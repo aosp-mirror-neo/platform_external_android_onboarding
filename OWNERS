@@ -1,4 +1,4 @@
 # Assign bugs to android-enterprise-triage@google.com
-file:platform/frameworks/base:/core/java/android/app/admin/EnterprisePlatform_OWNERS
+aoj-architecture-reviews@google.com
+mru@google.com #{LAST_RESORT_SUGGESTION}
 scottjonathan@google.com #{LAST_RESORT_SUGGESTION}
-petuska@google.com #{LAST_RESORT_SUGGESTION}
