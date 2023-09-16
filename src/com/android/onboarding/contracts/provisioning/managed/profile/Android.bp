@@ -1,0 +1,17 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.contracts.provisioning.managed.profile",
+    manifest: ":android_onboarding.AndroidManifest",
+    srcs: [
+        "*.kt",
+    ],
+    dont_merge_manifests: true,
+    static_libs: [
+        "android_onboarding.contracts",
+        "android_onboarding.contracts.provisioning",
+        "android_onboarding.contracts.provisioning.suw",
+    ],
+}

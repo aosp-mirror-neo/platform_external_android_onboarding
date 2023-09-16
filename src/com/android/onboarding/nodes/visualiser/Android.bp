@@ -1,0 +1,22 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+java_library_host {
+    name: "android_onboarding.nodes.visualiser",
+    installable: false,
+    srcs: [
+        "*.kt",
+    ],
+    static_libs: [
+        "android_onboarding.nodes_host",
+    ],
+}
+
+java_binary_host {
+    name: "android_onboarding.nodes.visualiser_png",
+    main_class: "com.android.onboarding.nodes.visualiser.PngOnboardingGraphVisualiser",
+    static_libs: [
+        "android_onboarding.nodes.visualiser"
+    ],
+}
