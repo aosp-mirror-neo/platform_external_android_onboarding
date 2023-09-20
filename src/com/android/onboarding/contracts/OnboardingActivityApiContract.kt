@@ -20,6 +20,7 @@ import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityN
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeSetResult
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating
+import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.util.UUID
 
 /**
@@ -109,9 +110,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     var contractResult = performSetResult(result)
 
     if (contractResult is Failure) {
-      AndroidOnboardingGraphLog.log(
-        ActivityNodeFail(activity.nodeId, this.javaClass, contractResult.reason)
-      )
+      AndroidOnboardingGraphLog.log(ActivityNodeFail(activity.nodeId, contractResult.reason))
     }
 
     val intent = contractResult.intent ?: Intent()
@@ -125,18 +124,21 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    *
    * <p>When parsing fails, the failure will be recorded so that it can be fixed.
    */
-  fun validate(activity: Activity, intent: Intent = activity.intent) {
+  @CanIgnoreReturnValue
+  fun validate(activity: Activity, intent: Intent = activity.intent): Boolean {
     try {
       AndroidOnboardingGraphLog.log(
         ActivityNodeValidating(activity.nodeId, this.javaClass, intentToIntentData(intent))
       )
 
       val unused = extractArgument(intent)
+      return true
     } catch (e: Exception) {
       AndroidOnboardingGraphLog.log(
         ActivityNodeFailedValidation(activity.nodeId, this.javaClass, e, intentToIntentData(intent))
       )
     }
+    return false
   }
 
   private fun extractNodeId(context: Context) =
@@ -185,7 +187,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     AndroidOnboardingGraphLog.log(ActivityNodeResultReceived(id, this.javaClass, result))
 
     if (result is Failure) {
-      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, this.javaClass, result.reason))
+      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, result.reason))
     }
 
     return result

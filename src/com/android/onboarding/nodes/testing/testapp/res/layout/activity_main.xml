@@ -4,67 +4,71 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-  <LinearLayout
+  <TextView
+      android:id="@+id/packageName"
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:orientation="horizontal">
-<!--    <LinearLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:orientation="vertical">-->
-<!--      <TextView-->
-<!--          android:id="@+id/app1Label"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:text="App 1" />-->
-<!--      <Button-->
-<!--          android:id="@+id/redButton2"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:text="Launch Red" />-->
-<!--      <Button-->
-<!--          android:id="@+id/blueButton2"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:text="Launch Blue" />-->
-<!--      <Button-->
-<!--          android:id="@+id/greenButton2"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:text="Launch Green" />-->
-<!--    </LinearLayout>-->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-<!--      <TextView-->
-<!--          android:id="@+id/app2Label"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:text="App 2" />-->
+      android:layout_height="wrap_content"
+      android:text="" />
+  <TextView
+      android:id="@+id/status"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="" />
+  <EditText
+      android:id="@+id/argument"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:ems="10"
+      android:inputType="text"
+      android:hint="Argument/Result" />
+  <Spinner
+      android:id="@+id/processSpinner"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+  <Spinner
+      android:id="@+id/contractSpinner"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
       <Button
-          android:id="@+id/redButton"
+          android:id="@+id/startActivityButton"
           android:layout_width="fill_parent"
           android:layout_height="wrap_content"
-          android:text="Launch Red" />
+          android:text="Start Activity" />
+  <Button
+      android:id="@+id/startActivityAndForwardButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Activity and Forward" />
       <Button
-          android:id="@+id/blueButton"
+          android:id="@+id/startActivityForResultButton"
           android:layout_width="fill_parent"
           android:layout_height="wrap_content"
-          android:text="Launch Blue" />
+          android:text="Start Activity For Result" />
       <Button
-          android:id="@+id/greenButton"
+          android:id="@+id/startActivityAndFinishButton"
           android:layout_width="fill_parent"
           android:layout_height="wrap_content"
-          android:text="Launch Green" />
-    </LinearLayout>
-  </LinearLayout>
+          android:text="Start Activity And Finish" />
   <Button
       android:id="@+id/failNodeButton"
-      android:layout_width="wrap_content"
+      android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-      android:layout_weight="1"
       android:text="Fail Node" />
+  <Button
+      android:id="@+id/crashButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Crash" />
+  <Button
+      android:id="@+id/finishButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Finish" />
+  <Button
+      android:id="@+id/setResultAndFinishButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Set Result and Finish" />
 
 </LinearLayout>

@@ -8,14 +8,16 @@
       android:minSdkVersion="21"
       android:targetSdkVersion="33"/>
 
+  <queries>
+    <intent>
+      <!-- used to detect test apps -->
+      <action android:name="com.android.onboarding.nodes.testing.testapp.red" />
+    </intent>
+  </queries>
+
   <application
       android:label="Onboarding Graph TestApp" android:theme="@style/Theme.AppCompat.Light" android:taskAffinity="">
-    <activity android:name=".MainActivity" android:exported="true">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LAUNCHER"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
+    <activity android:name=".MainActivity" android:exported="false">
     </activity>
 
     <activity-alias
@@ -23,6 +25,11 @@
         android:targetActivity=".MainActivity" android:exported="true">
       <intent-filter>
       <action android:name="com.android.onboarding.nodes.testing.testapp.red"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity-alias>
