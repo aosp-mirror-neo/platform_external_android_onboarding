@@ -4,6 +4,10 @@ import android.app.admin.DevicePolicyManager
 import com.google.android.setupcompat.util.WizardManagerHelper
 
 object EXTRAS {
+  /** @see com.android.managedprovisioning.model.ProvisioningParams.EXTRA_PROVISIONING_PARAMS */
+  inline val EXTRA_PROVISIONING_PARAMS: String
+    get() = "provisioningParams"
+
   inline val EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE: String
     get() = DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE
 

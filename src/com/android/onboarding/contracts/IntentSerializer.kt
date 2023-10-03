@@ -1,10 +1,149 @@
 package com.android.onboarding.contracts
 
 import android.content.Intent
+import android.os.Build
+import android.os.Bundle
+import android.os.Parcelable
+import androidx.annotation.RequiresApi
 
 /** Interface for writing an object to an [Intent] and reading the same object from an [Intent]. */
 interface IntentSerializer<V> {
   fun write(intent: Intent, value: V)
 
   fun read(intent: Intent): V
+}
+
+/**
+ * A serializer that does not expose [Intent] directly and instead works via [IntentScope]
+ * abstraction that can be observed
+ *
+ * TODO This is living as a separate opt-in interface for now, but
+ * we should look into incorporating it inside the contract class to make methods enforceable and
+ * protected
+ */
+interface ScopedIntentSerializer<V> : IntentSerializer<V> {
+  override fun write(intent: Intent, value: V) = IntentScope(intent).write(value)
+
+  override fun read(intent: Intent): V = IntentScope(intent).read()
+
+  fun IntentScope.write(value: V)
+
+  /**
+   * Writes a [value] to the [IntentScope] via a given [serializer]
+   */
+  fun <T> IntentScope.write(serializer: ScopedIntentSerializer<T>, value: T): Unit =
+    with(serializer) { write(value) }
+
+  fun IntentScope.read(): V
+
+  /**
+   * Reads a value [T] from the [IntentScope] via a given [serializer]
+   */
+  fun <T> IntentScope.read(serializer: ScopedIntentSerializer<T>): T = with(serializer) { read() }
+}
+
+/**
+ * An observable abstraction over [Intent] extras.
+ *
+ * @param intent to wrap
+ * @param afterRead function to call after each read
+ * @param beforeWrite function to call before each write
+ */
+data class IntentScope(
+  @PublishedApi internal  val intent: Intent,
+  @PublishedApi internal val afterRead: (key: String, value: Any?) -> Unit = { _, _ -> },
+  @PublishedApi internal val beforeWrite: (key: String, value: Any?) -> Unit = { _, _ -> },
+) {
+  operator fun contains(key: String): Boolean = intent.hasExtra(key)
+
+  fun intExtraOrNull(key: String): Int? =
+    run { if (contains(key)) intent.getIntExtra(key, 0) else null }.also { afterRead(key, it) }
+
+  fun intExtra(key: String): Int = intExtraOrNull(key) ?: missingExtraError(key)
+
+  fun stringExtraOrNull(key: String): String? =
+    intent.getStringExtra(key).also { afterRead(key, it) }
+
+  fun stringExtra(key: String): String = stringExtraOrNull(key) ?: missingExtraError(key)
+
+  fun booleanExtraOrNull(key: String): Boolean? =
+    run { if (contains(key)) intent.getBooleanExtra(key, false) else null }
+      .also { afterRead(key, it) }
+
+  fun booleanExtra(key: String): Boolean = booleanExtraOrNull(key) ?: missingExtraError(key)
+
+  fun bundleExtraOrNull(key: String): Bundle? =
+    intent.getBundleExtra(key).also { afterRead(key, it) }
+
+  fun bundleExtra(key: String): Bundle = bundleExtraOrNull(key) ?: missingExtraError(key)
+
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+  inline fun <reified T> parcelableExtraOrNull(key: String): T? =
+    intent.getParcelableExtra(key, T::class.java).also { afterRead(key, it) }
+
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+  inline fun <reified T> parcelableExtra(key: String): T =
+    parcelableExtraOrNull(key) ?: missingExtraError(key)
+
+  fun missingExtraError(key: String): Nothing = error("Required extra '$key' is missing")
+
+  operator fun set(key: String, value: Boolean?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Byte?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Char?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Short?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Int?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Long?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Float?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: Double?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, it) }
+  }
+
+  operator fun set(key: String, value: String?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, value) }
+  }
+
+  operator fun set(key: String, value: CharSequence?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, value) }
+  }
+
+  operator fun set(key: String, value: Parcelable?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, value) }
+  }
+
+  operator fun set(key: String, value: Bundle?): IntentScope = apply {
+    beforeWrite(key, value)
+    value?.let { intent.putExtra(key, value) }
+  }
 }

@@ -21,3 +21,8 @@ internal data class UnknownContractResult(
   override val resultCode: Int,
   override val intent: Intent? = null,
 ) : ContractResult
+
+interface ContractResultSerializer<R> {
+  fun read(result: ContractResult): R
+  fun write(result: R): ContractResult
+}

@@ -10,8 +10,9 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
+        "android_onboarding.common",
         "android_onboarding.contracts",
         "android_onboarding.contracts.provisioning",
-        "android_onboarding.contracts.provisioning.suw",
+        "android_onboarding.contracts.setupwizard",
     ],
 }
