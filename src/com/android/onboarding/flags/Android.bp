@@ -6,13 +6,10 @@ android_library {
     name: "android_onboarding.flags",
     manifest: ":android_onboarding.AndroidManifest",
     srcs: [
-        "*.kt",
-        "**/*.kt",
+        "DefaultOnboardingFlagsProvider.kt",
+        "OnboardingFlagsProvider.kt",
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "jsr330",
-        "dagger2",
-        "android_onboarding.common"
     ],
 }

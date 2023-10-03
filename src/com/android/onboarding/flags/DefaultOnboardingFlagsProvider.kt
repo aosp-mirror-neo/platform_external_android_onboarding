@@ -1,14 +1,9 @@
 package com.android.onboarding.flags
 
-import android.content.Context
 import android.os.SystemProperties
-import com.android.onboarding.common.OnboardingContext
-import javax.inject.Inject
 
 /** A default implementation of [OnboardingFlagsProvider] using system property. */
-class DefaultOnboardingFlagsProvider
-@Inject
-constructor(@OnboardingContext val appContext: Context) : OnboardingFlagsProvider {
+class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
 
   override fun isOnboardingContractEnabled(): Boolean {
     return SystemProperties.getBoolean(
