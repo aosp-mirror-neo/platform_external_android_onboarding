@@ -3,14 +3,16 @@ package {
 }
 
 android_library {
-    name: "android_onboarding.contracts.provisioning.suw",
+    name: "android_onboarding.common",
     manifest: ":android_onboarding.AndroidManifest",
     srcs: [
         "*.kt",
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "android_onboarding.contracts",
-        "android_onboarding.contracts.provisioning",
+        "dagger2",
+        "jsr330",
+        "androidx.annotation_annotation",
     ],
+    plugins: ["dagger2-compiler"]
 }

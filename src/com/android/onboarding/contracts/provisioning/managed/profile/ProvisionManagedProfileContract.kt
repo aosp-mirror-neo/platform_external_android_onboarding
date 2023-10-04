@@ -10,9 +10,9 @@ import com.android.onboarding.contracts.provisioning.ACTIONS
  * |----------|-------------------------------------------------------------------------|
  * |          |                                                                         |
  */
-class ProvisionManagedProfileContract :
-  VoidOnboardingActivityApiContract<ProvisionManagedProfileArguments>() {
-  private val serializer = ProvisionManagedProfileArgumentsSerializer()
+class ProvisionManagedProfileContract(
+  private val serializer: ProvisionManagedProfileArgumentsSerializer = ProvisionManagedProfileArgumentsSerializer(),
+) : VoidOnboardingActivityApiContract<ProvisionManagedProfileArguments>() {
 
   override fun performCreateIntent(
     context: Context,

@@ -138,7 +138,9 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
       if (e is ActivityNodeResultReceived) {
         nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, result = e.result)
         val node = nodeMap[e.nodeId]!!
-        nodeMap.updateNode(id = node._incomingEdge!!.id, timestamp = e.timestamp)
+        node._incomingEdge?.let {
+          nodeMap.updateNode(id = it.id, timestamp = e.timestamp)
+        }
       } else if (e is ActivityNodeFail) {
         nodeMap.updateNode(
           e,
@@ -288,6 +290,9 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
 
     val isSynchronous: Boolean
       get() = type == NodeType.SYNCHRONOUS
+
+    val isComplete: Boolean
+      get() = _events.size >= 2
 
     override fun hashCode(): Int = Objects.hash(_id, _name)
 

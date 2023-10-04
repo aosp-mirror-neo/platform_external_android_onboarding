@@ -4,8 +4,11 @@ package com.android.onboarding.flags
 interface OnboardingFlagsProvider {
 
   /**
-   * True if onboarding contracts[setupwizard.feature.is_onboarding_contract_enabled] are being used
-   * across the onboarding flow.
+   * Returns [true] if the onboarding contract architecture is being used across the onboarding
+   * flow.
    */
   fun isOnboardingContractEnabled(): Boolean
+
+  /** Returns [true] if onboarding node logs should be uploaded remotely. */
+  fun isOnboardingNodeLoggingEnabled(): Boolean
 }

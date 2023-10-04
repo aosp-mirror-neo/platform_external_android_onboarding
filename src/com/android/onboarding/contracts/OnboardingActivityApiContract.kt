@@ -91,13 +91,9 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   }
 
   private fun intentToIntentData(intent: Intent): OnboardingGraphLog.OnboardingEvent.IntentData {
-    val extras = mutableMapOf<String, Any?>()
-
-    intent.extras?.let {
-      for (s in it.keySet()) {
-        extras[s] = it.get(s)
+    val extras = buildMap<String, Any?> {
+        intent.extras?.let { for (key in it.keySet()) put(key, it.get(key)) }
       }
-    }
 
     return OnboardingGraphLog.OnboardingEvent.IntentData(intent.action, extras)
   }
@@ -129,7 +125,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    *
    * <p>When parsing fails, the failure will be recorded so that it can be fixed.
    */
-  fun validate(activity: Activity, intent: Intent) {
+  fun validate(activity: Activity, intent: Intent = activity.intent) {
     try {
       AndroidOnboardingGraphLog.log(
         ActivityNodeValidating(activity.nodeId, this.javaClass.name, intentToIntentData(intent))
