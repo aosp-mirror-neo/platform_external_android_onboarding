@@ -17,9 +17,8 @@ interface IntentSerializer<V> {
  * A serializer that does not expose [Intent] directly and instead works via [IntentScope]
  * abstraction that can be observed
  *
- * TODO This is living as a separate opt-in interface for now, but we should 
- * look into incorporating it inside the contract class 
- * to make methods enforceable and protected
+ * TODO This is living as a separate opt-in interface for now, but we should look into incorporating
+ * it inside the contract class to make methods enforceable and protected
  */
 interface ScopedIntentSerializer<V> : IntentSerializer<V> {
   override fun write(intent: Intent, value: V) = IntentScope(intent).write(value)
@@ -63,7 +62,7 @@ data class IntentScope(
    * }
    * ```
    */
-  @IntentManipulationDsl val intent = this
+  @IntentManipulationDsl val intent: IntentScope = this
 
   @IntentManipulationDsl operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
 
