@@ -63,6 +63,14 @@ object ACTIONS {
   inline val ACTION_PROVISION_MANAGED_DEVICE: String
     get() = DevicePolicyManager.ACTION_PROVISION_MANAGED_DEVICE
 
+  /**
+   * Cannot link against it directly because it's marked as `@hidden` without `@SystemApi`
+   *
+   * @see DevicePolicyManager.ACTION_PROVISION_MANAGED_USER
+   */
+  inline val ACTION_PROVISION_MANAGED_USER: String
+    get() = "android.app.action.PROVISION_MANAGED_USER"
+
   inline val ACTION_PROVISION_MANAGED_PROFILE: String
     get() = DevicePolicyManager.ACTION_PROVISION_MANAGED_PROFILE
 

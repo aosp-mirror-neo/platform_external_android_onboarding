@@ -11,5 +11,8 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
+        "jsr330",
+        "dagger2",
+        "android_onboarding.common"
     ],
 }

@@ -10,10 +10,13 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
+        "android_onboarding.common",
         "android_onboarding.contracts",
+        "android_onboarding.contracts.setupwizard",
         "android_onboarding.contracts.annotations",
         "setupcompat",
         "androidx.annotation_annotation",
+        "jsr330"
     ],
     platform_apis: true,
 }
