@@ -7,18 +7,18 @@ import javax.inject.Inject
 
 class SuwArgumentsSerializer @Inject constructor() : ScopedIntentSerializer<SuwArguments> {
   override fun IntentScope.write(value: SuwArguments) {
-   this["actionId"] = value.actionId
-   this["isSubactivityFirstLaunched"] = value.isSubactivityFirstLaunched
-   this[WizardManagerHelper.EXTRA_IS_SUW_SUGGESTED_ACTION_FLOW] = value.isSuwSuggestedActionFlow
-   this[WizardManagerHelper.EXTRA_IS_SETUP_FLOW] = value.isSetupFlow
-   this[WizardManagerHelper.EXTRA_IS_PRE_DEFERRED_SETUP] = value.preDeferredSetup
-   this[WizardManagerHelper.EXTRA_IS_DEFERRED_SETUP] = value.deferredSetup
-   this[WizardManagerHelper.EXTRA_IS_FIRST_RUN] = value.firstRun
-   this[WizardManagerHelper.EXTRA_IS_PORTAL_SETUP] = value.portalSetup
-   this["scriptUri"] = value.scriptUri
-   this["hasMultipleUsers"] = value.hasMultipleUsers
-   this[WizardManagerHelper.EXTRA_THEME] = value.theme
-   this["wizardBundle"] = value.wizardBundle
+    intent["actionId"] = value.actionId
+    intent["isSubactivityFirstLaunched"] = value.isSubactivityFirstLaunched
+    intent[WizardManagerHelper.EXTRA_IS_SUW_SUGGESTED_ACTION_FLOW] = value.isSuwSuggestedActionFlow
+    intent[WizardManagerHelper.EXTRA_IS_SETUP_FLOW] = value.isSetupFlow
+    intent[WizardManagerHelper.EXTRA_IS_PRE_DEFERRED_SETUP] = value.preDeferredSetup
+    intent[WizardManagerHelper.EXTRA_IS_DEFERRED_SETUP] = value.deferredSetup
+    intent[WizardManagerHelper.EXTRA_IS_FIRST_RUN] = value.firstRun
+    intent[WizardManagerHelper.EXTRA_IS_PORTAL_SETUP] = value.portalSetup
+    intent["scriptUri"] = value.scriptUri
+    intent["hasMultipleUsers"] = value.hasMultipleUsers
+    intent[WizardManagerHelper.EXTRA_THEME] = value.theme
+    intent["wizardBundle"] = value.wizardBundle
   }
 
   override fun IntentScope.read(): SuwArguments =
