@@ -1,6 +1,7 @@
 package com.android.onboarding.contracts
 
 import android.content.Intent
+import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 
 /** The result of encoding a contract result for passing as an activity result. */
 sealed interface ContractResult {
@@ -17,7 +18,8 @@ sealed interface ContractResult {
     val reason: String? = null) : ContractResult
 }
 
-internal data class UnknownContractResult(
+@InternalOnboardingApi
+data class UnknownContractResult(
   override val resultCode: Int,
   override val intent: Intent? = null,
 ) : ContractResult

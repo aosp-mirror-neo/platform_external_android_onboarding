@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContract
 import com.android.onboarding.contracts.ContractResult.Failure
+import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
 import com.android.onboarding.nodes.EXTRA_ONBOARDING_NODE_ID
 import com.android.onboarding.nodes.OnboardingGraphLog
@@ -179,6 +180,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     return intent
   }
 
+  @OptIn(InternalOnboardingApi::class)
   final override fun parseResult(resultCode: Int, intent: Intent?): O {
     // Injection point when control has returned to the current activity
 

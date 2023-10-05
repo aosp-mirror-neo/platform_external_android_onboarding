@@ -11,6 +11,7 @@ android_library {
     dont_merge_manifests: true,
     static_libs: [
         "androidx.activity_activity-ktx",
+        "android_onboarding.contracts.annotations",
         "android_onboarding.nodes",
         "error_prone_annotations",
     ],
