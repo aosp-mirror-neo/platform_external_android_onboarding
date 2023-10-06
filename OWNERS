@@ -1,5 +1,6 @@
-# Assign bugs to android-enterprise-triage@google.com
+# Assign bugs to aoj-architecture-team@google.com
 aoj-architecture-reviews@google.com
+copybara-worker-blackhole@google.com #{LAST_RESORT_SUGGESTION}
 scottjonathan@google.com #{LAST_RESORT_SUGGESTION}
 kelvinkwan@google.com #{LAST_RESORT_SUGGESTION}
 mru@google.com #{LAST_RESORT_SUGGESTION}
