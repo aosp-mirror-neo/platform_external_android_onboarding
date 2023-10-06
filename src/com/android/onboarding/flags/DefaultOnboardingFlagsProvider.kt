@@ -21,7 +21,7 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
 
   companion object {
     public const val SYSTEM_PROPERTY_NAMESPACE = "aoj.architecture.feature."
-    public const val FEATURE_ONBOARDING_CONTRACT_ENABLED = "is_onboarding_contract_enabled"
+    private const val FEATURE_ONBOARDING_CONTRACT_ENABLED = "is_onboarding_contract_enabled"
     private const val FEATURE_ONBOARDING_NODE_LOGGING_ENABLED = "is_onboarding_node_logging_enabled"
   }
 }
