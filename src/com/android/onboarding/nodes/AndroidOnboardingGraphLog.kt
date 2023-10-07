@@ -11,6 +11,10 @@ object AndroidOnboardingGraphLog : OnboardingGraphLog {
     defaultOnboardingGraphLog.addObserver(observer)
   }
 
+  override fun removeObserver(observer: OnboardingGraphLog.Observer) {
+    defaultOnboardingGraphLog.removeObserver(observer)
+  }
+
   override fun log(event: OnboardingGraphLog.OnboardingEvent) {
     defaultOnboardingGraphLog.log(event)
   }

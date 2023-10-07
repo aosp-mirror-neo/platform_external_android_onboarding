@@ -1,6 +1,7 @@
 package com.android.onboarding.contracts
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
@@ -50,6 +51,10 @@ data class IntentScope(
   @PublishedApi internal val afterRead: (key: String, value: Any?) -> Unit = { _, _ -> },
   @PublishedApi internal val beforeWrite: (key: String, value: Any?) -> Unit = { _, _ -> },
 ) {
+  companion object {
+    const val KEY_DATA = "com.android.onboarding.INTENT_DATA"
+  }
+
   /** Marks functions that read or write intent data */
   @DslMarker internal annotation class IntentManipulationDsl
 
@@ -63,6 +68,31 @@ data class IntentScope(
    * ```
    */
   @IntentManipulationDsl val intent: IntentScope = this
+
+  /** Provides observable access to [Intent.getData] */
+  @IntentManipulationDsl
+  var data: Uri?
+    get() = androidIntent.data.also { afterRead(KEY_DATA, it) }
+    set(value) {
+      beforeWrite(KEY_DATA, value)
+      value?.let(androidIntent::setData)
+    }
+
+  /**
+   * Copy over all [extras] to this [IntentScope]
+   */
+  @IntentManipulationDsl
+  operator fun plusAssign(extras: Bundle) {
+    androidIntent.putExtras(extras)
+  }
+
+  /**
+   * Copy over all extras from [other] to this [IntentScope]
+   */
+  @IntentManipulationDsl
+  operator fun plusAssign(other: IntentScope) {
+    androidIntent.putExtras(other.androidIntent)
+  }
 
   @IntentManipulationDsl operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
 

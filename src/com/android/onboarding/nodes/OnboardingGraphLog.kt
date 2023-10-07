@@ -19,11 +19,13 @@ interface OnboardingGraphLog {
 
   /**
    * Add an observer for future graph changes.
-   *
-   * This is stored weakly, so will only report results as long as the observer is not garbage
-   * collected.
    */
   fun addObserver(observer: Observer)
+
+  /**
+   * Remove the observer so it stops receiving updates.
+   */
+  fun removeObserver(observer: Observer)
 
   /**
    * Log an Onboarding event.

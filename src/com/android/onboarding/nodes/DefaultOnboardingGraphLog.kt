@@ -5,11 +5,14 @@ import java.util.WeakHashMap
 
 class DefaultOnboardingGraphLog : OnboardingGraphLog {
 
-  private val observers =
-    Collections.newSetFromMap(WeakHashMap<OnboardingGraphLog.Observer, Boolean>())
+  private val observers = mutableSetOf<OnboardingGraphLog.Observer>()
 
   override fun addObserver(observer: OnboardingGraphLog.Observer) {
     observers.add(observer)
+  }
+
+  override fun removeObserver(observer: OnboardingGraphLog.Observer) {
+    observers.remove(observer)
   }
 
   override fun log(event: OnboardingGraphLog.OnboardingEvent) {
