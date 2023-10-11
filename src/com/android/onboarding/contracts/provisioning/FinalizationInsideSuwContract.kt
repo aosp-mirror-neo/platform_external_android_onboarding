@@ -2,10 +2,12 @@ package com.android.onboarding.contracts.provisioning
 
 import android.content.Context
 import android.content.Intent
+import com.android.onboarding.common.MANAGED_PROVISIONING
 import com.android.onboarding.contracts.ContractResult
 import com.android.onboarding.contracts.IntentScope
 import com.android.onboarding.contracts.OnboardingActivityApiContract
 import com.android.onboarding.contracts.ScopedIntentSerializer
+import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.setupwizard.SuwArguments
 import com.android.onboarding.contracts.setupwizard.SuwArgumentsSerializer
 import com.android.onboarding.contracts.setupwizard.WithOptionalSuwArguments
@@ -18,8 +20,14 @@ data class FinalizationInsideSuwArguments(
 /**
  * Result is propagated from the child activities the activity described by this contract launches.
  *
- * The activity uses [ProvisioningParams], however they are fetched from the FS rather than intent extras.
+ * The activity uses [ProvisioningParams], however they are fetched from the FS rather than intent
+ * extras.
  */
+@OnboardingNode(
+  component = MANAGED_PROVISIONING,
+  name = "FinalizationInsideSuw",
+  hasUi = OnboardingNode.HasUi.YES
+)
 class FinalizationInsideSuwContract
 @Inject
 constructor(val suwArgumentsSerializer: SuwArgumentsSerializer) :

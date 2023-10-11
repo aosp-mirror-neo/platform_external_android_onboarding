@@ -2,13 +2,21 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
+java_library {
     name: "android_onboarding.contracts.annotations",
-    manifest: ":android_onboarding.AndroidManifest",
     srcs: [
         "*.kt",
     ],
-    dont_merge_manifests: true,
+    static_libs: [
+    ],
+}
+
+
+java_library_host {
+    name: "android_onboarding.contracts.annotations_host",
+    srcs: [
+        "*.kt",
+    ],
     static_libs: [
     ],
 }

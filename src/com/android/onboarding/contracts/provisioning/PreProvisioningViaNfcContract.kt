@@ -4,15 +4,22 @@ import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.os.Parcelable
+import com.android.onboarding.common.MANAGED_PROVISIONING
 import com.android.onboarding.contracts.IntentScope
 import com.android.onboarding.contracts.ScopedIntentSerializer
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
+import com.android.onboarding.contracts.annotations.OnboardingNode
 import javax.inject.Inject
 
 data class PreProvisioningViaNfcArguments(
   val ndefMessages: Array<Parcelable>,
 )
 
+@OnboardingNode(
+  component = MANAGED_PROVISIONING,
+  name = "PreProvisioningViaNfc",
+  hasUi = OnboardingNode.HasUi.YES
+)
 class PreProvisioningViaNfcContract @Inject constructor() :
   VoidOnboardingActivityApiContract<PreProvisioningViaNfcArguments>(),
   ScopedIntentSerializer<PreProvisioningViaNfcArguments> {

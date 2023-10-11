@@ -2,7 +2,9 @@ package com.android.onboarding.contracts.provisioning.managed.profile
 
 import android.content.Context
 import android.content.Intent
+import com.android.onboarding.common.MANAGED_PROVISIONING
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
+import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.provisioning.ACTIONS
 
 /**
@@ -10,8 +12,14 @@ import com.android.onboarding.contracts.provisioning.ACTIONS
  * |----------|-------------------------------------------------------------------------|
  * |          |                                                                         |
  */
+@OnboardingNode(
+  component = MANAGED_PROVISIONING,
+  name = "ProvisionManagedProfile",
+  hasUi = OnboardingNode.HasUi.YES
+)
 class ProvisionManagedProfileContract(
-  private val serializer: ProvisionManagedProfileArgumentsSerializer = ProvisionManagedProfileArgumentsSerializer(),
+  private val serializer: ProvisionManagedProfileArgumentsSerializer =
+    ProvisionManagedProfileArgumentsSerializer(),
 ) : VoidOnboardingActivityApiContract<ProvisionManagedProfileArguments>() {
 
   override fun performCreateIntent(
