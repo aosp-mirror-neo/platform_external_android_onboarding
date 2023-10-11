@@ -5,27 +5,66 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="horizontal">
+<!--    <LinearLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:orientation="vertical">-->
+<!--      <TextView-->
+<!--          android:id="@+id/app1Label"-->
+<!--          android:layout_width="match_parent"-->
+<!--          android:layout_height="wrap_content"-->
+<!--          android:text="App 1" />-->
+<!--      <Button-->
+<!--          android:id="@+id/redButton2"-->
+<!--          android:layout_width="match_parent"-->
+<!--          android:layout_height="wrap_content"-->
+<!--          android:text="Launch Red" />-->
+<!--      <Button-->
+<!--          android:id="@+id/blueButton2"-->
+<!--          android:layout_width="match_parent"-->
+<!--          android:layout_height="wrap_content"-->
+<!--          android:text="Launch Blue" />-->
+<!--      <Button-->
+<!--          android:id="@+id/greenButton2"-->
+<!--          android:layout_width="match_parent"-->
+<!--          android:layout_height="wrap_content"-->
+<!--          android:text="Launch Green" />-->
+<!--    </LinearLayout>-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+<!--      <TextView-->
+<!--          android:id="@+id/app2Label"-->
+<!--          android:layout_width="match_parent"-->
+<!--          android:layout_height="wrap_content"-->
+<!--          android:text="App 2" />-->
+      <Button
+          android:id="@+id/redButton"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:text="Launch Red" />
+      <Button
+          android:id="@+id/blueButton"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:text="Launch Blue" />
+      <Button
+          android:id="@+id/greenButton"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:text="Launch Green" />
+    </LinearLayout>
+  </LinearLayout>
   <Button
-      android:id="@+id/redButton"
-      android:layout_width="fill_parent"
+      android:id="@+id/failNodeButton"
+      android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Launch Red" />
+      android:layout_weight="1"
+      android:text="Fail Node" />
 
-  <Button
-      android:id="@+id/blueButton"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:text="Launch Blue" />
-
-  <Button
-      android:id="@+id/greenButton"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:text="Launch Green" />
-
-  <Button
-      android:id="@+id/visualiseButton"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:text="Visualise" />
 </LinearLayout>
