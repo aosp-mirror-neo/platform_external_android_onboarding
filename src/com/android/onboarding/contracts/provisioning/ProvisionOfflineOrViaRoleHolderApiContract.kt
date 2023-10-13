@@ -2,8 +2,9 @@ package com.android.onboarding.contracts.provisioning
 
 import android.content.Context
 import android.content.Intent
+import com.android.onboarding.common.MANAGED_PROVISIONING
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
-import com.android.onboarding.contracts.annotations.DoesNotNeedUi
+import com.android.onboarding.contracts.annotations.OnboardingNode
 
 // From DevicePolicyManager
 private const val ACTION_PROVISION_MANAGED_DEVICE_FROM_TRUSTED_SOURCE =
@@ -32,7 +33,11 @@ val PARSER = ManagedDeviceProvisioningArgumentsSerializer()
  * <p>This API should only be called on a device which is not yet provisioned (TODO: Define what
  * this means)
  */
-@DoesNotNeedUi
+@OnboardingNode(
+  component = MANAGED_PROVISIONING,
+  name = "ProvisionOfflineOrViaRoleHolder",
+  hasUi = OnboardingNode.HasUi.YES_TEMPORARILY
+)
 class ProvisionOfflineOrViaRoleHolderApiContract :
   VoidOnboardingActivityApiContract<ManagedDeviceProvisioningArguments>() {
   override fun performCreateIntent(
