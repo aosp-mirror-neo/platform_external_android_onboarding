@@ -79,20 +79,21 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   fun extractArgument(intent: Intent): I {
     // Injection point when we are receiving control in an activity
     AndroidOnboardingGraphLog.log(
-      ActivityNodeExtractArgument(intent.nodeId, this.javaClass.name, intentToIntentData(intent))
+      ActivityNodeExtractArgument(intent.nodeId, this.javaClass, intentToIntentData(intent))
     )
 
     val argument = performExtractArgument(intent)
 
     AndroidOnboardingGraphLog.log(
-      ActivityNodeArgumentExtracted(intent.nodeId, this.javaClass.name, argument)
+      ActivityNodeArgumentExtracted(intent.nodeId, this.javaClass, argument)
     )
 
     return argument
   }
 
   private fun intentToIntentData(intent: Intent): OnboardingGraphLog.OnboardingEvent.IntentData {
-    val extras = buildMap<String, Any?> {
+    val extras =
+      buildMap<String, Any?> {
         intent.extras?.let { for (key in it.keySet()) put(key, it.get(key)) }
       }
 
@@ -103,15 +104,13 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   fun setResult(activity: Activity, result: O) {
     // Injection point when we are returning a result from the current activity
 
-    AndroidOnboardingGraphLog.log(
-      ActivityNodeSetResult(activity.nodeId, this.javaClass.name, result)
-    )
+    AndroidOnboardingGraphLog.log(ActivityNodeSetResult(activity.nodeId, this.javaClass, result))
 
     var contractResult = performSetResult(result)
 
     if (contractResult is Failure) {
       AndroidOnboardingGraphLog.log(
-        ActivityNodeFail(activity.nodeId, this.javaClass.name, contractResult.reason)
+        ActivityNodeFail(activity.nodeId, this.javaClass, contractResult.reason)
       )
     }
 
@@ -129,18 +128,13 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   fun validate(activity: Activity, intent: Intent = activity.intent) {
     try {
       AndroidOnboardingGraphLog.log(
-        ActivityNodeValidating(activity.nodeId, this.javaClass.name, intentToIntentData(intent))
+        ActivityNodeValidating(activity.nodeId, this.javaClass, intentToIntentData(intent))
       )
 
       val unused = extractArgument(intent)
     } catch (e: Exception) {
       AndroidOnboardingGraphLog.log(
-        ActivityNodeFailedValidation(
-          activity.nodeId,
-          this.javaClass.name,
-          e,
-          intentToIntentData(intent)
-        )
+        ActivityNodeFailedValidation(activity.nodeId, this.javaClass, e, intentToIntentData(intent))
       )
     }
   }
@@ -162,7 +156,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
 
     AndroidOnboardingGraphLog.log(
-      ActivityNodeExecutedDirectly(extractNodeId(context), outgoingId, this.javaClass.name, input)
+      ActivityNodeExecutedDirectly(extractNodeId(context), outgoingId, this.javaClass, input)
     )
 
     return intent
@@ -174,7 +168,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
 
     AndroidOnboardingGraphLog.log(
-      ActivityNodeExecutedForResult(extractNodeId(context), outgoingId, this.javaClass.name, input)
+      ActivityNodeExecutedForResult(extractNodeId(context), outgoingId, this.javaClass, input)
     )
 
     return intent
@@ -188,10 +182,10 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
     val result = performParseResult(UnknownContractResult(resultCode, intent))
 
-    AndroidOnboardingGraphLog.log(ActivityNodeResultReceived(id, this.javaClass.name, result))
+    AndroidOnboardingGraphLog.log(ActivityNodeResultReceived(id, this.javaClass, result))
 
     if (result is Failure) {
-      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, this.javaClass.name, result.reason))
+      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, this.javaClass, result.reason))
     }
 
     return result
@@ -203,7 +197,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     val thisNodeId = extractNodeId(context)
 
     AndroidOnboardingGraphLog.log(
-      ActivityNodeStartExecuteSynchronously(thisNodeId, outgoingId, this.javaClass.name, input)
+      ActivityNodeStartExecuteSynchronously(thisNodeId, outgoingId, this.javaClass, input)
     )
 
     val result = performGetSynchronousResult(context, input)
@@ -211,7 +205,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
       // Injection point when the synchronous result was used and the activity was skipped
 
       AndroidOnboardingGraphLog.log(
-        ActivityNodeExecutedSynchronously(outgoingId, this.javaClass.name, result.value)
+        ActivityNodeExecutedSynchronously(outgoingId, this.javaClass, result.value)
       )
     }
 

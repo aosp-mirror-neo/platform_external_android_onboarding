@@ -13,6 +13,7 @@ android_library {
         "androidx.activity_activity-ktx",
         "guava",
         "android_onboarding.nodes_proto_lite",
+        "android_onboarding.contracts.annotations"
     ]
 }
 
@@ -27,6 +28,7 @@ java_library_host {
     static_libs: [
         "guava",
         "android_onboarding.nodes_proto_full",
+        "android_onboarding.contracts.annotations_host"
     ]
 }
 
