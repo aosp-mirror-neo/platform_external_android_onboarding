@@ -371,27 +371,17 @@ interface OnboardingGraphLog {
      * At [timestamp], an [android.app.Activity] with id [nodeId] has failed the [nodeName] contract
      * because of [reason].
      */
-    data class ActivityNodeFail
-    private constructor(
+    data class ActivityNodeFail(
       val nodeId: Long,
-      val nodeName: String,
       val reason: String?,
       val timestamp: Instant = Instant.now()
     ) : OnboardingEvent() {
-
-      constructor(
-        nodeId: Long,
-        nodeClass: Class<*>,
-        reason: String?,
-        timestamp: Instant = Instant.now()
-      ) : this(nodeId, extractNodeNameFromClass(nodeClass), reason, timestamp)
 
       override fun serialize(): OnboardingProtos.LogProto {
         return OnboardingProtos.LogProto.newBuilder()
           .setActivityNodeFail(
             OnboardingProtos.ActivityNodeFailProto.newBuilder()
               .setNodeId(nodeId)
-              .setNodeName(nodeName)
               .setReason(reason ?: "")
               .setTimestamp(timestamp.toEpochMilli())
               .build()
@@ -403,7 +393,6 @@ interface OnboardingGraphLog {
         fun fromProto(proto: OnboardingProtos.ActivityNodeFailProto) =
           ActivityNodeFail(
             nodeId = proto.nodeId,
-            nodeName = proto.nodeName,
             reason = proto.reason,
             timestamp = Instant.ofEpochMilli(proto.timestamp)
           )

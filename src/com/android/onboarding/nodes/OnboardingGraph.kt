@@ -138,15 +138,12 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
       if (e is ActivityNodeResultReceived) {
         nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, result = e.result)
         val node = nodeMap[e.nodeId]!!
-        node._incomingEdge?.let {
-          nodeMap.updateNode(id = it.id, timestamp = e.timestamp)
-        }
+        node._incomingEdge?.let { nodeMap.updateNode(id = it.id, timestamp = e.timestamp) }
       } else if (e is ActivityNodeFail) {
         nodeMap.updateNode(
           e,
           e.nodeId,
           e.timestamp,
-          e.nodeName,
           failureReason = IllegalStateException(e.reason)
         )
         val node = nodeMap[e.nodeId]!!
