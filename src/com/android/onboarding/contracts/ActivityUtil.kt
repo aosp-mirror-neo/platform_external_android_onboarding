@@ -27,5 +27,5 @@ val Activity.nodeId: Long
 
 /** Mark the executing node as failed with [reason]. */
 fun Activity.failNode(reason: String? = null) {
-  AndroidOnboardingGraphLog.log(ActivityNodeFail(nodeId, this.javaClass, reason))
+  AndroidOnboardingGraphLog.log(ActivityNodeFail(nodeId, reason))
 }
