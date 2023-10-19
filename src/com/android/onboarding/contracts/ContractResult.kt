@@ -8,14 +8,17 @@ sealed interface ContractResult {
   val resultCode: Int
   val intent: Intent?
 
-  data class Success(
-    override val resultCode: Int,
-    override val intent: Intent? = null) : ContractResult
+  data class Success
+  @JvmOverloads
+  constructor(override val resultCode: Int, override val intent: Intent? = null) : ContractResult
 
-  data class Failure(
+  data class Failure
+  @JvmOverloads
+  constructor(
     override val resultCode: Int,
     override val intent: Intent? = null,
-    val reason: String? = null) : ContractResult
+    val reason: String? = null
+  ) : ContractResult
 }
 
 @InternalOnboardingApi
@@ -26,5 +29,6 @@ data class UnknownContractResult(
 
 interface ContractResultSerializer<R> {
   fun read(result: ContractResult): R
+
   fun write(result: R): ContractResult
 }
