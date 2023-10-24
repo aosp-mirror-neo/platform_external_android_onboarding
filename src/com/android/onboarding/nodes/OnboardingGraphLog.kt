@@ -540,13 +540,12 @@ interface OnboardingGraphLog {
 
     companion object {
 
-      private fun extractNodeNameFromClass(nodeClass: Class<*>) =
-        nodeClass.getAnnotation(OnboardingNode::class.java)?.name?.takeIf {
-          it.length <= MAX_NODE_NAME_LENGTH
-        }
-          ?: throw IllegalArgumentException(
-            "All nodes must be annotated @OnboardingNode and have a valid node name"
-          )
+      private fun extractNodeNameFromClass(nodeClass: Class<*>): String =
+        nodeClass.getAnnotation(OnboardingNode::class.java)?.name?.also {
+          require(it.length <= MAX_NODE_NAME_LENGTH) {
+            "Node name length (${it.length}) exceeds maximum length of $MAX_NODE_NAME_LENGTH characters"
+          }
+        } ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
 
       fun deserialize(str: String): OnboardingEvent {
         val proto = OnboardingProtos.LogProto.parseFrom(BaseEncoding.base64().decode(str))

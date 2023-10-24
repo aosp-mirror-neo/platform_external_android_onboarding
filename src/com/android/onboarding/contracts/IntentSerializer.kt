@@ -7,8 +7,38 @@ import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
 
+/** Marks functions that read or write intent data */
+@DslMarker internal annotation class IntentManipulationDsl
+
 /** Interface for writing an object to an [Intent] and reading the same object from an [Intent]. */
 interface IntentSerializer<V> {
+  /**
+   * Utility intent builder that allows writing the [arg] and customising the intent settings
+   *
+   * @param arg to serialize into intent extras
+   * @param builder to configure the intent
+   */
+  @IntentManipulationDsl
+  fun Intent(arg: V, builder: Intent.() -> Unit = {}): Intent =
+    Intent().also {
+      write(it, arg)
+      it.builder()
+    }
+
+  /**
+   * Utility intent builder that allows writing the [arg] and customising the intent settings
+   *
+   * @param action the intent should send
+   * @param arg to serialize into intent extras
+   * @param builder to configure the intent
+   */
+  @IntentManipulationDsl
+  fun Intent(action: String, arg: V, builder: Intent.() -> Unit = {}): Intent =
+    Intent(arg) {
+      this.action = action
+      builder()
+    }
+
   fun write(intent: Intent, value: V)
 
   fun read(intent: Intent): V
@@ -29,12 +59,14 @@ interface ScopedIntentSerializer<V> : IntentSerializer<V> {
   fun IntentScope.write(value: V)
 
   /** Writes a [value] to the [IntentScope] via a given [serializer] */
+  @IntentManipulationDsl
   fun <T> IntentScope.write(serializer: ScopedIntentSerializer<T>, value: T): Unit =
     with(serializer) { write(value) }
 
   fun IntentScope.read(): V
 
   /** Reads a value [T] from the [IntentScope] via a given [serializer] */
+  @IntentManipulationDsl
   fun <T> IntentScope.read(serializer: ScopedIntentSerializer<T>): T = with(serializer) { read() }
 }
 
@@ -45,7 +77,7 @@ interface ScopedIntentSerializer<V> : IntentSerializer<V> {
  * @param afterRead function to call after each read
  * @param beforeWrite function to call before each write
  */
-@IntentScope.IntentManipulationDsl
+@IntentManipulationDsl
 data class IntentScope(
   @PublishedApi internal val androidIntent: Intent,
   @PublishedApi internal val afterRead: (key: String, value: Any?) -> Unit = { _, _ -> },
@@ -53,10 +85,8 @@ data class IntentScope(
 ) {
   companion object {
     const val KEY_DATA = "com.android.onboarding.INTENT_DATA"
+    const val KEY_ACTION = "com.android.onboarding.INTENT_ACTION"
   }
-
-  /** Marks functions that read or write intent data */
-  @DslMarker internal annotation class IntentManipulationDsl
 
   /**
    * Self-reference for more fluid write access
@@ -69,6 +99,24 @@ data class IntentScope(
    */
   @IntentManipulationDsl val intent: IntentScope = this
 
+  /** Provides observable access to [Intent.getAction] */
+  @IntentManipulationDsl
+  var action: String?
+    get() = androidIntent.action.also { afterRead(KEY_ACTION, it) }
+    set(value) {
+      beforeWrite(KEY_ACTION, value)
+      value?.let(androidIntent::setAction)
+    }
+
+  /** Provides observable access to [Intent.getType] */
+  @IntentManipulationDsl
+  var type: String?
+    get() = androidIntent.type.also { afterRead(KEY_ACTION, it) }
+    set(value) {
+      beforeWrite(KEY_ACTION, value)
+      value?.let(androidIntent::setType)
+    }
+
   /** Provides observable access to [Intent.getData] */
   @IntentManipulationDsl
   var data: Uri?
@@ -78,17 +126,13 @@ data class IntentScope(
       value?.let(androidIntent::setData)
     }
 
-  /**
-   * Copy over all [extras] to this [IntentScope]
-   */
+  /** Copy over all [extras] to this [IntentScope] */
   @IntentManipulationDsl
   operator fun plusAssign(extras: Bundle) {
     androidIntent.putExtras(extras)
   }
 
-  /**
-   * Copy over all extras from [other] to this [IntentScope]
-   */
+  /** Copy over all extras from [other] to this [IntentScope] */
   @IntentManipulationDsl
   operator fun plusAssign(other: IntentScope) {
     androidIntent.putExtras(other.androidIntent)
@@ -220,6 +264,10 @@ data class IntentScope(
     beforeWrite(key, value)
     value?.let { androidIntent.putExtra(key, value) }
   }
+
+  @IntentManipulationDsl
+  operator fun set(key: String, value: List<Parcelable>?): IntentScope =
+    set(key, value?.toTypedArray())
 
   @IntentManipulationDsl
   operator fun set(key: String, value: Bundle?): IntentScope = apply {
