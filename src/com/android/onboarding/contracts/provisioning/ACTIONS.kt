@@ -1,6 +1,7 @@
 package com.android.onboarding.contracts.provisioning
 
 import android.app.admin.DevicePolicyManager
+import android.nfc.NfcAdapter
 import android.os.Build
 import androidx.annotation.RequiresApi
 
@@ -21,9 +22,11 @@ object ACTIONS {
   inline val ACTION_DEVICE_OWNER_CHANGED: String
     get() = DevicePolicyManager.ACTION_DEVICE_OWNER_CHANGED
 
+  @get:RequiresApi(Build.VERSION_CODES.Q)
   inline val ACTION_GET_PROVISIONING_MODE: String
     get() = DevicePolicyManager.ACTION_GET_PROVISIONING_MODE
 
+  @get:RequiresApi(Build.VERSION_CODES.Q)
   inline val ACTION_ADMIN_POLICY_COMPLIANCE: String
     get() = DevicePolicyManager.ACTION_ADMIN_POLICY_COMPLIANCE
 
@@ -50,6 +53,10 @@ object ACTIONS {
   @get:Suppress("UNRESOLVED_REFERENCE")
   inline val ACTION_PROVISION_MANAGED_DEVICE_FROM_TRUSTED_SOURCE: String
     get() = DevicePolicyManager.ACTION_PROVISION_MANAGED_DEVICE_FROM_TRUSTED_SOURCE
+
+  @get:Suppress("UNRESOLVED_REFERENCE")
+  inline val ACTION_ROLE_HOLDER_PROVISION_MANAGED_DEVICE_FROM_TRUSTED_SOURCE: String
+    get() = DevicePolicyManager.ACTION_ROLE_HOLDER_PROVISION_MANAGED_DEVICE_FROM_TRUSTED_SOURCE
 
   @get:Suppress("UNRESOLVED_REFERENCE")
   inline val ACTION_PROVISION_FINANCED_DEVICE: String
@@ -91,4 +98,7 @@ object ACTIONS {
    */
   inline val ACTION_PROVISION_MANAGED_DEVICE_SILENTLY: String
     get() = "com.android.managedprovisioning.action.PROVISION_MANAGED_DEVICE_SILENTLY"
+
+  inline val ACTION_NDEF_DISCOVERED: String
+    get() = NfcAdapter.ACTION_NDEF_DISCOVERED
 }

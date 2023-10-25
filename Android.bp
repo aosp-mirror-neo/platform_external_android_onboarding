@@ -19,7 +19,6 @@ android_library {
         "android_onboarding.contracts.annotations",
         "android_onboarding.contracts.fragment",
         "android_onboarding.contracts.provisioning",
-        "android_onboarding.contracts.provisioning.managed.profile",
         "android_onboarding.contracts.setupwizard",
         "android_onboarding.flags",
         "android_onboarding.nodes",
