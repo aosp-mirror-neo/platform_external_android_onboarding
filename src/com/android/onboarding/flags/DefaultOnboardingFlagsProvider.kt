@@ -20,8 +20,9 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
   }
 
   companion object {
-    public const val SYSTEM_PROPERTY_NAMESPACE = "aoj.architecture.feature."
-    private const val FEATURE_ONBOARDING_CONTRACT_ENABLED = "is_onboarding_contract_enabled"
-    private const val FEATURE_ONBOARDING_NODE_LOGGING_ENABLED = "is_onboarding_node_logging_enabled"
+    // The key length has to be less that 31 characters (<18 if excluding namespace)
+    public const val SYSTEM_PROPERTY_NAMESPACE = "aoj.feature."
+    private const val FEATURE_ONBOARDING_CONTRACT_ENABLED = "contract"
+    private const val FEATURE_ONBOARDING_NODE_LOGGING_ENABLED = "node_logging"
   }
 }
