@@ -4,10 +4,16 @@ import com.android.onboarding.flags.OnboardingFlagsProvider
 
 /** A fake implementation of [OnboardingFlagsProvider]. */
 class FakeOnboardingFlagsProvider(
-  var isOnboardingContractEnabledFlag: Boolean = false,
-  var isOnboardingNodeLoggingEnabledFlag: Boolean = false
+  override var isContractEnabled: Boolean = false,
+  override var isNodeLoggingEnabled: Boolean = false,
+  override var isDebug: Boolean = false,
 ) : OnboardingFlagsProvider {
-  override fun isOnboardingContractEnabled() = isOnboardingContractEnabledFlag
+  @Deprecated(message = "Replaced with overrides", replaceWith = ReplaceWith("isContractEnabled"))
+  var isOnboardingContractEnabledFlag: Boolean by ::isContractEnabled
 
-  override fun isOnboardingNodeLoggingEnabled() = isOnboardingNodeLoggingEnabledFlag
+  @Deprecated(
+    message = "Replaced with overrides",
+    replaceWith = ReplaceWith("isNodeLoggingEnabled")
+  )
+  var isOnboardingNodeLoggingEnabledFlag: Boolean by ::isNodeLoggingEnabled
 }
