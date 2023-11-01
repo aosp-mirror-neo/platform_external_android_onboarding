@@ -32,7 +32,7 @@ class SuwArgumentsSerializer @Inject constructor() : ScopedIntentSerializer<SuwA
       firstRun = booleanExtra("firstRun"),
       portalSetup = booleanExtra("portalSetup"),
       scriptUri = parcelableExtraOrNull("scriptUri"),
-      hasMultipleUsers = booleanExtra("hasMultipleUsers"),
+      hasMultipleUsers = booleanExtraOrNull("hasMultipleUsers"),
       theme = stringExtra("theme"),
       wizardBundle = bundleExtra("wizardBundle"),
     )

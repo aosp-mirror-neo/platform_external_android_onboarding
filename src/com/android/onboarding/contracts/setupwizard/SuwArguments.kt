@@ -30,7 +30,7 @@ data class SuwArguments(
   val firstRun: Boolean,
   val portalSetup: Boolean,
   val scriptUri: Uri?,
-  val hasMultipleUsers: Boolean,
+  val hasMultipleUsers: Boolean?,
   val theme: String,
   val wizardBundle: Bundle,
 )
