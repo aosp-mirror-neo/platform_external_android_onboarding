@@ -25,15 +25,15 @@ class SuwArgumentsSerializer @Inject constructor() : ScopedIntentSerializer<SuwA
     SuwArguments(
       actionId = intExtraOrNull("actionId"),
       isSubactivityFirstLaunched = booleanExtraOrNull("isSubactivityFirstLaunched"),
-      isSuwSuggestedActionFlow = booleanExtra("isSuwSuggestedActionFlow"),
-      isSetupFlow = booleanExtra("isSetupFlow"),
-      preDeferredSetup = booleanExtra("preDeferredSetup"),
-      deferredSetup = booleanExtra("deferredSetup"),
-      firstRun = booleanExtra("firstRun"),
-      portalSetup = booleanExtra("portalSetup"),
+      isSuwSuggestedActionFlow = booleanExtraOrNull("isSuwSuggestedActionFlow"),
+      isSetupFlow = booleanExtraOrNull("isSetupFlow") ?: false,
+      preDeferredSetup = booleanExtraOrNull("preDeferredSetup"),
+      deferredSetup = booleanExtraOrNull("deferredSetup"),
+      firstRun = booleanExtraOrNull("firstRun"),
+      portalSetup = booleanExtraOrNull("portalSetup"),
       scriptUri = parcelableExtraOrNull("scriptUri"),
       hasMultipleUsers = booleanExtraOrNull("hasMultipleUsers"),
-      theme = stringExtra("theme"),
-      wizardBundle = bundleExtra("wizardBundle"),
+      theme = stringExtraOrNull("theme"),
+      wizardBundle = bundleExtraOrNull("wizardBundle"),
     )
 }

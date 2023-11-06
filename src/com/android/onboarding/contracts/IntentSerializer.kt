@@ -8,7 +8,8 @@ import android.os.Parcelable
 import androidx.annotation.RequiresApi
 
 /** Marks functions that read or write intent data */
-@DslMarker internal annotation class IntentManipulationDsl
+@DslMarker
+internal annotation class IntentManipulationDsl
 
 /** Interface for writing an object to an [Intent] and reading the same object from an [Intent]. */
 interface IntentSerializer<V> {
@@ -138,7 +139,8 @@ data class IntentScope(
     androidIntent.putExtras(other.androidIntent)
   }
 
-  @IntentManipulationDsl operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
+  @IntentManipulationDsl
+  operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
 
   @IntentManipulationDsl
   fun intExtraOrNull(key: String): Int? =
