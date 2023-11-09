@@ -14,12 +14,31 @@ annotation class OnboardingNode(
   val name: String,
 
   /** True if this is a node which presents a UI to the user. */
-  val hasUi: HasUi
+  val hasUi: HasUi,
+
+  /** The type of specification given for this node. */
+  val specificationType: SpecificationType = SpecificationType.LIGHT
 ) {
   enum class HasUi {
     NO,
     YES,
     YES_TEMPORARILY
+  }
+
+  enum class SpecificationType {
+    /**
+     * This means that full Javadoc is provided, all arguments are fully defined, documented and
+     * typed (no undefined Bundles or Intents), and return values are properly defined and typed.
+     */
+    V1,
+
+    /**
+     * No requirements.
+     *
+     * Most "Light" nodes will be lacking Javadoc, and using Intents and Bundles as arguments and
+     * return values.
+     */
+    LIGHT
   }
 }
 
