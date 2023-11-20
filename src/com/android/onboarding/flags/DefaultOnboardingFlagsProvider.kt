@@ -11,6 +11,10 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     get() =
       SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_NODE_LOGGING_ENABLED", false)
 
+  override val isUiLoggingEnabled: Boolean
+    get() =
+      SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_UI_LOGGING_ENABLED", false)
+
   override val isDebug: Boolean
     get() = SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DEBUG_ENABLED", false)
 
@@ -20,5 +24,6 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     private const val FEATURE_CONTRACT_ENABLED = "contract"
     private const val FEATURE_NODE_LOGGING_ENABLED = "node_logging"
     private const val FEATURE_DEBUG_ENABLED = "debug"
+    private const val FEATURE_UI_LOGGING_ENABLED = "ui_logging"
   }
 }

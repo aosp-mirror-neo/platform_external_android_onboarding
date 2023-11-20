@@ -20,6 +20,9 @@ interface OnboardingFlagsProvider {
   /** Returns `true` if onboarding node logs should be uploaded remotely. */
   val isNodeLoggingEnabled: Boolean
 
+  /** Returns `true` if onboarding UI logging should be uploaded remotely. */
+  val isUiLoggingEnabled: Boolean
+
   /**
    * Indicates that all onboarding components should activate the flagged changes regardless of
    * other flag values.
