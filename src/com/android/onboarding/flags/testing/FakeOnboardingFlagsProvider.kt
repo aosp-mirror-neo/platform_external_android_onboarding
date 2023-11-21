@@ -6,6 +6,7 @@ import com.android.onboarding.flags.OnboardingFlagsProvider
 class FakeOnboardingFlagsProvider(
   override var isContractEnabled: Boolean = false,
   override var isNodeLoggingEnabled: Boolean = false,
+  override var isUiLoggingEnabled: Boolean = false,
   override var isDebug: Boolean = false,
 ) : OnboardingFlagsProvider {
   @Deprecated(message = "Replaced with overrides", replaceWith = ReplaceWith("isContractEnabled"))
