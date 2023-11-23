@@ -18,6 +18,13 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
   override val isDebug: Boolean
     get() = SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DEBUG_ENABLED", false)
 
+  override val shouldVisualiseNodeTransitionsInLogcat: Boolean
+    get() =
+      SystemProperties.getBoolean(
+        "$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_VISUALISE_TRANSITIONS",
+        false
+      ) || isDebug
+
   companion object {
     // The key length has to be less that 31 characters (<18 if excluding namespace)
     const val SYSTEM_PROPERTY_NAMESPACE = "aoj.feature"
@@ -25,5 +32,6 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     private const val FEATURE_NODE_LOGGING_ENABLED = "node_logging"
     private const val FEATURE_DEBUG_ENABLED = "debug"
     private const val FEATURE_UI_LOGGING_ENABLED = "ui_logging"
+    private const val FEATURE_VISUALISE_TRANSITIONS = "vis_transitions"
   }
 }
