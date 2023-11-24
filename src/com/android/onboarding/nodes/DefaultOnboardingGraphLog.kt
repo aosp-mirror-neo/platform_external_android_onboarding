@@ -1,8 +1,5 @@
 package com.android.onboarding.nodes
 
-import java.util.Collections
-import java.util.WeakHashMap
-
 class DefaultOnboardingGraphLog : OnboardingGraphLog {
 
   private val observers = mutableSetOf<OnboardingGraphLog.Observer>()
