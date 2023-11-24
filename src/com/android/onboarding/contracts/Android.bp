@@ -8,6 +8,9 @@ android_library {
     srcs: [
         "*.kt",
     ],
+    optimize: {
+        proguard_flags_files: ["proguard.pgcfg"],
+    },
     dont_merge_manifests: true,
     static_libs: [
         "androidx.activity_activity-ktx",
