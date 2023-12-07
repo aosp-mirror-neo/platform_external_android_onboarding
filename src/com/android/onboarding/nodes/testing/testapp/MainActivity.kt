@@ -174,13 +174,13 @@ abstract class ColourContract(val colour: Int, private val name: String) :
     ContractResult.Success(1, Intent().apply { putExtra("KEY", result) })
 }
 
-@OnboardingNode(component = TEST_APP, name = "Red", hasUi = OnboardingNode.HasUi.YES)
+@OnboardingNode(component = TEST_APP, name = "Red", uiType = OnboardingNode.UiType.OTHER)
 class RedContract : ColourContract(Color.RED, "red")
 
-@OnboardingNode(component = TEST_APP, name = "Blue", hasUi = OnboardingNode.HasUi.YES)
+@OnboardingNode(component = TEST_APP, name = "Blue", uiType = OnboardingNode.UiType.OTHER)
 class BlueContract : ColourContract(Color.BLUE, "blue")
 
-@OnboardingNode(component = TEST_APP, name = "Green", hasUi = OnboardingNode.HasUi.YES)
+@OnboardingNode(component = TEST_APP, name = "Green", uiType = OnboardingNode.UiType.OTHER)
 class GreenContract : ColourContract(Color.GREEN, "green")
 
 fun Intent.hasFlag(flag: Int) = (this.flags and flag) == flag
