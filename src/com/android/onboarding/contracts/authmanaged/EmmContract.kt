@@ -100,7 +100,7 @@ sealed interface EmmResult {
 @OnboardingNode(
   component = AUTH_MANAGED,
   name = "Emm",
-  hasUi = OnboardingNode.HasUi.YES_TEMPORARILY,
+  uiType = OnboardingNode.UiType.INVISIBLE,
 )
 @RequiresApi(Build.VERSION_CODES.Q)
 class EmmContract @Inject constructor(val suwArgumentsSerializer: SuwArgumentsSerializer) :
