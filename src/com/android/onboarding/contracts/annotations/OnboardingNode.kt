@@ -13,16 +13,39 @@ annotation class OnboardingNode(
    */
   val name: String,
 
-  /** True if this is a node which presents a UI to the user. */
-  val hasUi: HasUi,
+  /** The type of UI shown as part of this node. */
+  val uiType: UiType,
 
   /** The type of specification given for this node. */
   val specificationType: SpecificationType = SpecificationType.LIGHT
 ) {
-  enum class HasUi {
-    NO,
-    YES,
-    YES_TEMPORARILY
+  enum class UiType {
+    /** This node shows no UI. */
+    NONE,
+
+    /** This node shows UI which does not fit any other type. */
+    OTHER,
+
+    /**
+     * This node does not actually show UI but makes use of UI controls as a way of passing control.
+     * This will be replaced by some other mechanism in future.
+     */
+    INVISIBLE,
+
+    /**
+     * This node shows a loading screen. The primary purpose is to control the screen while some
+     * background work executes.
+     */
+    LOADING,
+
+    /**
+     * This node shows an education screen. The primary purpose is to educate the user about their
+     * device, privacy, etc.
+     */
+    EDUCATION,
+
+    /** This node's primary purpose is to input a decision or some data from the user. */
+    INPUT
   }
 
   enum class SpecificationType {

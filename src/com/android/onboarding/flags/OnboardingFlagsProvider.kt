@@ -28,4 +28,7 @@ interface OnboardingFlagsProvider {
    * other flag values.
    */
   val isDebug: Boolean
+
+  /** Returns true if node transitions should be visualised in logcat. */
+  val shouldVisualiseNodeTransitionsInLogcat: Boolean
 }

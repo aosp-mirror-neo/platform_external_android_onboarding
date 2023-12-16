@@ -40,7 +40,7 @@ interface OnboardingGraphLog {
 
   // LINT.IfChange
   /** Possible Events. */
-  sealed class OnboardingEvent {
+  sealed class OnboardingEvent(open val nodeId: Long, open val nodeName: String?) {
 
     /** Writes this event to a string which can be parsed by [OnboardingGraphLog#deserialize]. */
     fun serializeToString(): String {
@@ -59,11 +59,11 @@ interface OnboardingGraphLog {
     data class ActivityNodeExecutedDirectly
     private constructor(
       val sourceNodeId: Long,
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val argument: Any? = null,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         sourceNodeId: Long,
@@ -106,11 +106,11 @@ interface OnboardingGraphLog {
     data class ActivityNodeExecutedForResult
     private constructor(
       val sourceNodeId: Long,
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val argument: Any? = null,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         sourceNodeId: Long,
@@ -151,11 +151,11 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeValidating
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val intent: IntentData? = null,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -193,12 +193,12 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeFailedValidation
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val exception: Exception = IllegalArgumentException("Failed validation"),
       val intent: IntentData? = null,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -238,11 +238,11 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeExtractArgument
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val intent: IntentData,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -287,11 +287,11 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeArgumentExtracted
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val argument: Any?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -330,11 +330,11 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeSetResult
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val result: Any?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -372,10 +372,10 @@ interface OnboardingGraphLog {
      * because of [reason].
      */
     data class ActivityNodeFail(
-      val nodeId: Long,
+      override val nodeId: Long,
       val reason: String?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName = null) {
 
       override fun serialize(): OnboardingProtos.LogProto {
         return OnboardingProtos.LogProto.newBuilder()
@@ -408,11 +408,11 @@ interface OnboardingGraphLog {
      */
     data class ActivityNodeResultReceived
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val result: Any?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
@@ -452,11 +452,11 @@ interface OnboardingGraphLog {
     data class ActivityNodeStartExecuteSynchronously
     private constructor(
       val sourceNodeId: Long,
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val argument: Any?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         sourceNodeId: Long,
@@ -495,11 +495,11 @@ interface OnboardingGraphLog {
     /** At [timestamp], the synchronously executing node with id [nodeId] got result [result]. */
     data class ActivityNodeExecutedSynchronously
     private constructor(
-      val nodeId: Long,
-      val nodeName: String,
+      override val nodeId: Long,
+      override val nodeName: String,
       val result: Any?,
       val timestamp: Instant = Instant.now()
-    ) : OnboardingEvent() {
+    ) : OnboardingEvent(nodeId, nodeName) {
 
       constructor(
         nodeId: Long,
