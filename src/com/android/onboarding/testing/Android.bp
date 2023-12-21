@@ -12,7 +12,7 @@ android_library {
     static_libs: [
         "error_prone_annotations",
         "androidx.test.core",
-        "Robolectric_all-target",
+        "Robolectric_all-target_upstream",
         "truth",
     ],
 }

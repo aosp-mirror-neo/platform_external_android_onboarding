@@ -16,7 +16,7 @@ android_library {
         "androidx.activity_activity-ktx",
         "androidx.fragment_fragment-ktx",
         "androidx.appcompat_appcompat",
-        "Robolectric_all-target",
+        "Robolectric_all-target_upstream",
         "truth",
     ],
 }
