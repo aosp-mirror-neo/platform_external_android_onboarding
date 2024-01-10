@@ -130,6 +130,19 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             type = NodeType.SYNCHRONOUS
           )
         }
+        is OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished -> {
+          nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, type = NodeType.ACTIVITY)
+        }
+        is OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch -> {
+          nodeMap.updateNode(
+            e,
+            e.nodeId,
+            e.timestamp,
+            e.nodeName,
+            incomingEdge = InternalEdge.ClosedIncomingEdge(e.sourceNodeId, e.timestamp),
+            type = NodeType.ACTIVITY
+          )
+        }
       }
     }
 
