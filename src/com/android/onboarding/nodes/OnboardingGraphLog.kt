@@ -532,6 +532,83 @@ interface OnboardingGraphLog {
       }
     }
 
+    /** At [timestamp], the activity node with id [nodeId] called finish. */
+    data class ActivityNodeFinished
+    private constructor(
+      override val nodeId: Long,
+      override val nodeName: String,
+      val timestamp: Instant = Instant.now()
+    ) : OnboardingEvent(nodeId, nodeName) {
+      constructor(
+        nodeId: Long,
+        nodeClass: Class<*>,
+        timestamp: Instant = Instant.now()
+      ) : this(nodeId, extractNodeNameFromClass(nodeClass), timestamp)
+
+      override fun serialize(): OnboardingProtos.LogProto {
+        return OnboardingProtos.LogProto.newBuilder()
+          .setActivityNodeFinished(
+            OnboardingProtos.ActivityNodeFinishedProto.newBuilder()
+              .setNodeId(nodeId)
+              .setNodeName(nodeName)
+              .setTimestamp(timestamp.toEpochMilli())
+              .build()
+          )
+          .build()
+      }
+
+      companion object {
+        fun fromProto(proto: OnboardingProtos.ActivityNodeFinishedProto) =
+          ActivityNodeFinished(
+            nodeId = proto.nodeId,
+            nodeName = proto.nodeName,
+            timestamp = Instant.ofEpochMilli(proto.timestamp)
+          )
+      }
+    }
+
+    /**
+     * At [timestamp], the activity node with id [nodeId] resumes after it previously launched node
+     * with id [sourceNodeId].
+     */
+    data class ActivityNodeResumedAfterLaunch
+    private constructor(
+      val sourceNodeId: Long,
+      override val nodeId: Long,
+      override val nodeName: String,
+      val timestamp: Instant = Instant.now()
+    ) : OnboardingEvent(nodeId, nodeName) {
+      constructor(
+        sourceNodeId: Long,
+        nodeId: Long,
+        nodeClass: Class<*>,
+        timestamp: Instant = Instant.now()
+      ) : this(sourceNodeId, nodeId, extractNodeNameFromClass(nodeClass), timestamp)
+
+      override fun serialize(): OnboardingProtos.LogProto {
+        return OnboardingProtos.LogProto.newBuilder()
+          .setActivityNodeResumedAfterLaunch(
+            OnboardingProtos.ActivityNodeResumedAfterLaunchProto.newBuilder()
+              .setSourceNodeId(sourceNodeId)
+              .setNodeId(nodeId)
+              .setNodeName(nodeName)
+              .setTimestamp(timestamp.toEpochMilli())
+              .build()
+          )
+          .build()
+      }
+
+      companion object {
+        fun fromProto(proto: OnboardingProtos.ActivityNodeResumedAfterLaunchProto) =
+          ActivityNodeResumedAfterLaunch(
+            sourceNodeId = proto.sourceNodeId,
+            nodeId = proto.nodeId,
+            nodeName = proto.nodeName,
+            timestamp = Instant.ofEpochMilli(proto.timestamp)
+          )
+      }
+    }
+
     /**
      * Wrapper around the same information as [android.content.Intent] but can be used without
      * dependency on Android.
