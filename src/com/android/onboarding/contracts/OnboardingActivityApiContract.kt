@@ -153,12 +153,27 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         Lifecycle.Event.ON_PAUSE -> maybeLogFinish()
         Lifecycle.Event.ON_DESTROY -> {
           maybeLogFinish()
+          activity?.nodeId?.let { waitingForResumeActivity.remove(it) }
           // Clear the activity reference to avoid memory leak.
           activity = null
         }
         Lifecycle.Event.ON_CREATE,
         Lifecycle.Event.ON_START,
-        Lifecycle.Event.ON_RESUME,
+        Lifecycle.Event.ON_RESUME -> {
+          val waitingForResume = waitingForResumeActivity.contains(activity?.nodeId)
+          if (waitingForResume) {
+            val nodeId = activity?.nodeId ?: UNKNOWN_NODE
+            val sourceNodeId = waitingForResumeActivity[activity?.nodeId] ?: UNKNOWN_NODE
+            AndroidOnboardingGraphLog.log(
+              OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch(
+                sourceNodeId,
+                nodeId,
+                contract.javaClass,
+              )
+            )
+            waitingForResumeActivity.remove(nodeId)
+          }
+        }
         Lifecycle.Event.ON_ANY -> {}
       }
     }
@@ -227,6 +242,8 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     val intent = performCreateIntent(context, input)
     val outgoingId = newOutgoingId()
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
+    // Track for resume event for activity node id.
+    waitingForResumeActivity.put(extractNodeId(context), outgoingId)
 
     AndroidOnboardingGraphLog.log(
       ActivityNodeExecutedDirectly(extractNodeId(context), outgoingId, this.javaClass, input)
@@ -309,6 +326,9 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
   companion object {
     const val UNKNOWN_NODE = -1L
+
+    // nodeId to outgoingId
+    private val waitingForResumeActivity: MutableMap<Long, Long> = mutableMapOf()
   }
 }
 
