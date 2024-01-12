@@ -3,7 +3,11 @@ package com.android.onboarding.contracts
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.android.onboarding.contracts.ContractResult.Failure
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
@@ -119,17 +123,78 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     activity.setResult(contractResult.resultCode, intent)
   }
 
+  class OnboardingLifecycleObserver<I, O>(
+    private var activity: Activity?,
+    private val contract: OnboardingActivityApiContract<I, O>
+  ) : LifecycleEventObserver {
+
+    private var isFinishLogged = false
+
+    private fun maybeLogFinish() {
+      if (!isFinishLogged && activity?.isFinishing == true) {
+        isFinishLogged = true
+        AndroidOnboardingGraphLog.log(
+          OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished(
+            activity?.nodeId ?: UNKNOWN_NODE,
+            contract.javaClass,
+          )
+        )
+      }
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+      when (event) {
+        Lifecycle.Event.ON_STOP,
+        Lifecycle.Event.ON_PAUSE -> maybeLogFinish()
+        Lifecycle.Event.ON_DESTROY -> {
+          maybeLogFinish()
+          // Clear the activity reference to avoid memory leak.
+          activity = null
+        }
+        Lifecycle.Event.ON_CREATE,
+        Lifecycle.Event.ON_START,
+        Lifecycle.Event.ON_RESUME,
+        Lifecycle.Event.ON_ANY -> {}
+      }
+    }
+  }
+
   /**
    * Validate that the intent can be parsed into an argument.
    *
    * <p>When parsing fails, the failure will be recorded so that it can be fixed.
+   *
+   * @param activity the current activity context
+   * @param intent the [Intent] to validate (defaults to the activity's current intent)
+   * @return `true` if the intent is valid, `false` otherwise
    */
   @CanIgnoreReturnValue
-  fun validate(activity: Activity, intent: Intent = activity.intent): Boolean {
+  fun validate(activity: ComponentActivity, intent: Intent = activity.intent): Boolean {
+    return validate(activity, activity.lifecycle, intent)
+  }
+
+  /**
+   * Validate that the intent can be parsed into an argument.
+   *
+   * <p>When parsing fails, the failure will be recorded so that it can be fixed.
+   *
+   * @param activity the current activity context
+   * @param lifecycle the lifecycle of the activity, used for logging purposes
+   * @param intent the [Intent] to validate (defaults to the activity's current intent)
+   * @return `true` if the intent is valid, `false` otherwise
+   */
+  @CanIgnoreReturnValue
+  fun validate(
+    activity: Activity,
+    lifecycle: Lifecycle?,
+    intent: Intent = activity.intent
+  ): Boolean {
     try {
       AndroidOnboardingGraphLog.log(
         ActivityNodeValidating(activity.nodeId, this.javaClass, intentToIntentData(intent))
       )
+
+      lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
 
       val unused = extractArgument(intent)
       return true
