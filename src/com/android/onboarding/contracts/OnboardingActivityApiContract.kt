@@ -3,6 +3,7 @@ package com.android.onboarding.contracts
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.Lifecycle
@@ -36,12 +37,14 @@ import java.util.UUID
 abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O>() {
 
   /**
-   * The ID to be used for the node started by this contract.
+   * Create a new ID to be used for the node started by this contract.
    *
    * <p>This is only used when starting a contract - it is not used when extracting arguments during
    * the execution of a contract. In that case, the ID is extracted from the activity intent.
    */
-  private val outgoingId by lazy { UUID.randomUUID().leastSignificantBits }
+  private fun newOutgoingId(): Long {
+    return UUID.randomUUID().leastSignificantBits
+  }
 
   /**
    * Creates an {@link Intent} for this contract containing the given argument.
@@ -79,6 +82,8 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    */
   protected open fun performGetSynchronousResult(context: Context, args: I): SynchronousResult<O>? =
     null
+
+  private var forResultOutGoingId: Long = UNKNOWN_NODE
 
   /** Extracts an argument passed into the current activity using the contract. */
   fun extractArgument(intent: Intent): I {
@@ -148,12 +153,27 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         Lifecycle.Event.ON_PAUSE -> maybeLogFinish()
         Lifecycle.Event.ON_DESTROY -> {
           maybeLogFinish()
+          activity?.nodeId?.let { waitingForResumeActivity.remove(it) }
           // Clear the activity reference to avoid memory leak.
           activity = null
         }
         Lifecycle.Event.ON_CREATE,
         Lifecycle.Event.ON_START,
-        Lifecycle.Event.ON_RESUME,
+        Lifecycle.Event.ON_RESUME -> {
+          val waitingForResume = waitingForResumeActivity.contains(activity?.nodeId)
+          if (waitingForResume) {
+            val nodeId = activity?.nodeId ?: UNKNOWN_NODE
+            val sourceNodeId = waitingForResumeActivity[activity?.nodeId] ?: UNKNOWN_NODE
+            AndroidOnboardingGraphLog.log(
+              OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch(
+                sourceNodeId,
+                nodeId,
+                contract.javaClass,
+              )
+            )
+            waitingForResumeActivity.remove(nodeId)
+          }
+        }
         Lifecycle.Event.ON_ANY -> {}
       }
     }
@@ -220,7 +240,10 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     // Injection point when we are passing control out of the current activity without expecting a
     // result
     val intent = performCreateIntent(context, input)
+    val outgoingId = newOutgoingId()
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
+    // Track for resume event for activity node id.
+    waitingForResumeActivity.put(extractNodeId(context), outgoingId)
 
     AndroidOnboardingGraphLog.log(
       ActivityNodeExecutedDirectly(extractNodeId(context), outgoingId, this.javaClass, input)
@@ -232,10 +255,30 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   final override fun createIntent(context: Context, input: I): Intent {
     // Injection point when we are passing control out of the current activity
     val intent = performCreateIntent(context, input)
-    intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
+
+    // We should assume forResultOutGoingId is already set because, in
+    // actityResultRegistry.onLaunch, getSynchronousResult is always called first. Then createIntent
+    // may be called afterwards.
+    // We should expect a outgoingId created in getSynchronousResult and store it in
+    // forResultOutGoingId.
+    // https://source.corp.google.com/h/googleplex-android/platform/frameworks/support/+/androidx-platform-dev:activity/activity/src/main/java/androidx/activity/ComponentActivity.kt
+    if (forResultOutGoingId != UNKNOWN_NODE) {
+      intent.putExtra(EXTRA_ONBOARDING_NODE_ID, forResultOutGoingId)
+      forResultOutGoingId = UNKNOWN_NODE
+    } else {
+      // getSynchronousResult is not called. This may be not called from
+      // actityResultRegistry.onLaunch. We will use the outgoing which was just created in
+      // performCreateIntent.
+      Log.w("OnboardingApiContract", "getSynchronousResult was not called when creating intent.")
+    }
 
     AndroidOnboardingGraphLog.log(
-      ActivityNodeExecutedForResult(extractNodeId(context), outgoingId, this.javaClass, input)
+      ActivityNodeExecutedForResult(
+        extractNodeId(context),
+        forResultOutGoingId,
+        this.javaClass,
+        input
+      )
     )
 
     return intent
@@ -263,8 +306,10 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
     val thisNodeId = extractNodeId(context)
 
+    forResultOutGoingId = newOutgoingId()
+
     AndroidOnboardingGraphLog.log(
-      ActivityNodeStartExecuteSynchronously(thisNodeId, outgoingId, this.javaClass, input)
+      ActivityNodeStartExecuteSynchronously(thisNodeId, forResultOutGoingId, this.javaClass, input)
     )
 
     val result = performGetSynchronousResult(context, input)
@@ -272,7 +317,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
       // Injection point when the synchronous result was used and the activity was skipped
 
       AndroidOnboardingGraphLog.log(
-        ActivityNodeExecutedSynchronously(outgoingId, this.javaClass, result.value)
+        ActivityNodeExecutedSynchronously(forResultOutGoingId, this.javaClass, result.value)
       )
     }
 
@@ -281,6 +326,9 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
   companion object {
     const val UNKNOWN_NODE = -1L
+
+    // nodeId to outgoingId
+    private val waitingForResumeActivity: MutableMap<Long, Long> = mutableMapOf()
   }
 }
 
