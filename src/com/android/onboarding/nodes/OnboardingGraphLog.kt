@@ -746,35 +746,36 @@ interface OnboardingGraphLog {
       fun deserialize(str: String): OnboardingEvent {
         val proto = OnboardingProtos.LogProto.parseFrom(BaseEncoding.base64().decode(str))
 
-        if (proto.hasActivityNodeExecutedDirectly()) {
-          return ActivityNodeExecutedDirectly.fromProto(proto.activityNodeExecutedDirectly)
-        } else if (proto.hasActivityNodeExecutedForResult()) {
-          return ActivityNodeExecutedForResult.fromProto(proto.activityNodeExecutedForResult)
-        } else if (proto.hasActivityNodeValidating()) {
-          return ActivityNodeValidating.fromProto(proto.activityNodeValidating)
-        } else if (proto.hasActivityNodeFailedValidation()) {
-          return ActivityNodeFailedValidation.fromProto(proto.activityNodeFailedValidation)
-        } else if (proto.hasActivityNodeExtractArgument()) {
-          return ActivityNodeExtractArgument.fromProto(proto.activityNodeExtractArgument)
-        } else if (proto.hasActivityNodeArgumentExtracted()) {
-          return ActivityNodeArgumentExtracted.fromProto(proto.activityNodeArgumentExtracted)
-        } else if (proto.hasActivityNodeSetResult()) {
-          return ActivityNodeSetResult.fromProto(proto.activityNodeSetResult)
-        } else if (proto.hasActivityNodeFail()) {
-          return ActivityNodeFail.fromProto(proto.activityNodeFail)
-        } else if (proto.hasActivityNodeResultReceived()) {
-          return ActivityNodeResultReceived.fromProto(proto.activityNodeResultReceived)
-        } else if (proto.hasActivityNodeStartExecuteSynchronously()) {
-          return ActivityNodeStartExecuteSynchronously.fromProto(
-            proto.activityNodeStartExecuteSynchronously
-          )
-        } else if (proto.hasActivityNodeExecutedSynchronously()) {
-          return ActivityNodeExecutedSynchronously.fromProto(
-            proto.activityNodeExecutedSynchronously
-          )
+        return when {
+          proto.hasActivityNodeExecutedDirectly() ->
+            ActivityNodeExecutedDirectly.fromProto(proto.activityNodeExecutedDirectly)
+          proto.hasActivityNodeExecutedForResult() ->
+            ActivityNodeExecutedForResult.fromProto(proto.activityNodeExecutedForResult)
+          proto.hasActivityNodeValidating() ->
+            ActivityNodeValidating.fromProto(proto.activityNodeValidating)
+          proto.hasActivityNodeFailedValidation() ->
+            ActivityNodeFailedValidation.fromProto(proto.activityNodeFailedValidation)
+          proto.hasActivityNodeExtractArgument() ->
+            ActivityNodeExtractArgument.fromProto(proto.activityNodeExtractArgument)
+          proto.hasActivityNodeArgumentExtracted() ->
+            ActivityNodeArgumentExtracted.fromProto(proto.activityNodeArgumentExtracted)
+          proto.hasActivityNodeSetResult() ->
+            ActivityNodeSetResult.fromProto(proto.activityNodeSetResult)
+          proto.hasActivityNodeFail() -> ActivityNodeFail.fromProto(proto.activityNodeFail)
+          proto.hasActivityNodeResultReceived() ->
+            ActivityNodeResultReceived.fromProto(proto.activityNodeResultReceived)
+          proto.hasActivityNodeStartExecuteSynchronously() ->
+            ActivityNodeStartExecuteSynchronously.fromProto(
+              proto.activityNodeStartExecuteSynchronously
+            )
+          proto.hasActivityNodeExecutedSynchronously() ->
+            ActivityNodeExecutedSynchronously.fromProto(proto.activityNodeExecutedSynchronously)
+          proto.hasActivityNodeFinished() ->
+            ActivityNodeFinished.fromProto(proto.activityNodeFinished)
+          proto.hasActivityNodeResumedAfterLaunch() ->
+            ActivityNodeResumedAfterLaunch.fromProto(proto.activityNodeResumedAfterLaunch)
+          else -> throw IllegalStateException("Could not parse $proto")
         }
-
-        throw IllegalStateException("Could not parse $proto")
       }
     }
   }
