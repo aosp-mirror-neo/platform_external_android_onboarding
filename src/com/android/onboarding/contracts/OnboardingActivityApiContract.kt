@@ -264,11 +264,11 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     // https://source.corp.google.com/h/googleplex-android/platform/frameworks/support/+/androidx-platform-dev:activity/activity/src/main/java/androidx/activity/ComponentActivity.kt
     if (forResultOutGoingId != UNKNOWN_NODE) {
       intent.putExtra(EXTRA_ONBOARDING_NODE_ID, forResultOutGoingId)
-      forResultOutGoingId = UNKNOWN_NODE
     } else {
       // getSynchronousResult is not called. This may be not called from
       // actityResultRegistry.onLaunch. We will use the outgoing which was just created in
       // performCreateIntent.
+      forResultOutGoingId = intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE)
       Log.w("OnboardingApiContract", "getSynchronousResult was not called when creating intent.")
     }
 
@@ -280,7 +280,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         input
       )
     )
-
+    forResultOutGoingId = UNKNOWN_NODE
     return intent
   }
 
