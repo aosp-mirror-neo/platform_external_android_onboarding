@@ -33,6 +33,7 @@ message ActivityNodeExecutedDirectlyProto {
   optional int64 node_id = 2;
   optional string node_name = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeExecutedForResultProto {
@@ -40,12 +41,14 @@ message ActivityNodeExecutedForResultProto {
   optional int64 node_id = 2;
   optional string node_name = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeValidatingProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeFailedValidationProto {
@@ -53,6 +56,7 @@ message ActivityNodeFailedValidationProto {
   optional string node_name = 2;
   optional IntentDataProto intent = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeExtractArgumentProto {
@@ -60,30 +64,35 @@ message ActivityNodeExtractArgumentProto {
   optional string node_name = 2;
   optional IntentDataProto intent = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeArgumentExtractedProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeSetResultProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeFailProto {
   optional int64 node_id = 1;
   optional string reason = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeResultReceivedProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeStartExecuteSynchronouslyProto {
@@ -91,6 +100,7 @@ message ActivityNodeStartExecuteSynchronouslyProto {
   optional int64 node_id = 2;
   optional string node_name = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeExecutedSynchronouslyProto {
@@ -98,12 +108,14 @@ message ActivityNodeExecutedSynchronouslyProto {
   optional int64 node_id = 2;
   optional string node_name = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message ActivityNodeFinishedProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
   optional int64 timestamp = 3;
+  optional string node_component = 4;
 }
 
 message ActivityNodeResumedAfterLaunchProto {
@@ -111,6 +123,7 @@ message ActivityNodeResumedAfterLaunchProto {
   optional int64 node_id = 2;
   optional string node_name = 3;
   optional int64 timestamp = 4;
+  optional string node_component = 5;
 }
 
 message IntentDataProto {
