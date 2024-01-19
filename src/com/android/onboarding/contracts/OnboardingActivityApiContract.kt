@@ -130,7 +130,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
   class OnboardingLifecycleObserver<I, O>(
     private var activity: Activity?,
-    private val contract: OnboardingActivityApiContract<I, O>
+    private val contract: OnboardingActivityApiContract<I, O>,
   ) : LifecycleEventObserver {
 
     private var isFinishLogged = false
@@ -180,6 +180,44 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   }
 
   /**
+   * Attaches to the specified Activity in onCreate. This validates the intent can be parsed into an
+   * argument.
+   *
+   * @param activity The Activity to attach to.
+   * @param intent The Intent to use (defaults to the Activity's intent).
+   * @return An AttachedResult object with information about the attachment, including the
+   *   validation result.
+   */
+  @CanIgnoreReturnValue
+  fun attach(activity: ComponentActivity, intent: Intent = activity.intent): AttachedResult {
+    return attach(activity, activity.lifecycle, intent)
+  }
+
+  /**
+   * Attaches to the specified Activity in onCreate. This validates the intent can be parsed into an
+   * argument.
+   *
+   * A lifecycle should be provided. If the activity does not support lifecycle owner, it should
+   * implement a LifeCycleOwner or migrate to use androidx ComponentActivity.
+   *
+   * @param activity The Activity to attach to.
+   * @param lifecycle The Lifecycle of the activity.
+   * @param intent The Intent to use (defaults to the Activity's intent).
+   * @return An AttachedResult object with information about the attachment, including the
+   *   validation result.
+   */
+  @CanIgnoreReturnValue
+  fun attach(
+    activity: Activity,
+    lifecycle: Lifecycle?,
+    intent: Intent = activity.intent,
+  ): AttachedResult {
+    val validated = validateInternal(activity, intent)
+    lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
+    return AttachedResult(validated)
+  }
+
+  /**
    * Validate that the intent can be parsed into an argument.
    *
    * <p>When parsing fails, the failure will be recorded so that it can be fixed.
@@ -187,8 +225,10 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    * @param activity the current activity context
    * @param intent the [Intent] to validate (defaults to the activity's current intent)
    * @return `true` if the intent is valid, `false` otherwise
+   * @deprecated use [attach].
    */
   @CanIgnoreReturnValue
+  @Deprecated("Use attach instead", ReplaceWith("attach(activity, intent)"))
   fun validate(activity: ComponentActivity, intent: Intent = activity.intent): Boolean {
     return validate(activity, activity.lifecycle, intent)
   }
@@ -204,18 +244,22 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    * @return `true` if the intent is valid, `false` otherwise
    */
   @CanIgnoreReturnValue
+  @Deprecated("Use attach instead", ReplaceWith("attach(activity, lifecycle, intent)"))
   fun validate(
     activity: Activity,
     lifecycle: Lifecycle?,
-    intent: Intent = activity.intent
+    intent: Intent = activity.intent,
   ): Boolean {
+    val validated = validateInternal(activity, intent)
+    lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
+    return validated
+  }
+
+  private fun validateInternal(activity: Activity, intent: Intent): Boolean {
     try {
       AndroidOnboardingGraphLog.log(
         ActivityNodeValidating(activity.nodeId, this.javaClass, intentToIntentData(intent))
       )
-
-      lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
-
       val unused = extractArgument(intent)
       return true
     } catch (e: Exception) {
@@ -277,7 +321,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         extractNodeId(context),
         forResultOutGoingId,
         this.javaClass,
-        input
+        input,
       )
     )
     forResultOutGoingId = UNKNOWN_NODE
