@@ -160,7 +160,13 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
           failureReason = IllegalStateException(e.reason)
         )
         val node = nodeMap[e.nodeId]!!
-        nodeMap.updateNode(id = node._incomingEdge!!.id, timestamp = e.timestamp)
+        with(node._incomingEdge) {
+          if (this == null) {
+            println("node._incomingEdge is null. Event: $e, Node: $node")
+          } else {
+            nodeMap.updateNode(id = this.id, timestamp = e.timestamp)
+          }
+        }
       }
     }
 
