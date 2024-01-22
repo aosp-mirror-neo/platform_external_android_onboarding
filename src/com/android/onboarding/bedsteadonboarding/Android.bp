@@ -1,0 +1,40 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+// Onboarding bedstead target which production apps should include.
+android_library {
+    name: "android_onboarding.testable_onboarding",
+    srcs: [],
+    manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
+    static_libs: [
+        "android_onboarding.bedsteadonboarding.providers",
+    ],
+}
+
+// Onboarding bedstead target which tests should depend on.
+android_library {
+    name: "android_onboarding.bedsteadonboarding_testing",
+    manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
+    srcs: [
+        "*.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "androidx.test.ext.junit",
+        "android_onboarding.bedsteadonboarding.annotations",
+        "android_onboarding.bedsteadonboarding.data",
+        "android_onboarding.bedsteadonboarding.contractutils",
+        "android_onboarding.bedsteadonboarding.providers",
+        "androidx.test.core",
+        "junit",
+        "kotlin-reflect",
+    ],
+}
+
+filegroup {
+    name: "android_onboarding.bedsteadonboarding.AndroidManifest",
+    srcs: [
+        "AndroidManifest.xml",
+    ],
+}

@@ -8,8 +8,7 @@ import android.os.Parcelable
 import androidx.annotation.RequiresApi
 
 /** Marks functions that read or write intent data */
-@DslMarker
-internal annotation class IntentManipulationDsl
+@DslMarker internal annotation class IntentManipulationDsl
 
 /** Interface for writing an object to an [Intent] and reading the same object from an [Intent]. */
 interface IntentSerializer<V> {
@@ -42,7 +41,22 @@ interface IntentSerializer<V> {
 
   fun write(intent: Intent, value: V)
 
+  fun writeIfPresent(intent: Intent, value: V?) {
+    value?.let { write(intent, value) }
+  }
+
   fun read(intent: Intent): V
+
+  /**
+   * Calls [read] to get the value, but instead of throwing an error during read failures it instead
+   * catches it, prints stack trace and returns null
+   */
+  fun readOrNull(intent: Intent): V? =
+    runCatching { read(intent) }
+      .getOrElse {
+        println(it.stackTraceToString())
+        null
+      }
 }
 
 /**
@@ -59,16 +73,39 @@ interface ScopedIntentSerializer<V> : IntentSerializer<V> {
 
   fun IntentScope.write(value: V)
 
+  fun IntentScope.writeIfPresent(value: V?) {
+    value?.let { write(value) }
+  }
+
   /** Writes a [value] to the [IntentScope] via a given [serializer] */
   @IntentManipulationDsl
   fun <T> IntentScope.write(serializer: ScopedIntentSerializer<T>, value: T): Unit =
     with(serializer) { write(value) }
 
+  fun <T> IntentScope.writeIfPresent(serializer: ScopedIntentSerializer<T>, value: T?) {
+    value?.let { write(serializer, value) }
+  }
+
   fun IntentScope.read(): V
+
+  fun IntentScope.readOrNull(): V? =
+    runCatching { read() }
+      .getOrElse {
+        println(it.stackTraceToString())
+        null
+      }
 
   /** Reads a value [T] from the [IntentScope] via a given [serializer] */
   @IntentManipulationDsl
   fun <T> IntentScope.read(serializer: ScopedIntentSerializer<T>): T = with(serializer) { read() }
+
+  /**
+   * Reads a value [T] from the [IntentScope] via a given [serializer] or silently prints errors and
+   * returns null
+   */
+  @IntentManipulationDsl
+  fun <T> IntentScope.readOrNull(serializer: ScopedIntentSerializer<T>): T? =
+    with(serializer) { readOrNull() }
 }
 
 /**
@@ -139,8 +176,7 @@ data class IntentScope(
     androidIntent.putExtras(other.androidIntent)
   }
 
-  @IntentManipulationDsl
-  operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
+  @IntentManipulationDsl operator fun contains(key: String): Boolean = androidIntent.hasExtra(key)
 
   @IntentManipulationDsl
   fun intExtraOrNull(key: String): Int? =

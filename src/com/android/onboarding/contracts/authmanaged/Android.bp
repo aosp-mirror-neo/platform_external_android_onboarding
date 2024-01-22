@@ -16,6 +16,6 @@ android_library {
         "android_onboarding.contracts.annotations",
         "androidx.annotation_annotation",
         "setupcompat",
-        "jsr330"
+        "jsr330",
     ],
 }
