@@ -73,9 +73,8 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
         context.packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA)
 
       val complianceDateString =
-        packageInfo.applicationInfo?.metaData?.getString(
-          "onboarding-compliance-date",
-        ) ?: ComplianceDate.EARLIEST_COMPLIANCE_DATE_STRING
+        packageInfo.applicationInfo?.metaData?.getString("onboarding-compliance-date")
+          ?: ComplianceDate.EARLIEST_COMPLIANCE_DATE_STRING
       packageComplianceDates[packageName] = ComplianceDate(complianceDateString)
     } catch (e: NameNotFoundException) {
       Log.w(LOG_TAG, "Could not find package info for $packageName", e)
@@ -121,7 +120,7 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
       return false
     }
 
-    return Versions.isAvailable(packageComplianceDates[packageName]!!, changeData)
+    return packageComplianceDates[packageName]!!.isAvailable(changeData)
   }
 
   private fun getChangeOverride(packageName: String, changeId: Long): Boolean? {

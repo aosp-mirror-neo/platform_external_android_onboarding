@@ -2,7 +2,6 @@ package com.android.onboarding.versions.testing
 
 import com.android.onboarding.versions.ComplianceDate
 import com.android.onboarding.versions.OnboardingChanges
-import com.android.onboarding.versions.Versions
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
@@ -125,7 +124,7 @@ class FakeOnboardingChanges(private val component: String) : OnboardingChanges {
 
     // The fake does not support the "if it cannot be found then we assume no support" functionality
 
-    return Versions.isAvailable(getComplianceDate(packageName), changeData)
+    return getComplianceDate(packageName).isAvailable(changeData)
   }
 
   private fun extractPackageFromComponent(component: String) = component.split("/", limit = 2)[0]
