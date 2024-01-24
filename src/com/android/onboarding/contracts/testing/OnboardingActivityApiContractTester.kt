@@ -28,6 +28,13 @@ private fun isPrimitiveArray(obj: Any): Boolean =
     obj is FloatArray ||
     obj is BooleanArray
 
+/**
+ * Compares that [lhs] is equal to [rhs] via reflection by recursively checking that all kotlin
+ * properties are equal. The usage of this function should only be reserved for cases where the
+ * objects being checked cannot guarantee a reliable [Any.equals] implementation.
+ *
+ * Behaviour for Java objects is undefined.
+ */
 fun recursiveReflectionEquals(lhs: Any?, rhs: Any?): Boolean {
   if (lhs == null || rhs == null) return lhs == rhs
   if (isPrimitiveOrWrapper(lhs::class.java) || isPrimitiveOrWrapper(rhs::class.java)) {
