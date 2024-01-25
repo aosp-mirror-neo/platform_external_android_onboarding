@@ -30,7 +30,7 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     return taskToken
   }
 
-  suspend override fun <Args, Result> runTaskAndGetResult(
+  override suspend fun <Args, Result> runTaskAndGetResult(
     task: OnboardingTask<Args, Result>,
     taskContract: OnboardingTaskContract<Args, Result>,
     taskArgs: Args,
@@ -65,15 +65,15 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     return tasksStates[taskToken] as? OnboardingTaskState<Result>
   }
 
-  suspend override fun <Result> waitForCompleted(
+  override suspend fun <Result> waitForCompleted(
     taskToken: OnboardingTaskToken
   ): OnboardingTaskState<Result>? {
     while (true) {
       val currentState: OnboardingTaskState<Result>? = getTaskState(taskToken)
       when (currentState) {
         null -> return null
-        is OnboardingTaskState.COMPLETED,
-        is OnboardingTaskState.FAILED -> return currentState
+        is OnboardingTaskState.Completed,
+        is OnboardingTaskState.Failed -> return currentState
         else -> {
           // Do nothing here as task is in progress.
         }
@@ -101,7 +101,7 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     Log.d(TAG, "performTask#start")
     // Validate all inputs by defined contract.
     taskContract.validate(taskArgs)
-    tasksStates[taskToken] = OnboardingTaskState.IN_PROGRESS<Result>()
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
     // Run the task asynchronously.
     CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
