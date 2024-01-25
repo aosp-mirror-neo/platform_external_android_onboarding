@@ -1,0 +1,142 @@
+package com.android.onboarding.tasks
+
+import android.content.Context
+import android.util.Log
+import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.guava.future
+import kotlinx.coroutines.launch
+
+class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskManager {
+
+  private val tasksStates = ConcurrentHashMap<OnboardingTaskToken, OnboardingTaskState<*>>()
+
+  override fun <
+    Args,
+    Result,
+    Task : OnboardingTask<Args, Result>,
+    Contract : OnboardingTaskContract<Args, Result>,
+  > runTask(task: Task, taskContract: Contract, taskArgs: Args): OnboardingTaskToken {
+    val taskToken =
+      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+
+    performTask(task, taskContract, taskArgs, taskToken)
+
+    Log.d(TAG, "runTask#Return task token immediately.")
+    return taskToken
+  }
+
+  suspend override fun <Args, Result> runTaskAndGetResult(
+    task: OnboardingTask<Args, Result>,
+    taskContract: OnboardingTaskContract<Args, Result>,
+    taskArgs: Args,
+  ): OnboardingTaskState<Result> {
+    val taskToken =
+      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+
+    performTask(task, taskContract, taskArgs, taskToken)
+
+    return getTaskState(taskToken)
+      ?: error(
+        "Unexpected: No task result retrieved. You must see a task result when developer calls the suspend [runTaskAndGetResult]."
+      )
+  }
+
+  override fun <Args, Result> runTaskAndGetResultAsync(
+    task: OnboardingTask<Args, Result>,
+    taskContract: OnboardingTaskContract<Args, Result>,
+    taskArgs: Args,
+  ): ListenableFuture<OnboardingTaskState<Result>> {
+    return CoroutineScope(Dispatchers.Default + SupervisorJob()).future {
+      runTaskAndGetResult(task, taskContract, taskArgs)
+    }
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  override fun <Result> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<Result>? {
+    // This method performs a cast from a wildcard type (`OnboardingTaskState<*>) to the expected
+    // result type (`OnboardingTaskState<Result>`). The cast is unchecked due to type erasure at
+    // runtime, and the `as?` operator is used to safely handle cases where the cast might fail,
+    // resulting in a null value.
+    return tasksStates[taskToken] as? OnboardingTaskState<Result>
+  }
+
+  suspend override fun <Result> waitForCompleted(
+    taskToken: OnboardingTaskToken
+  ): OnboardingTaskState<Result>? {
+    while (true) {
+      val currentState: OnboardingTaskState<Result>? = getTaskState(taskToken)
+      when (currentState) {
+        null -> return null
+        is OnboardingTaskState.COMPLETED,
+        is OnboardingTaskState.FAILED -> return currentState
+        else -> {
+          // Do nothing here as task is in progress.
+        }
+      }
+      // Sleep for a short interval before checking again.
+      Log.d(TAG, "waitForCompleted#sleep... 500 ms")
+      delay(500)
+    }
+  }
+
+  override fun <Result> waitForCompletedAsync(
+    taskToken: OnboardingTaskToken
+  ): ListenableFuture<OnboardingTaskState<Result>?> {
+    return CoroutineScope(Dispatchers.Default + SupervisorJob()).future {
+      waitForCompleted(taskToken)
+    }
+  }
+
+  private fun <Args, Result> performTask(
+    task: OnboardingTask<Args, Result>,
+    taskContract: OnboardingTaskContract<Args, Result>,
+    taskArgs: Args,
+    taskToken: OnboardingTaskToken,
+  ) {
+    Log.d(TAG, "performTask#start")
+    // Validate all inputs by defined contract.
+    taskContract.validate(taskArgs)
+    tasksStates[taskToken] = OnboardingTaskState.IN_PROGRESS<Result>()
+
+    // Run the task asynchronously.
+    CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+      val taskResult = task.runTask(taskContract, taskArgs)
+      Log.d(TAG, "performTask#end")
+
+      // Update the tasksStates map with the actual task result after completion.
+      tasksStates[taskToken] = taskResult
+    }
+  }
+
+  /**
+   * Gets an instance of [DefaultOnboardingTaskManager], creating one if it does not exist.
+   *
+   * @return The singleton instance of [DefaultOnboardingTaskManager].
+   */
+  companion object {
+
+    const val TAG: String = "DefaultOTM"
+    private var instance: DefaultOnboardingTaskManager? = null
+
+    /**
+     * Gets an instance of [DefaultOnboardingTaskManager], creating one if it does not exist.
+     *
+     * @return The singleton instance of [DefaultOnboardingTaskManager].
+     */
+    fun getInstance(context: Context): DefaultOnboardingTaskManager {
+      return instance
+        ?: synchronized(this) {
+          instance ?: DefaultOnboardingTaskManager(context).also { instance = it }
+        }
+    }
+
+    fun release() {
+      instance = null
+    }
+  }
+}
