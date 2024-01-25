@@ -26,16 +26,17 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             argument = e.argument,
             incomingEdge = InternalEdge.ClosedIncomingEdge(e.sourceNodeId, e.timestamp),
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
           nodeMap.updateNode(
             e,
             e.sourceNodeId,
             e.timestamp,
-            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp)
+            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp),
           )
         }
         is ActivityNodeExecutedForResult -> {
@@ -43,27 +44,42 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             argument = e.argument,
             incomingEdge = InternalEdge.OpenIncomingEdge(e.sourceNodeId, e.timestamp),
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
           nodeMap.updateNode(
             e,
             e.sourceNodeId,
             e.timestamp,
-            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp)
+            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp),
           )
         }
         is ActivityNodeValidating -> {
           // We don't log the incoming intent beyond the normal event log as it's an implementation
           // detail
-          nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, type = NodeType.ACTIVITY)
+          nodeMap.updateNode(
+            e,
+            e.nodeId,
+            e.timestamp,
+            name = e.nodeName,
+            component = e.nodeComponent,
+            type = NodeType.ACTIVITY,
+          )
         }
         is ActivityNodeExtractArgument -> {
           // We don't log the incoming intent beyond the normal event log as it's an implementation
           // detail
-          nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, type = NodeType.ACTIVITY)
+          nodeMap.updateNode(
+            e,
+            e.nodeId,
+            e.timestamp,
+            name = e.nodeName,
+            component = e.nodeComponent,
+            type = NodeType.ACTIVITY,
+          )
         }
         is ActivityNodeFailedValidation -> {
           // We don't log the incoming intent beyond the normal event log as it's an implementation
@@ -72,9 +88,10 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             failureReason = e.exception,
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
         }
         is ActivityNodeArgumentExtracted -> {
@@ -82,9 +99,10 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             argument = e.argument,
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
         }
         is ActivityNodeSetResult -> {
@@ -92,9 +110,10 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             result = e.result,
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
         }
         is ActivityNodeResultReceived -> {
@@ -108,16 +127,17 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             argument = e.argument,
             incomingEdge = InternalEdge.OpenIncomingEdge(e.sourceNodeId, e.timestamp),
-            type = NodeType.SYNCHRONOUS
+            type = NodeType.SYNCHRONOUS,
           )
           nodeMap.updateNode(
             e,
             e.sourceNodeId,
             e.timestamp,
-            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp)
+            outgoingEdge = InternalEdge.OutgoingEdge(e.nodeId, e.timestamp),
           )
         }
         is ActivityNodeExecutedSynchronously -> {
@@ -125,22 +145,31 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             result = e.result,
-            type = NodeType.SYNCHRONOUS
+            type = NodeType.SYNCHRONOUS,
           )
         }
         is OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished -> {
-          nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, type = NodeType.ACTIVITY)
+          nodeMap.updateNode(
+            e,
+            e.nodeId,
+            e.timestamp,
+            name = e.nodeName,
+            component = e.nodeComponent,
+            type = NodeType.ACTIVITY,
+          )
         }
         is OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch -> {
           nodeMap.updateNode(
             e,
             e.nodeId,
             e.timestamp,
-            e.nodeName,
+            name = e.nodeName,
+            component = e.nodeComponent,
             incomingEdge = InternalEdge.ClosedIncomingEdge(e.sourceNodeId, e.timestamp),
-            type = NodeType.ACTIVITY
+            type = NodeType.ACTIVITY,
           )
         }
       }
@@ -149,7 +178,14 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     // We run through a second time to update results now that all nodes exist
     for (e in events) {
       if (e is ActivityNodeResultReceived) {
-        nodeMap.updateNode(e, e.nodeId, e.timestamp, e.nodeName, result = e.result)
+        nodeMap.updateNode(
+          e,
+          e.nodeId,
+          e.timestamp,
+          name = e.nodeName,
+          component = e.nodeComponent,
+          result = e.result,
+        )
         val node = nodeMap[e.nodeId]!!
         node._incomingEdge?.let { nodeMap.updateNode(id = it.id, timestamp = e.timestamp) }
       } else if (e is ActivityNodeFail) {
@@ -157,7 +193,7 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
           e,
           e.nodeId,
           e.timestamp,
-          failureReason = IllegalStateException(e.reason)
+          failureReason = IllegalStateException(e.reason),
         )
         val node = nodeMap[e.nodeId]!!
         with(node._incomingEdge) {
@@ -210,16 +246,18 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     id: Long,
     timestamp: Instant,
     name: String? = null,
+    component: String? = null,
     argument: Any? = null,
     result: Any? = null,
     outgoingEdge: InternalEdge? = null,
     incomingEdge: InternalEdge? = null,
     failureReason: Exception? = null,
-    type: NodeType? = null
+    type: NodeType? = null,
   ) {
     this.getOrPut(id) { Node(this, id) }
       .also { node ->
         name?.also { node._name = it }
+        component?.also { node._component = it }
 
         argument?.also { node._argument = it }
         result?.also { node._result = it }
@@ -252,9 +290,10 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     internal var _incomingEdge: InternalEdge? = null,
     internal var _failureReasons: MutableSet<Exception> = mutableSetOf(),
     internal var _type: NodeType = NodeType.UNKNOWN,
+    internal var _component: String? = null,
 
     // Note that one event can be associated with multiple nodes
-    internal var _events: MutableSet<OnboardingGraphLog.OnboardingEvent> = mutableSetOf()
+    internal var _events: MutableSet<OnboardingGraphLog.OnboardingEvent> = mutableSetOf(),
   ) {
     val id: Long
       get() = _id
@@ -285,6 +324,15 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
           }
           .toSet()
 
+    // It filters the invalid outgoing edges i.e. edges to non existent node and returns only the
+    // valid ones.
+    val outgoingEdgesOfValidNodes: Set<Edge>
+      get() =
+        _outgoingEdges
+          .filter { nodeMap.containsKey(it.id) }
+          .map { Edge(nodeMap[it.id]!!, it.timestamp) }
+          .toSet()
+
     val incomingEdge: Edge?
       get() =
         _incomingEdge?.let {
@@ -304,8 +352,14 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     val type: NodeType
       get() = _type
 
+    val component: String?
+      get() = _component
+
     val isSynchronous: Boolean
       get() = type == NodeType.SYNCHRONOUS
+
+    val events
+      get() = _events.toSet()
 
     val isComplete: Boolean
       get() = _events.size >= 2

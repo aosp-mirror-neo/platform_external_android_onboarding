@@ -14,5 +14,5 @@ android_library {
         "jsr330",
         "androidx.annotation_annotation",
     ],
-    plugins: ["dagger2-compiler"]
+    plugins: ["dagger2-compiler"],
 }

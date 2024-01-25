@@ -17,7 +17,7 @@ annotation class OnboardingNode(
   val uiType: UiType,
 
   /** The type of specification given for this node. */
-  val specificationType: SpecificationType = SpecificationType.LIGHT
+  val specificationType: SpecificationType = SpecificationType.LIGHT,
 ) {
   enum class UiType {
     /** This node shows no UI. */
@@ -62,6 +62,21 @@ annotation class OnboardingNode(
      * return values.
      */
     LIGHT
+  }
+
+  companion object {
+    /** Returns the node [component] for given node's contract class. */
+    fun extractComponentNameFromClass(nodeClass: Class<*>): String =
+      nodeClass.getAnnotation(OnboardingNode::class.java)?.component
+        ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
+
+    /** Returns the node [name] for given node's contract class. */
+    fun extractNodeNameFromClass(nodeClass: Class<*>): String =
+      nodeClass.getAnnotation(OnboardingNode::class.java)?.name?.also {
+        require(it.length <= MAX_NODE_NAME_LENGTH) {
+          "Node name length (${it.length}) exceeds maximum length of $MAX_NODE_NAME_LENGTH characters"
+        }
+      } ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
   }
 }
 
