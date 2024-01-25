@@ -1,4 +1,4 @@
-package com.android.onboarding.contracts.testing
+package com.android.onboarding.bedsteadonboarding.permissions
 
 // DO NOT MERGE WITH THIS SET TO TRUE.
 const val ALLOW_DEBUGGING = false
@@ -17,5 +17,5 @@ object TestPermissions {
    * queried later. For example, exposing a test-only API to override an allow-list - rather than
    * having the production code skip the allowlist when running in a test.
    */
-  fun canCallerExecuteTestFunctionality(uid: Long): Boolean = ALLOW_DEBUGGING
+  fun canCallerExecuteTestFunctionality(uid: Int): Boolean = ALLOW_DEBUGGING
 }

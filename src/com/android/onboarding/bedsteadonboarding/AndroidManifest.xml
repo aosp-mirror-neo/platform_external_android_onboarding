@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.onboarding.bedsteadonboarding">
+<application>
+  <!-- LINT.IfChange(authority) -->
+  <provider
+      android:exported="true"
+      android:name="com.android.onboarding.bedsteadonboarding.providers.TestContentProvider"
+      android:authorities="${applicationId}.testprovider">
+  </provider>
+  <!-- LINT.ThenChange(//depot/google3/third_party/java/android_onboarding/java/com/android/onboarding/bedsteadonboarding/providers/ConfigProviderUtil.kt:authority) -->
+</application>
+</manifest>

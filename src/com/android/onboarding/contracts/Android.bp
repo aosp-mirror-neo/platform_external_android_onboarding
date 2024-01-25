@@ -16,6 +16,7 @@ android_library {
         "androidx.activity_activity-ktx",
         "android_onboarding.contracts.annotations",
         "android_onboarding.nodes",
+        "android_onboarding.bedsteadonboarding.contract_eligibility_checker",
         "error_prone_annotations",
     ],
 }
