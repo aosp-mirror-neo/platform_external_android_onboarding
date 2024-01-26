@@ -35,7 +35,7 @@ abstract class OnboardingTask<Args, Result>(val context: Context) {
     var result: Result? = null
     return try {
       if (!taskContract.validate(taskArgs)) {
-        return OnboardingTaskState.FAILED(
+        return OnboardingTaskState.Failed(
           "Task argument doesn't align with the contract(${taskContract::class.java.simpleName})" +
             "definition. Failed returned immediately before execution.",
           null,
@@ -44,12 +44,12 @@ abstract class OnboardingTask<Args, Result>(val context: Context) {
 
       withTimeout(timeout.toMillis()) {
         result = runTask(taskContract, taskArgs)
-        OnboardingTaskState.COMPLETED(result)
+        OnboardingTaskState.Completed(result)
       }
     } catch (timeout: TimeoutCancellationException) {
-      OnboardingTaskState.FAILED("Task timed out", result)
+      OnboardingTaskState.Failed("Task timed out", result)
     } catch (e: Exception) {
-      OnboardingTaskState.FAILED("Task failed : " + e.message, result)
+      OnboardingTaskState.Failed("Task failed : " + e.message, result)
     }
   }
 
