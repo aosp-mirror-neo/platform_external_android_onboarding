@@ -1,14 +1,25 @@
 package com.android.onboarding.bedsteadonboarding
 
 import android.content.ContentValues
+import android.content.Intent
+import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.onboarding.bedsteadonboarding.annotations.TestNodes
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
 import com.android.onboarding.bedsteadonboarding.data.NodeData
 import com.android.onboarding.bedsteadonboarding.data.OnboardingNodeMetadata
+import com.android.onboarding.bedsteadonboarding.logcat.LogcatReader
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
+import com.android.onboarding.contracts.ArgumentFreeOnboardingActivityApiContract
+import com.android.onboarding.contracts.ArgumentFreeVoidOnboardingActivityApiContract
+import com.android.onboarding.contracts.OnboardingActivityApiContract
+import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.contracts.annotations.OnboardingNode
+import com.android.onboarding.contracts.registerForActivityLaunch
+import com.android.onboarding.nodes.OnboardingGraph
+import com.android.onboarding.nodes.OnboardingGraphLog
+import java.time.Instant
 import kotlin.reflect.KClass
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -19,7 +30,16 @@ import org.junit.runners.model.Statement
  */
 class OnboardingTestsRule : TestRule {
 
+  private val INTENT_FLAGS_START_IN_NEW_TASK =
+    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
   private val instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+
+  private lateinit var logcatReader: LogcatReader
+
+  // Initial/ Source node of the graph. In a test multiple nodes could be launched or even a single
+  // node could be launched multiple times using [OnboardingTestRule#launch] call. Each such call
+  // would start a new graph and hence update [startNodeIdOfGraph] value.
+  private var startNodeIdOfGraph: Long = OnboardingActivityApiContract.UNKNOWN_NODE
 
   override fun apply(base: Statement, description: Description): Statement {
     return if (description.isTest) {
@@ -38,6 +58,9 @@ class OnboardingTestsRule : TestRule {
           extractTestNodesAnnotation(description)?.let { processTestNodesAnnotation(it) }
             ?: TestNodesConfiguration()
         try {
+          // Start Reading OnboardingEvents Logs.
+          logcatReader = LogcatReader(filterTag = ONBOARDING_EVENT_LOG_TAG).apply { start() }
+
           // Create an array of [ContentValues] representing the Test Configs.
           val contentValuesForTestConfigs =
             createContentValuesForAllowedNodes(testNodesConfiguration.allowedNodes)
@@ -51,11 +74,153 @@ class OnboardingTestsRule : TestRule {
 
           base.evaluate()
         } finally {
+          logcatReader.stopReadingLogs()
           deleteAllTestConfigs(testNodesConfiguration.appsStoringTestConfig)
         }
       }
     }
   }
+
+  /** Launches an activity using [OnboardingActivityApiContract]. */
+  fun <I, O> launch(activityContract: OnboardingActivityApiContract<I, O>, args: I) {
+    startNodeIdOfGraph =
+      instrumentationContext
+        .registerForActivityLaunch(activityContract)
+        .launch(args, INTENT_FLAGS_START_IN_NEW_TASK)
+    waitForActivityLaunch()
+  }
+
+  /** Launches an activity using [ArgumentFreeOnboardingActivityApiContract]. */
+  fun <O> launch(activityContract: ArgumentFreeOnboardingActivityApiContract<O>) {
+    startNodeIdOfGraph =
+      instrumentationContext
+        .registerForActivityLaunch(activityContract)
+        .launch(Unit, INTENT_FLAGS_START_IN_NEW_TASK)
+    waitForActivityLaunch()
+  }
+
+  /**
+   * Launches an activity which do not return result using [VoidOnboardingActivityApiContract] and
+   * contract arguments.
+   */
+  fun <I> launch(activityContract: VoidOnboardingActivityApiContract<I>, args: I) {
+    startNodeIdOfGraph =
+      instrumentationContext
+        .registerForActivityLaunch(activityContract)
+        .launch(args, INTENT_FLAGS_START_IN_NEW_TASK)
+    waitForActivityLaunch()
+  }
+
+  /**
+   * Launches an activity which do not return result using
+   * [ArgumentFreeVoidOnboardingActivityApiContract].
+   */
+  fun launch(activityContract: ArgumentFreeVoidOnboardingActivityApiContract) {
+    startNodeIdOfGraph =
+      instrumentationContext
+        .registerForActivityLaunch(activityContract)
+        .launch(Unit, INTENT_FLAGS_START_IN_NEW_TASK)
+    waitForActivityLaunch()
+  }
+
+  /**
+   * Given the [contractClass] of node, it blocks the test until the node has completed execution.
+   * Currently it supports only activity nodes. Other node types will be handled later. There are 3
+   * scenarios for node completion for activities.
+   * 1. For nodes which return result, until that node has returned result i.e.,
+   *    [ActivityNodeSetResult] event has been logged.
+   * 2. Some other node has been started. This is a proxy for representing that the node of interest
+   *    has finished execution.
+   * 3. User-initiated exits like lifecycle events representing destroy, backpress, etc.
+   */
+  fun blockUntilNodeHasFinished(contractClass: KClass<*>) {
+    // Find contract identifier of the node of interest given its contract class.
+    val contractIdentifier = ContractUtils.getContractIdentifier(contractClass.java)
+    while (true) {
+      val graph = OnboardingGraph(getOnboardingEvents())
+      if (hasNodeFinishedExecution(contractIdentifier, graph)) return
+      // In the logcat, we have not received OnboardingEvent for given node, so wait for some
+      // time before checking again.
+      Thread.sleep(1000)
+    }
+  }
+
+  /**
+   * Given the [contractIdentifierOfNodeOfInterest] it queries the given [graph] to check if this
+   * node has finished execution.
+   */
+  internal fun hasNodeFinishedExecution(
+    contractIdentifierOfNodeOfInterest: String,
+    graph: OnboardingGraph,
+  ): Boolean {
+    // Find the [OnboardingGraph.Node] entry for the source node of graph.
+    val startNodes = graph.nodes.entries.filter { it.key == startNodeIdOfGraph }
+    if (startNodes.isEmpty()) return false
+    val startNode = startNodes.first()
+
+    val nodeIdOfInterest =
+      findEarliestStartedNodeWithGivenContract(
+        startNode.key,
+        graph,
+        contractIdentifierOfNodeOfInterest,
+      ) ?: return false
+    val nodeToWaitFor = graph.nodes[nodeIdOfInterest]!!
+
+    val events = nodeToWaitFor.events
+    // Unblock, once the node completion condition has reached.
+    return events.any {
+      it is OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished ||
+        isAnotherNodeAttemptedToBeExecutedForResult(it, contractIdentifierOfNodeOfInterest)
+    } || nodeToWaitFor.outgoingEdgesOfValidNodes.isNotEmpty()
+  }
+
+  /**
+   * This will do a bfs traversal of the given [graph] whose initial node is [startNodeId]. It will
+   * look for all nodes whose contractIdentifier = [contractIdentifierOfNodeOfInterest]. Out of
+   * those it will return the one which was started first. If there is no node with
+   * contractIdentifier as [contractIdentifierOfNodeOfInterest] it will return null.
+   */
+  internal fun findEarliestStartedNodeWithGivenContract(
+    startNodeId: Long,
+    graph: OnboardingGraph,
+    contractIdentifierOfNodeOfInterest: String,
+  ): Long? {
+    val queue = ArrayDeque<Long>().apply { add(startNodeId) } // Add initial node
+    val visitedNodes = mutableSetOf<Long>()
+    var minStartTimeOfNodeOfInterest: Instant = Instant.MAX
+    var probableNodeOfInterest: Long? = null
+
+    while (queue.isNotEmpty()) {
+      val currentNode = graph.nodes[queue.removeFirst()]!!
+      visitedNodes.add(currentNode.id)
+      if (
+        ContractUtils.getContractIdentifierForNode(currentNode) ==
+          contractIdentifierOfNodeOfInterest && currentNode.start < minStartTimeOfNodeOfInterest
+      ) {
+        probableNodeOfInterest = currentNode.id
+        minStartTimeOfNodeOfInterest = currentNode.start
+      }
+
+      for (outgoingNode in currentNode.outgoingEdgesOfValidNodes) {
+        if (!visitedNodes.contains(outgoingNode.node.id)) {
+          queue.add(outgoingNode.node.id)
+        }
+      }
+    }
+    return probableNodeOfInterest
+  }
+
+  // Internal helper function to be used only in robolectric tests.
+  internal fun setStartNodeIdOfGraph(nodeId: Long) {
+    if (requireRobolectric()) {
+      startNodeIdOfGraph = nodeId
+    } else {
+      throw IllegalAccessException("Not allowed to access internal methods")
+    }
+  }
+
+  /** Returns if the calling function is executed on robolectric. */
+  private fun requireRobolectric() = "robolectric" == Build.FINGERPRINT
 
   /**
    * Stores the test configs using the ContentProvider of the app with given [appPackageName].
@@ -70,6 +235,32 @@ class OnboardingTestsRule : TestRule {
       ConfigProviderUtil.getTestConfigContentUri(ConfigProviderUtil.getAuthority(appPackageName))
     instrumentationContext.contentResolver.bulkInsert(uri, contentValues)
   }
+
+  /** Returns the immutable set of OnboardingEvents read from logs */
+  private fun getOnboardingEvents(): Set<OnboardingGraphLog.OnboardingEvent> {
+    val onboardingEvents = mutableSetOf<OnboardingGraphLog.OnboardingEvent>()
+    for (logLines in logcatReader.getFilteredLogs()) {
+      // Is an onboarding graph line containing OnboardingEvent.
+      val encoded = logLines.split("${ONBOARDING_EVENT_LOG_TAG}: ")[1]
+
+      // Deserialize and store the OnboardingEvent in-memory.
+      val event = OnboardingGraphLog.OnboardingEvent.deserialize(encoded)
+      onboardingEvents.add(event)
+    }
+    return onboardingEvents.toSet()
+  }
+
+  /**
+   * Returns [true] if a node other than the one with name [contractIdentifierOfNode], has been
+   * started for result
+   */
+  private fun isAnotherNodeAttemptedToBeExecutedForResult(
+    event: OnboardingGraphLog.OnboardingEvent,
+    contractIdentifierOfNode: String,
+  ) =
+    (event is OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously) &&
+      (ContractUtils.getContractIdentifier(event.nodeComponent, event.nodeName) !=
+        contractIdentifierOfNode)
 
   /**
    * From the [TestNodes] annotation, extract all the nodes which are allowed to execute and also
@@ -148,6 +339,11 @@ class OnboardingTestsRule : TestRule {
    */
   private fun extractTestNodesAnnotation(description: Description) =
     description.annotations?.filterIsInstance<TestNodes>()?.firstOrNull()
+  private fun waitForActivityLaunch() {
+    if (!requireRobolectric()) {
+      Thread.sleep(10000)
+    }
+  }
 
   /**
    * Stores the test configuration obtained by processing [TestNodes] annotation. This data will be
@@ -164,4 +360,8 @@ class OnboardingTestsRule : TestRule {
     /** Stores the list of nodes which are allowed to execute in tests. */
     val allowedNodes: List<NodeData> = listOf(),
   )
+
+  companion object {
+    const val ONBOARDING_EVENT_LOG_TAG = "ZZOnboardingGraph"
+  }
 }
