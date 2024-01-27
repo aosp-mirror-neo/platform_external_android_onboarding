@@ -12,14 +12,14 @@ sealed class OnboardingTaskState<Result> {
    *
    * @param result The current result, if available.
    */
-  data class IN_PROGRESS<Result>(var result: Result? = null) : OnboardingTaskState<Result>()
+  data class InProgress<Result>(var result: Result? = null) : OnboardingTaskState<Result>()
 
   /**
    * Represents the completed state of an onboarding task.
    *
    * @param result The result of the completed task.
    */
-  data class COMPLETED<Result>(val result: Result? = null) : OnboardingTaskState<Result>()
+  data class Completed<Result>(val result: Result? = null) : OnboardingTaskState<Result>()
 
   /**
    * Represents the failed state of an onboarding task.
@@ -27,6 +27,6 @@ sealed class OnboardingTaskState<Result> {
    * @param errorMessage The error message describing the failure.
    * @param result The result associated with the failed task, if available.
    */
-  data class FAILED<Result>(val errorMessage: String, val result: Result? = null) :
+  data class Failed<Result>(val errorMessage: String, val result: Result? = null) :
     OnboardingTaskState<Result>()
 }

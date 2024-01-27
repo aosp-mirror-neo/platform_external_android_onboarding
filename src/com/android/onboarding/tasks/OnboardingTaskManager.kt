@@ -90,10 +90,10 @@ interface OnboardingTaskManager {
    * this token is not recorded in the manager.
    *
    * If the [taskToken] represents a task in a timeout state or encounters an exeception, the caller
-   * receives a [OnboardingTaskState.FAILED] state.
+   * receives a [OnboardingTaskState.Failed] state.
    *
    * If the onboarding task completes successfully, the caller receives a
-   * [OnboardingTaskState.COMPLETED] state with [Result] data.
+   * [OnboardingTaskState.Completed] state with [Result] data.
    *
    * @param taskToken The token associated with the onboarding task.
    * @return The final result of the onboarding task, or null if the token is not valid.
@@ -109,10 +109,10 @@ interface OnboardingTaskManager {
    * this token is not recorded in the manager.
    *
    * If the [taskToken] represents a task in a timeout state or encounters an exeception, the caller
-   * receives a [OnboardingTaskState.FAILED] state.
+   * receives a [OnboardingTaskState.Failed] state.
    *
    * If the onboarding task completes successfully, the caller receives a
-   * [OnboardingTaskState.COMPLETED] state with [Result] data.
+   * [OnboardingTaskState.Completed] state with [Result] data.
    *
    * @param taskToken The token associated with the onboarding task.
    * @return A [ListenableFuture] containing the final result of the onboarding task.
