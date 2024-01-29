@@ -9,7 +9,7 @@ interface OnboardingChanges {
   /**
    * True if the current executing process supports the given change ID.
    *
-   * The changeId must reference a long constant annotated with
+   * The [changeId] must reference a long constant annotated with
    * [com.android.onboarding.versions.annotations.ChangeId]
    */
   fun currentProcessSupportsChange(changeId: Long): Boolean
