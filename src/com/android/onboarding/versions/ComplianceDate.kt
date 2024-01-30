@@ -13,8 +13,8 @@ value class ComplianceDate(private val complianceDate: LocalDate) {
   constructor(
     version: String? = null
   ) : this(
-    version?.let(LocalDate::parse)?.takeUnless { it.isBefore(EARLIEST_COMPLIANCE_DATE) }
-      ?: EARLIEST_COMPLIANCE_DATE
+    version?.let(LocalDate::parse)?.takeUnless { it.isBefore(EARLIEST_COMPLIANCE_DATE_LOCALDATE) }
+      ?: EARLIEST_COMPLIANCE_DATE_LOCALDATE
   )
 
   /** True if the compliance date is at least {@code version} */
@@ -48,7 +48,7 @@ value class ComplianceDate(private val complianceDate: LocalDate) {
      * <p>This represents the oldest API version which must be supported by all onboarding
      * components. Any code dealing with versions older than this can be safely removed.
      */
-    private val EARLIEST_COMPLIANCE_DATE: LocalDate = LocalDate.parse("2023-07-05")
+    val EARLIEST_COMPLIANCE_DATE_STRING = "2023-07-05"
 
     /**
      * The default for any APK for whom no compliance date is specified.
@@ -56,6 +56,14 @@ value class ComplianceDate(private val complianceDate: LocalDate) {
      * <p>This represents the oldest API version which must be supported by all onboarding
      * components. Any code dealing with versions older than this can be safely removed.
      */
-    val EARLIEST = ComplianceDate(EARLIEST_COMPLIANCE_DATE)
+    val EARLIEST_COMPLIANCE_DATE_LOCALDATE = LocalDate.parse(EARLIEST_COMPLIANCE_DATE_STRING)
+
+    /**
+     * The default for any APK for whom no compliance date is specified.
+     *
+     * <p>This represents the oldest API version which must be supported by all onboarding
+     * components. Any code dealing with versions older than this can be safely removed.
+     */
+    val EARLIEST = ComplianceDate(EARLIEST_COMPLIANCE_DATE_LOCALDATE)
   }
 }
