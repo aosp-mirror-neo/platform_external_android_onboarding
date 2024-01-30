@@ -9,7 +9,7 @@ import com.android.onboarding.versions.annotations.ChangeRadius
   bugId = 1234567L,
   owner = "anowner",
   breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
 )
 const val UNAVAILABLE_CHANGE_ID = 1234567L
 
@@ -17,7 +17,7 @@ const val UNAVAILABLE_CHANGE_ID = 1234567L
   bugId = 2345678L,
   owner = "anowner",
   breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
   available = "2024-01-02",
 )
 const val AVAILABLE_2024_01_02_CHANGE_ID = 2345678L
@@ -26,8 +26,18 @@ const val AVAILABLE_2024_01_02_CHANGE_ID = 2345678L
   bugId = 3456789L,
   owner = "anowner",
   breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
   available = "2024-01-02",
   released = "2024-02-02",
 )
 const val AVAILABLE_2024_01_02_RELEASED_2024_02_02_CHANGE_ID = 3456789L
+
+@ChangeId(
+  bugId = 111111L,
+  owner = "anowner",
+  breaking = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2024-01-02",
+  released = "2024-02-02",
+)
+const val SINGLE_COMPONENT_AVAILABLE_2024_01_02_RELEASED_2024_02_02_CHANGE_ID = 111111L

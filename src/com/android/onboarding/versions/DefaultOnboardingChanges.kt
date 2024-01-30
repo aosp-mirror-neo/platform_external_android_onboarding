@@ -6,7 +6,9 @@ import android.content.pm.PackageManager.NameNotFoundException
 import android.provider.Settings
 import android.util.Log
 import com.android.onboarding.versions.annotations.ChangeId
+import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
+import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.lang.UnsupportedOperationException
 
@@ -84,17 +86,25 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
   override fun componentSupportsChange(component: String, changeId: Long): Boolean {
     val packageName = extractPackageFromComponent(component)
 
-    // First we check for global setting override (for local testing)
-    val changeOverride = getChangeOverride(packageName, changeId)
-    if (changeOverride != null) {
-      return changeOverride
-    }
-
     val changeData =
       ALL_CHANGE_IDS[changeId]
         ?: throw IllegalStateException(
           "Invalid change ID $changeId - this should have been blocked by the conformance checker"
         )
+
+    if (
+      changeData.changeRadius == ChangeRadius.SINGLE_COMPONENT && packageName != context.packageName
+    ) {
+      // This should be blocked by conformance
+      throw IllegalArgumentException(
+        "You cannot query changes which are SINGLE_COMPONENT across process boundaries."
+      )
+    }
+
+    val changeOverride = getChangeOverride(packageName, changeId)
+    if (changeOverride != null) {
+      return changeOverride
+    }
 
     // If it's released, we assume it's available everywhere
     // (this call should be blocked by conformance)

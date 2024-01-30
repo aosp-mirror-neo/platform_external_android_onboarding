@@ -4,7 +4,9 @@ import com.android.onboarding.versions.ComplianceDate
 import com.android.onboarding.versions.OnboardingChanges
 import com.android.onboarding.versions.Versions
 import com.android.onboarding.versions.annotations.ChangeId
+import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
+import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.lang.UnsupportedOperationException
 
@@ -93,16 +95,28 @@ class FakeOnboardingChanges(private val component: String) : OnboardingChanges {
   override fun loadSupportedChanges(component: String) {}
 
   override fun componentSupportsChange(component: String, changeId: Long): Boolean {
-    val overrideSupport = supportedChanges[component]?.get(changeId)
-    if (overrideSupport != null) {
-      return overrideSupport
-    }
+    val packageName = extractPackageFromComponent(component)
 
     val changeData =
       ALL_CHANGE_IDS[changeId]
         ?: throw IllegalStateException(
           "Invalid change ID $changeId - this should have been blocked by the conformance checker"
         )
+
+    if (
+      changeData.changeRadius == ChangeRadius.SINGLE_COMPONENT &&
+        packageName != extractPackageFromComponent(this.component)
+    ) {
+      // This should be blocked by conformance
+      throw IllegalArgumentException(
+        "You cannot query changes which are SINGLE_COMPONENT across process boundaries."
+      )
+    }
+
+    val overrideSupport = supportedChanges[packageName]?.get(changeId)
+    if (overrideSupport != null) {
+      return overrideSupport
+    }
 
     // (this call should be blocked by conformance)
     if (changeData.released != ChangeId.NOT_RELEASED) {
@@ -111,7 +125,7 @@ class FakeOnboardingChanges(private val component: String) : OnboardingChanges {
 
     // The fake does not support the "if it cannot be found then we assume no support" functionality
 
-    return Versions.isAvailable(getComplianceDate(component), changeData)
+    return Versions.isAvailable(getComplianceDate(packageName), changeData)
   }
 
   private fun extractPackageFromComponent(component: String) = component.split("/", limit = 2)[0]
