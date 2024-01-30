@@ -1,0 +1,23 @@
+package com.android.onboarding.versions.changes
+
+import com.android.onboarding.versions.annotations.ChangeId
+import com.android.onboarding.versions.annotations.ChangeRadius
+
+// Changes in this file are for use by the Onboarding Versions test suite
+
+@ChangeId(
+  bugId = 1234567L,
+  owner = "anowner",
+  breaking = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+)
+const val UNAVAILABLE_CHANGE_ID = 1234567L
+
+@ChangeId(
+  bugId = 2345678L,
+  owner = "anowner",
+  breaking = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2024-01-02",
+)
+const val AVAILABLE_2024_01_02_CHANGE_ID = 2345678L

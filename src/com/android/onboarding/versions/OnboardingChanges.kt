@@ -2,6 +2,8 @@ package com.android.onboarding.versions
 
 import android.content.Context
 import android.provider.Settings
+import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
+import java.lang.IllegalStateException
 
 /** Entry point to checking if processes support particular change ids. */
 interface OnboardingChanges {
@@ -25,6 +27,9 @@ interface OnboardingChanges {
  * package.name.changeid` to use the default configured value.
  */
 class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
+
+  private val version = Versions(context)
+
   override fun currentProcessSupportsChange(changeId: Long): Boolean {
     // First we check for global setting override (for local testing)
     val changeOverride = getChangeOverride(context.packageName, changeId)
@@ -32,7 +37,12 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
       return changeOverride
     }
 
-    return false
+    val changeData =
+      ALL_CHANGE_IDS[changeId]
+        ?: throw IllegalStateException(
+          "Invalid change ID $changeId - this should have been blocked by the conformance checker"
+        )
+    return Versions.isAvailable(version.myComplianceDate, changeData)
   }
 
   private fun getChangeOverride(packageName: String, changeId: Long): Boolean? {
@@ -49,17 +59,31 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
 /** Fake implementation of [OnboardingChanges]. */
 class FakeOnboardingChanges : OnboardingChanges {
 
-  val supportedChanges = mutableSetOf<Long>()
+  val supportedChanges = mutableMapOf<Long, Boolean>()
+  var complianceDate: ComplianceDate = ComplianceDate.EARLIEST
 
   override fun currentProcessSupportsChange(changeId: Long): Boolean {
-    return supportedChanges.contains(changeId)
+    return supportedChanges[changeId]
+      ?: run {
+        val changeData =
+          ALL_CHANGE_IDS[changeId]
+            ?: throw IllegalStateException(
+              "Invalid change ID $changeId - this should have been blocked by the conformance checker"
+            )
+
+        Versions.isAvailable(complianceDate, changeData)
+      }
   }
 
   fun enableChange(changeId: Long) {
-    supportedChanges.add(changeId)
+    supportedChanges[changeId] = true
   }
 
   fun disableChange(changeId: Long) {
+    supportedChanges[changeId] = false
+  }
+
+  fun resetChange(changeId: Long) {
     supportedChanges.remove(changeId)
   }
 }
