@@ -16,6 +16,5 @@ enum class ChangeRadius {
    * For example, any change to an API which one component exposes to another (via activity starts,
    * broadcasts, services, etc.) is intrinsically MULTI_COMPONENT.
    */
-  // Multi-component changes are not currently supported
-  // MULTI_COMPONENT
+  MULTI_COMPONENT
 }
