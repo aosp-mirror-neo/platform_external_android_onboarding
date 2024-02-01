@@ -1,7 +1,6 @@
 package com.android.onboarding.bedsteadonboarding.providers
 
 import android.content.ContentResolver
-import android.content.Context
 import android.net.Uri
 
 /**
@@ -32,15 +31,8 @@ object ConfigProviderUtil {
    *
    * @param authority the content provider authority to use for constructing Uri
    */
-  fun getTestConfigUri(authority: String): Uri =
+  fun getTestConfigContentUri(authority: String): Uri =
     getBaseContentUri(authority).buildUpon().path(TEST_CONFIG_PATH).build()
-
-  /**
-   * Returns the uri for all the test configuration Eg: content://authority/test_config
-   *
-   * @param context context of the application being executed
-   */
-  fun getTestConfigUri(context: Context): Uri = getTestConfigUri(getAuthority(context.packageName))
 
   // LINT.IfChange(authority)
   /**
