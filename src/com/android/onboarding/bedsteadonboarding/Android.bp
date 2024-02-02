@@ -9,6 +9,7 @@ android_library {
     manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
     static_libs: [
         "android_onboarding.bedsteadonboarding.providers",
+        "android_onboarding.bedsteadonboarding.activities",
     ],
 }
 
@@ -21,8 +22,10 @@ android_library {
     ],
     static_libs: [
         "android_onboarding.contracts.annotations",
+        "android_onboarding.bedsteadonboarding.activities",
         "android_onboarding.bedsteadonboarding.annotations",
         "android_onboarding.bedsteadonboarding.data",
+        "android_onboarding.bedsteadonboarding.contract_eligibility_checker",
         "android_onboarding.bedsteadonboarding.contractutils",
         "android_onboarding.bedsteadonboarding.logcat",
         "android_onboarding.bedsteadonboarding.providers",
