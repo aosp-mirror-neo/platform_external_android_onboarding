@@ -6,8 +6,6 @@ import android.util.Log
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
 
-private const val TAG = "TestFramework"
-
 /**
  * Contains helper methods which different nodes can call to check if they are allowed to execute.
  */
@@ -37,13 +35,12 @@ object ContractExecutionEligibilityChecker {
 
       // If the node is attempted to be executed as part of test but it is not allowed.
       if (!allowedNodes.contains(nodeToCheck)) {
-        Log.w(TAG, "Contract $nodeToCheck is not allowed to execute")
         // Kill the app under test.
         Process.killProcess(Process.myPid())
       }
     } catch (t: Throwable) {
       // For safety, ignore the exception since current function would run in production flow.
-      Log.e(TAG, "Error while fetching list of allowed nodes", t)
+      Log.e("TestFramework", "Error while fetching list of allowed nodes", t)
     }
   }
 
@@ -52,7 +49,10 @@ object ContractExecutionEligibilityChecker {
    * return [ALLOW_ALL_NODES] when the node is being executed in production.
    */
   internal fun getAllowedNodes(context: Context): Set<String>? {
-    val uri = ConfigProviderUtil.getTestConfigUri(context)
+    val uri =
+      ConfigProviderUtil.getTestConfigContentUri(
+        ConfigProviderUtil.getAuthority(context.packageName)
+      )
     var allowedNodes: MutableSet<String>? = null
     // Fetch the list of contracts which are allowed to execute.
     context.contentResolver
