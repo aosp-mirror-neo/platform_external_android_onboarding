@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskManager {
 
@@ -23,8 +24,14 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
   > runTask(task: Task, taskContract: Contract, taskArgs: Args): OnboardingTaskToken {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    // We have to update the task status as soon as possible to prevent immediate query status
+    // action.
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
-    performTask(task, taskContract, taskArgs, taskToken)
+    // Run the task asynchronously.
+    CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+      performTask(task, taskContract, taskArgs, taskToken)
+    }
 
     Log.d(TAG, "runTask#Return task token immediately.")
     return taskToken
@@ -37,7 +44,11 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
   ): OnboardingTaskState<Result> {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    // We have to update the task status as soon as possible to prevent immediate query status
+    // action.
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
+    // Execute the task and await its completion.
     performTask(task, taskContract, taskArgs, taskToken)
 
     return getTaskState(taskToken)
@@ -92,25 +103,25 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     }
   }
 
-  private fun <Args, Result> performTask(
+  private suspend fun <Args, Result> performTask(
     task: OnboardingTask<Args, Result>,
     taskContract: OnboardingTaskContract<Args, Result>,
     taskArgs: Args,
     taskToken: OnboardingTaskToken,
   ) {
     Log.d(TAG, "performTask#start")
-    // Validate all inputs by defined contract.
+
+    // Validate all inputs by the defined contract.
     taskContract.validate(taskArgs)
-    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
-    // Run the task asynchronously.
-    CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
-      val taskResult = task.runTask(taskContract, taskArgs)
-      Log.d(TAG, "performTask#end")
+    // Execute the task and await its completion.
+    val taskResult =
+      withContext(Dispatchers.Default + SupervisorJob()) { task.runTask(taskContract, taskArgs) }
 
-      // Update the tasksStates map with the actual task result after completion.
-      tasksStates[taskToken] = taskResult
-    }
+    Log.d(TAG, "performTask#end")
+
+    // Update the tasksStates map with the actual task result after completion.
+    tasksStates[taskToken] = taskResult
   }
 
   /**
