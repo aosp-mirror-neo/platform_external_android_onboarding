@@ -7,11 +7,14 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
 
-class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskManager {
+class DefaultOnboardingTaskManager
+private constructor(private val appContext: Context, private val coroutineScope: CoroutineScope) :
+  OnboardingTaskManager {
 
   private val tasksStates = ConcurrentHashMap<OnboardingTaskToken, OnboardingTaskState<*>>()
 
@@ -23,8 +26,12 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
   > runTask(task: Task, taskContract: Contract, taskArgs: Args): OnboardingTaskToken {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    // We have to update the task status as soon as possible to prevent immediate query status
+    // action.
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
-    performTask(task, taskContract, taskArgs, taskToken)
+    // Run the task asynchronously.
+    coroutineScope.launch { performTask(task, taskContract, taskArgs, taskToken) }
 
     Log.d(TAG, "runTask#Return task token immediately.")
     return taskToken
@@ -37,7 +44,11 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
   ): OnboardingTaskState<Result> {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    // We have to update the task status as soon as possible to prevent immediate query status
+    // action.
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
+    // Execute the task and await its completion.
     performTask(task, taskContract, taskArgs, taskToken)
 
     return getTaskState(taskToken)
@@ -51,9 +62,7 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     taskContract: OnboardingTaskContract<Args, Result>,
     taskArgs: Args,
   ): ListenableFuture<OnboardingTaskState<Result>> {
-    return CoroutineScope(Dispatchers.Default + SupervisorJob()).future {
-      runTaskAndGetResult(task, taskContract, taskArgs)
-    }
+    return coroutineScope.future { runTaskAndGetResult(task, taskContract, taskArgs) }
   }
 
   @Suppress("UNCHECKED_CAST")
@@ -87,30 +96,27 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
   override fun <Result> waitForCompletedAsync(
     taskToken: OnboardingTaskToken
   ): ListenableFuture<OnboardingTaskState<Result>?> {
-    return CoroutineScope(Dispatchers.Default + SupervisorJob()).future {
-      waitForCompleted(taskToken)
-    }
+    return coroutineScope.future { waitForCompleted(taskToken) }
   }
 
-  private fun <Args, Result> performTask(
+  private suspend fun <Args, Result> performTask(
     task: OnboardingTask<Args, Result>,
     taskContract: OnboardingTaskContract<Args, Result>,
     taskArgs: Args,
     taskToken: OnboardingTaskToken,
   ) {
     Log.d(TAG, "performTask#start")
-    // Validate all inputs by defined contract.
+
+    // Validate all inputs by the defined contract.
     taskContract.validate(taskArgs)
-    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
 
-    // Run the task asynchronously.
-    CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
-      val taskResult = task.runTask(taskContract, taskArgs)
-      Log.d(TAG, "performTask#end")
+    // Execute the task and await its completion.
+    val taskResult = task.runTask(taskContract, taskArgs)
 
-      // Update the tasksStates map with the actual task result after completion.
-      tasksStates[taskToken] = taskResult
-    }
+    Log.d(TAG, "performTask#end")
+
+    // Update the tasksStates map with the actual task result after completion.
+    tasksStates[taskToken] = taskResult
   }
 
   /**
@@ -124,18 +130,44 @@ class DefaultOnboardingTaskManager(val appContext: Context) : OnboardingTaskMana
     private var instance: DefaultOnboardingTaskManager? = null
 
     /**
-     * Gets an instance of [DefaultOnboardingTaskManager], creating one if it does not exist.
+     * Gets an instance of [DefaultOnboardingTaskManager], creating one if it does not exist. A
+     * default coroutine scope with [Dispatchers.Default] and [SupervisorJob] will be used for this
+     * function.
      *
+     * @param appContext The application context.
      * @return The singleton instance of [DefaultOnboardingTaskManager].
      */
-    fun getInstance(context: Context): DefaultOnboardingTaskManager {
+    fun getInstance(appContext: Context): DefaultOnboardingTaskManager {
+      return getInstance(appContext, CoroutineScope(Dispatchers.Default + SupervisorJob()))
+    }
+
+    /**
+     * Gets an instance of [DefaultOnboardingTaskManager], creating one if it does not exist. You
+     * can customize the coroutine scope by providing your own [CoroutineScope] instance. If not
+     * provided, a default coroutine scope with [Dispatchers.Default] and [SupervisorJob] will be
+     * used.
+     *
+     * @param appContext The application context.
+     * @param coroutineScope The optional [CoroutineScope] for custom coroutine handling.
+     * @return The singleton instance of [DefaultOnboardingTaskManager].
+     */
+    fun getInstance(
+      appContext: Context,
+      coroutineScope: CoroutineScope? = null,
+    ): DefaultOnboardingTaskManager {
       return instance
         ?: synchronized(this) {
-          instance ?: DefaultOnboardingTaskManager(context).also { instance = it }
+          instance
+            ?: DefaultOnboardingTaskManager(
+                appContext,
+                coroutineScope ?: CoroutineScope(Dispatchers.Default + SupervisorJob()),
+              )
+              .also { instance = it }
         }
     }
 
     fun release() {
+      instance?.coroutineScope?.cancel()
       instance = null
     }
   }
