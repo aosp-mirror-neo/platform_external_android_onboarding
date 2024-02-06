@@ -1,5 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.onboarding.bedsteadonboarding">
 <application>
+
+  <!-- LINT.IfChange(activity_action_name) -->
+  <activity android:name=".activities.TrampolineActivity"
+      android:exported="true">
+    <intent-filter>
+      <action android:name="${applicationId}.bedstead.onboarding.trampolineactivity"/>
+      <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter>
+  </activity>
+  <!-- LINT.ThenChange(//depot/google3/third_party/java/android_onboarding/java/com/android/onboarding/bedsteadonboarding/OnboardingTestsRule.kt:activity_action_name) -->
+
   <!-- LINT.IfChange(authority) -->
   <provider
       android:exported="true"

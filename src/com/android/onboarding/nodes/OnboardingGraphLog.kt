@@ -7,9 +7,6 @@ import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.time.Instant
 
-/** Extra key used when storing a node id */
-const val EXTRA_ONBOARDING_NODE_ID = "com.android.onboarding.ONBOARDING_NODE_ID"
-
 /**
  * A target for onboarding logs which can register observers to store those logs.
  *
@@ -228,7 +225,7 @@ interface OnboardingGraphLog {
       override val nodeId: Long,
       override val nodeName: String,
       override val nodeComponent: String,
-      val exception: Exception = IllegalArgumentException("Failed validation"),
+      val exception: Throwable = IllegalArgumentException("Failed validation"),
       val intent: IntentData? = null,
       val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
@@ -236,7 +233,7 @@ interface OnboardingGraphLog {
       constructor(
         nodeId: Long,
         nodeClass: Class<*>,
-        exception: Exception = IllegalArgumentException("Failed validation"),
+        exception: Throwable = IllegalArgumentException("Failed validation"),
         intent: IntentData? = null,
         timestamp: Instant = Instant.now(),
       ) : this(

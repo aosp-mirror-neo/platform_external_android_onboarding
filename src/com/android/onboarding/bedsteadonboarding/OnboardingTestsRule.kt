@@ -2,12 +2,15 @@ package com.android.onboarding.bedsteadonboarding
 
 import android.content.ContentValues
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.services.storage.TestStorage
 import com.android.onboarding.bedsteadonboarding.annotations.OnboardingNodeScreenshot
 import com.android.onboarding.bedsteadonboarding.annotations.TestNodes
+import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
 import com.android.onboarding.bedsteadonboarding.data.NodeData
 import com.android.onboarding.bedsteadonboarding.data.OnboardingNodeMetadata
@@ -16,14 +19,17 @@ import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
 import com.android.onboarding.contracts.ArgumentFreeOnboardingActivityApiContract
 import com.android.onboarding.contracts.ArgumentFreeVoidOnboardingActivityApiContract
+import com.android.onboarding.contracts.EXTRA_ONBOARDING_NODE_ID
 import com.android.onboarding.contracts.OnboardingActivityApiContract
+import com.android.onboarding.contracts.UNKNOWN_NODE_ID
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.contracts.annotations.OnboardingNode
-import com.android.onboarding.contracts.registerForActivityLaunch
+import com.android.onboarding.contracts.nodeId
 import com.android.onboarding.nodes.OnboardingGraph
 import com.android.onboarding.nodes.OnboardingGraphLog
 import java.lang.AssertionError
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 import java.time.Instant
 import kotlin.reflect.KClass
 import org.junit.rules.TestRule
@@ -35,8 +41,6 @@ import org.junit.runners.model.Statement
  */
 class OnboardingTestsRule : TestRule {
 
-  private val INTENT_FLAGS_START_IN_NEW_TASK =
-    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
   private val instrumentationContext = InstrumentationRegistry.getInstrumentation().context
   private val testStorage = TestStorage()
 
@@ -45,7 +49,7 @@ class OnboardingTestsRule : TestRule {
   // Initial/ Source node of the graph. In a test multiple nodes could be launched or even a single
   // node could be launched multiple times using [OnboardingTestRule#launch] call. Each such call
   // would start a new graph and hence update [startNodeIdOfGraph] value.
-  private var startNodeIdOfGraph: Long = OnboardingActivityApiContract.UNKNOWN_NODE
+  private var startNodeIdOfGraph: Long = UNKNOWN_NODE_ID
   private var hasOnboardingNodeScreenshotAnnotation: Boolean = false
   private var hasTakenScreenshot: Boolean = false
   private var currentTestName: String = ""
@@ -96,46 +100,56 @@ class OnboardingTestsRule : TestRule {
     }
   }
 
-  /** Launches an activity using [OnboardingActivityApiContract]. */
+  /**
+   * Launches an activity using [OnboardingActivityApiContract]. Each call to launch() will start a
+   * new graph.
+   */
   fun <I, O> launch(activityContract: OnboardingActivityApiContract<I, O>, args: I) {
-    startNodeIdOfGraph =
-      instrumentationContext
-        .registerForActivityLaunch(activityContract)
-        .launch(args, INTENT_FLAGS_START_IN_NEW_TASK)
-    waitForActivityLaunch()
+    ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
+      instrumentationContext,
+      activityContract::class.java,
+    )
+    val nodeIntent = createNodeIntent(activityContract, args)
+    startTrampolineActivity(activityContract, nodeIntent)
   }
 
-  /** Launches an activity using [ArgumentFreeOnboardingActivityApiContract]. */
+  /**
+   * Launches an activity using [ArgumentFreeOnboardingActivityApiContract]. Each call to launch()
+   * will start a new graph.
+   */
   fun <O> launch(activityContract: ArgumentFreeOnboardingActivityApiContract<O>) {
-    startNodeIdOfGraph =
-      instrumentationContext
-        .registerForActivityLaunch(activityContract)
-        .launch(Unit, INTENT_FLAGS_START_IN_NEW_TASK)
-    waitForActivityLaunch()
+    ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
+      instrumentationContext,
+      activityContract::class.java,
+    )
+    val nodeIntent = createNodeIntent(activityContract, Unit)
+    startTrampolineActivity(activityContract, nodeIntent)
   }
 
   /**
    * Launches an activity which do not return result using [VoidOnboardingActivityApiContract] and
-   * contract arguments.
+   * contract arguments. Each call to launch() will start a new graph.
    */
   fun <I> launch(activityContract: VoidOnboardingActivityApiContract<I>, args: I) {
-    startNodeIdOfGraph =
-      instrumentationContext
-        .registerForActivityLaunch(activityContract)
-        .launch(args, INTENT_FLAGS_START_IN_NEW_TASK)
-    waitForActivityLaunch()
+    ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
+      instrumentationContext,
+      activityContract::class.java,
+    )
+    val nodeIntent = createNodeIntent(activityContract, args)
+    startTrampolineActivity(activityContract, nodeIntent)
   }
 
   /**
    * Launches an activity which do not return result using
-   * [ArgumentFreeVoidOnboardingActivityApiContract].
+   * [ArgumentFreeVoidOnboardingActivityApiContract]. Each call to launch() will start a new graph.
    */
   fun launch(activityContract: ArgumentFreeVoidOnboardingActivityApiContract) {
-    startNodeIdOfGraph =
-      instrumentationContext
-        .registerForActivityLaunch(activityContract)
-        .launch(Unit, INTENT_FLAGS_START_IN_NEW_TASK)
-    waitForActivityLaunch()
+    ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
+      instrumentationContext,
+      activityContract::class.java,
+    )
+    val nodeIntent = createNodeIntent(activityContract, Unit)
+    startTrampolineActivity(activityContract, nodeIntent)
   }
 
   /** Captures the current UI on the device and saves it to the test output file. */
@@ -235,12 +249,44 @@ class OnboardingTestsRule : TestRule {
     return probableNodeOfInterest
   }
 
+  internal fun getStartNodeIdOfGraph() = startNodeIdOfGraph
+
   // Internal helper function to be used only in robolectric tests.
   internal fun setStartNodeIdOfGraph(nodeId: Long) {
     if (requireRobolectric()) {
       startNodeIdOfGraph = nodeId
     } else {
       throw IllegalAccessException("Not allowed to access internal methods")
+    }
+  }
+
+  /**
+   * Creates an [Intent] to launch the node for contract [activityContract] using [contractArgs].
+   */
+  internal fun <I> createNodeIntent(
+    activityContract: OnboardingActivityApiContract<I, *>,
+    contractArgs: I,
+  ): Intent {
+    // Use reflection to invoke the [OnboardingActivityApiContract#performCreateIntent()] of
+    // [activityContract] to create [Intent]. We assume that the instrumented app is not proguarded.
+    val intentCreationMethod =
+      activityContract::class.java.methods.firstOrNull { it.name == INTENT_CREATION_METHOD_NAME }
+
+    if (intentCreationMethod != null) {
+      intentCreationMethod.isAccessible = true
+      val nodeIntent =
+        intentCreationMethod.invoke(activityContract, instrumentationContext, contractArgs)
+          as? Intent ?: error("Unable to create valid Intent for contract $activityContract")
+      // Since we start the node for [activityContract] using startActivity from
+      // [TrampolineActivity], so the graph is broken, i.e. we can't know what is the nodeId of the
+      // [activityContract]. So as a workaround we set the nodeId in the [Intent] here itself.
+      startNodeIdOfGraph = nodeIntent.nodeId
+      nodeIntent.putExtra(EXTRA_ONBOARDING_NODE_ID, startNodeIdOfGraph)
+      return nodeIntent
+    } else {
+      throw IllegalStateException(
+        "Couldn't find $INTENT_CREATION_METHOD_NAME method for contract $activityContract"
+      )
     }
   }
 
@@ -256,8 +302,7 @@ class OnboardingTestsRule : TestRule {
   private fun insertTestConfigsInApp(contentValues: Array<ContentValues>, appPackageName: String) {
     /* Delete test configurations stored by app before inserting new ones. */
     deleteTestConfigsOfApp(appPackageName)
-    val uri =
-      ConfigProviderUtil.getTestConfigContentUri(ConfigProviderUtil.getAuthority(appPackageName))
+    val uri = ConfigProviderUtil.getTestConfigUri(ConfigProviderUtil.getAuthority(appPackageName))
     instrumentationContext.contentResolver.bulkInsert(uri, contentValues)
   }
 
@@ -286,6 +331,45 @@ class OnboardingTestsRule : TestRule {
     (event is OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously) &&
       (ContractUtils.getContractIdentifier(event.nodeComponent, event.nodeName) !=
         contractIdentifierOfNode)
+
+  /**
+   * Start the [TrampolineActivity] in the app owning [activityContract]. The [Intent] for
+   * [TrampolineActivity] will also contain the [nodeIntent] to launch the actual intended node for
+   * [activityContract] as an extra.
+   */
+  private fun startTrampolineActivity(
+    activityContract: OnboardingActivityApiContract<*, *>,
+    nodeIntent: Intent,
+  ) {
+    val trampolineActivityIntent =
+      Intent(getTrampolineActivityIntentAction(activityContract)).apply {
+        putExtra(EXTRA_NODE_START_INTENT_KEY, nodeIntent)
+        flags = INTENT_FLAGS_START_IN_NEW_TASK
+      }
+
+    // Start activity and wait.
+    instrumentationContext.startActivity(trampolineActivityIntent)
+    waitForActivityLaunch()
+  }
+
+  /** Get the [Intent] action to launch Trampoline Activity of the application owning [contract]. */
+  private fun getTrampolineActivityIntentAction(
+    contract: OnboardingActivityApiContract<*, *>
+  ): String {
+    val onboardingNode =
+      extractOnboardingNodeAnnotation(contract)
+        ?: error("Can't fetch OnboardingNode annotation for contract $contract")
+    val onboardingNodeMetadata = getOnboardingNodeMetadata(onboardingNode)
+
+    return "${onboardingNodeMetadata.packageName}${TRAMPOLINE_ACTIVITY_NAME}"
+  }
+
+  /**
+   * Extract the [OnboardingNode] annotation applied to activity [contract]. There should be exactly
+   * 1 such annotation and if there is none then null is returned.
+   */
+  private fun extractOnboardingNodeAnnotation(contract: OnboardingActivityApiContract<*, *>) =
+    contract::class.annotations.filterIsInstance<OnboardingNode>().firstOrNull()
 
   /**
    * From the [TestNodes] annotation, extract all the nodes which are allowed to execute and also
@@ -392,8 +476,7 @@ class OnboardingTestsRule : TestRule {
 
   // Deletes the test configs stored by a given app.
   private fun deleteTestConfigsOfApp(packageName: String) {
-    val uri =
-      ConfigProviderUtil.getTestConfigContentUri(ConfigProviderUtil.getAuthority(packageName))
+    val uri = ConfigProviderUtil.getTestConfigUri(ConfigProviderUtil.getAuthority(packageName))
     instrumentationContext.contentResolver.delete(uri, /* where= */ null, /* selectionArgs= */ null)
   }
 
@@ -468,5 +551,15 @@ class OnboardingTestsRule : TestRule {
 
   companion object {
     const val ONBOARDING_EVENT_LOG_TAG = "ZZOnboardingGraph"
+    const val EXTRA_NODE_START_INTENT_KEY =
+      "com.android.onboarding.bedsteadonboarding.activities.extra.NODE_START_INTENT"
+
+    private const val INTENT_CREATION_METHOD_NAME = "performCreateIntent"
+    private const val INTENT_FLAGS_START_IN_NEW_TASK =
+      FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK
+
+    // LINT.IfChange(activity_action_name)
+    private const val TRAMPOLINE_ACTIVITY_NAME = ".bedstead.onboarding.trampolineactivity"
+    // LINT.ThenChange(//depot/google3/third_party/java/android_onboarding/java/com/android/onboarding/bedsteadonboarding/AndroidManifest.xml:activity_action_name)
   }
 }
