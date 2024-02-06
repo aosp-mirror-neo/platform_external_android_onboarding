@@ -4,8 +4,11 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.services.storage.TestStorage
+import com.android.onboarding.bedsteadonboarding.annotations.OnboardingNodeScreenshot
 import com.android.onboarding.bedsteadonboarding.annotations.TestNodes
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
@@ -23,6 +26,8 @@ import com.android.onboarding.contracts.nodeId
 import com.android.onboarding.nodes.EXTRA_ONBOARDING_NODE_ID
 import com.android.onboarding.nodes.OnboardingGraph
 import com.android.onboarding.nodes.OnboardingGraphLog
+import java.lang.AssertionError
+import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.time.Instant
 import kotlin.reflect.KClass
@@ -36,6 +41,7 @@ import org.junit.runners.model.Statement
 class OnboardingTestsRule : TestRule {
 
   private val instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+  private val testStorage = TestStorage()
 
   private lateinit var logcatReader: LogcatReader
 
@@ -43,6 +49,10 @@ class OnboardingTestsRule : TestRule {
   // node could be launched multiple times using [OnboardingTestRule#launch] call. Each such call
   // would start a new graph and hence update [startNodeIdOfGraph] value.
   private var startNodeIdOfGraph: Long = OnboardingActivityApiContract.UNKNOWN_NODE
+  private var hasOnboardingNodeScreenshotAnnotation: Boolean = false
+  private var hasTakenScreenshot: Boolean = false
+  private var currentTestName: String = ""
+  private var nameOfNodeToTakeScreenshot: String = ""
 
   override fun apply(base: Statement, description: Description): Statement {
     return if (description.isTest) {
@@ -57,9 +67,10 @@ class OnboardingTestsRule : TestRule {
   private fun applyTest(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        val testNodesConfiguration =
-          extractTestNodesAnnotation(description)?.let { processTestNodesAnnotation(it) }
-            ?: TestNodesConfiguration()
+        currentTestName = description.methodName
+        // Extract test configuration from all the annotations applied to the test.
+        val testNodesConfiguration = extractTestNodesConfiguration(description)
+
         try {
           // Start Reading OnboardingEvents Logs.
           logcatReader = LogcatReader(filterTag = ONBOARDING_EVENT_LOG_TAG).apply { start() }
@@ -79,6 +90,10 @@ class OnboardingTestsRule : TestRule {
         } finally {
           logcatReader.stopReadingLogs()
           deleteAllTestConfigs(testNodesConfiguration.appsStoringTestConfig)
+
+          if (hasOnboardingNodeScreenshotAnnotation && !hasTakenScreenshot) {
+            throw AssertionError("OnboardingTestRule#takeScreenshot() not called in this test.")
+          }
         }
       }
     }
@@ -134,6 +149,16 @@ class OnboardingTestsRule : TestRule {
     )
     val nodeIntent = createNodeIntent(activityContract, Unit)
     startTrampolineActivity(activityContract, nodeIntent)
+  }
+
+  /** Captures the current UI on the device and saves it to the test output file. */
+  fun takeScreenshot() {
+    hasTakenScreenshot = true
+
+    val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+    val outputStream = testStorage.openOutputFile(/* pathname= */ getScreenshotName())
+    // Convert the bitmap to PNG.
+    screenshot.compress(Bitmap.CompressFormat.PNG, /* quality= */ 100, outputStream)
   }
 
   /**
@@ -363,6 +388,47 @@ class OnboardingTestsRule : TestRule {
   }
 
   /**
+   * From the [OnboardingNodeScreenshot] annotation, extract the allowed node to execute and also
+   * the package name of the app containing this node and store them in [TestNodesConfiguration].
+   */
+  private fun processOnboardingNodeScreenshotAnnotation(
+    onboardingNodeScreenshot: OnboardingNodeScreenshot
+  ): TestNodesConfiguration {
+    validateUiNode(onboardingNodeScreenshot.node.contract.annotations)
+    hasOnboardingNodeScreenshotAnnotation = true
+
+    var allowedNode: NodeData
+    val appsStoringTestConfig = mutableSetOf(instrumentationContext.packageName)
+
+    extractAllowedNodeAndItsAppPackage(onboardingNodeScreenshot.node.contract).apply {
+      allowedNode = first
+      appsStoringTestConfig.add(second)
+    }
+
+    return TestNodesConfiguration(appsStoringTestConfig.toSet(), listOf(allowedNode))
+  }
+
+  private fun validateUiNode(annotations: List<Annotation>) {
+    for (annotation in annotations) {
+      if (annotation is OnboardingNode) {
+        when (annotation.uiType) {
+          OnboardingNode.UiType.EDUCATION,
+          OnboardingNode.UiType.INPUT,
+          OnboardingNode.UiType.LOADING,
+          OnboardingNode.UiType.OTHER -> {
+            nameOfNodeToTakeScreenshot = annotation.name
+          }
+          OnboardingNode.UiType.NONE,
+          OnboardingNode.UiType.INVISIBLE ->
+            throw IllegalArgumentException(
+              "Not allowed to take screenshot for non-UI onboarding nodes."
+            )
+        }
+      }
+    }
+  }
+
+  /**
    * Given a node's contract class, returns its [NodeData] representation and the package name of
    * the app to which it belongs.
    */
@@ -414,6 +480,30 @@ class OnboardingTestsRule : TestRule {
   }
 
   /**
+   * Extracts the [TestNodesConfiguration] from all annotations applied to [description].
+   *
+   * If no annotation is provided, then null will be returned.
+   */
+  private fun extractTestNodesConfiguration(description: Description): TestNodesConfiguration {
+    val testNodesAnnotationConfiguration =
+      extractTestNodesAnnotation(description)?.let { processTestNodesAnnotation(it) }
+        ?: TestNodesConfiguration()
+    val onboardingNodeScreenshotAnnotationTestConfiguration =
+      extractOnboardingNodeScreenshotAnnotation(description)?.let {
+        processOnboardingNodeScreenshotAnnotation(it)
+      } ?: TestNodesConfiguration()
+
+    return TestNodesConfiguration(
+      appsStoringTestConfig =
+        testNodesAnnotationConfiguration.appsStoringTestConfig +
+          onboardingNodeScreenshotAnnotationTestConfiguration.appsStoringTestConfig,
+      allowedNodes =
+        testNodesAnnotationConfiguration.allowedNodes +
+          onboardingNodeScreenshotAnnotationTestConfiguration.allowedNodes,
+    )
+  }
+
+  /**
    * Extracts the [TestNodes] annotation applied to [description].
    *
    * There can only be a maximum of 1 such annotation, and if 0 is provided then null will be
@@ -421,6 +511,21 @@ class OnboardingTestsRule : TestRule {
    */
   private fun extractTestNodesAnnotation(description: Description) =
     description.annotations?.filterIsInstance<TestNodes>()?.firstOrNull()
+
+  /**
+   * Extracts the [OnboardingNodeScreenshot] annotation applied to [description].
+   *
+   * There can only be a maximum of 1 such annotation, and if 0 is provided then null will be
+   * returned.
+   */
+  private fun extractOnboardingNodeScreenshotAnnotation(description: Description) =
+    description.annotations?.filterIsInstance<OnboardingNodeScreenshot>()?.firstOrNull()
+
+  /**
+   * Returns the screenshot name derived from the test method name [currentTestName] and node name
+   * [nameOfNodeToTakeScreenshot].
+   */
+  private fun getScreenshotName() = "${currentTestName}_$nameOfNodeToTakeScreenshot.png"
   private fun waitForActivityLaunch() {
     if (!requireRobolectric()) {
       Thread.sleep(10000)
@@ -428,7 +533,7 @@ class OnboardingTestsRule : TestRule {
   }
 
   /**
-   * Stores the test configuration obtained by processing [TestNodes] annotation. This data will be
+   * Stores the test configuration obtained by processing test level annotations. This data will be
    * later used to store the list of [allowedNodes] in all the apps given by [appsStoringTestConfig]
    * using their [TestContentProvider].
    */
