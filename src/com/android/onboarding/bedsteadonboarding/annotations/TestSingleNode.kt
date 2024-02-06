@@ -3,9 +3,9 @@ package com.android.onboarding.bedsteadonboarding.annotations
 import kotlin.reflect.KClass
 
 /**
- * Mark that the test will allow the given node to be executed.
+ * A reference to a single node definition.
  *
- * @property contract the Kclass of the contract for which the nodes are allowed to execute.
+ * @property contract the Kclass of the contract to execute the node.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
