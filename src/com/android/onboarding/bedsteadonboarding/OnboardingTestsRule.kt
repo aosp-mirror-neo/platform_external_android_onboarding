@@ -54,6 +54,7 @@ class OnboardingTestsRule : TestRule {
   private var hasTakenScreenshot: Boolean = false
   private var currentTestName: String = ""
   private var nameOfNodeToTakeScreenshot: String = ""
+  private var componentOfNodeToTakeScreenshot: String = ""
 
   override fun apply(base: Statement, description: Description): Statement {
     return if (description.isTest) {
@@ -160,6 +161,14 @@ class OnboardingTestsRule : TestRule {
     val outputStream = testStorage.openOutputFile(/* pathname= */ getScreenshotName())
     // Convert the bitmap to PNG.
     screenshot.compress(Bitmap.CompressFormat.PNG, /* quality= */ 100, outputStream)
+
+    // Adding node info to the metadata of the generated sponge.
+    testStorage.addOutputProperties(
+      mapOf(
+        "onboarding_screenshot_node" to nameOfNodeToTakeScreenshot,
+        "onboarding_screenshot_component" to componentOfNodeToTakeScreenshot,
+      )
+    )
   }
 
   /**
@@ -418,6 +427,7 @@ class OnboardingTestsRule : TestRule {
           OnboardingNode.UiType.LOADING,
           OnboardingNode.UiType.OTHER -> {
             nameOfNodeToTakeScreenshot = annotation.name
+            componentOfNodeToTakeScreenshot = annotation.component
           }
           OnboardingNode.UiType.NONE,
           OnboardingNode.UiType.INVISIBLE ->
@@ -523,10 +533,11 @@ class OnboardingTestsRule : TestRule {
     description.annotations?.filterIsInstance<OnboardingNodeScreenshot>()?.firstOrNull()
 
   /**
-   * Returns the screenshot name derived from the test method name [currentTestName] and node name
-   * [nameOfNodeToTakeScreenshot].
+   * Returns the screenshot path derived from the component name [componentOfNodeToTakeScreenshot],
+   * node name [nameOfNodeToTakeScreenshot] and test method name [currentTestName].
    */
-  private fun getScreenshotName() = "${currentTestName}_$nameOfNodeToTakeScreenshot.png"
+  private fun getScreenshotName() =
+    "$componentOfNodeToTakeScreenshot/$nameOfNodeToTakeScreenshot/${currentTestName}.png"
   private fun waitForActivityLaunch() {
     if (!requireRobolectric()) {
       Thread.sleep(10000)
