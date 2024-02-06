@@ -251,7 +251,7 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     result: Any? = null,
     outgoingEdge: InternalEdge? = null,
     incomingEdge: InternalEdge? = null,
-    failureReason: Throwable? = null,
+    failureReason: Exception? = null,
     type: NodeType? = null,
   ) {
     this.getOrPut(id) { Node(this, id) }
@@ -288,7 +288,7 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
     internal var _end: Instant? = null,
     internal var _outgoingEdges: MutableSet<InternalEdge> = mutableSetOf(),
     internal var _incomingEdge: InternalEdge? = null,
-    internal var _failureReasons: MutableSet<Throwable> = mutableSetOf(),
+    internal var _failureReasons: MutableSet<Exception> = mutableSetOf(),
     internal var _type: NodeType = NodeType.UNKNOWN,
     internal var _component: String? = null,
 
@@ -343,7 +343,7 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
           }
         }
 
-    val failureReasons: Set<Throwable>
+    val failureReasons: Set<Exception>
       get() = _failureReasons.toSet()
 
     val isFailed: Boolean

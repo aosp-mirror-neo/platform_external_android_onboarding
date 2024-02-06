@@ -19,12 +19,11 @@ import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
 import com.android.onboarding.contracts.ArgumentFreeOnboardingActivityApiContract
 import com.android.onboarding.contracts.ArgumentFreeVoidOnboardingActivityApiContract
-import com.android.onboarding.contracts.EXTRA_ONBOARDING_NODE_ID
 import com.android.onboarding.contracts.OnboardingActivityApiContract
-import com.android.onboarding.contracts.UNKNOWN_NODE_ID
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.nodeId
+import com.android.onboarding.nodes.EXTRA_ONBOARDING_NODE_ID
 import com.android.onboarding.nodes.OnboardingGraph
 import com.android.onboarding.nodes.OnboardingGraphLog
 import java.lang.AssertionError
@@ -49,7 +48,7 @@ class OnboardingTestsRule : TestRule {
   // Initial/ Source node of the graph. In a test multiple nodes could be launched or even a single
   // node could be launched multiple times using [OnboardingTestRule#launch] call. Each such call
   // would start a new graph and hence update [startNodeIdOfGraph] value.
-  private var startNodeIdOfGraph: Long = UNKNOWN_NODE_ID
+  private var startNodeIdOfGraph: Long = OnboardingActivityApiContract.UNKNOWN_NODE
   private var hasOnboardingNodeScreenshotAnnotation: Boolean = false
   private var hasTakenScreenshot: Boolean = false
   private var currentTestName: String = ""
