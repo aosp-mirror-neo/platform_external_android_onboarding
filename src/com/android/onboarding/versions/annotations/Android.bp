@@ -17,7 +17,7 @@ android_library {
 java_library {
     name: "android_onboarding.versions.annotations_host",
     srcs: [
-      "*.kt",
+        "*.kt",
     ],
     host_supported: true,
 }

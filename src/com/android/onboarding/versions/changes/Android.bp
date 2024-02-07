@@ -10,7 +10,7 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-      "android_onboarding.versions.annotations",
+        "android_onboarding.versions.annotations",
     ],
-    plugins: ["android_onboarding.versions.change_collector"]
+    plugins: ["android_onboarding.versions.change_collector"],
 }
