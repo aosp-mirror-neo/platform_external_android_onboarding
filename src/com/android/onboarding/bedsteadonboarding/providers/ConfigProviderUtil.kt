@@ -50,5 +50,5 @@ object ConfigProviderUtil {
    * @return the content provider authority for a given package
    */
   fun getAuthority(packageName: String): String = "$packageName.testprovider"
-  // LINT.ThenChange(//depot/google3/third_party/java/android_onboarding/java/com/android/onboarding/bedsteadonboarding/AndroidManifest.xml:authority)
+  // LINT.ThenChange(src/com/android/onboarding/bedsteadonboarding/AndroidManifest.xml:authority)
 }
