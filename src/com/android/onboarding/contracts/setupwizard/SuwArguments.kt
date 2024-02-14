@@ -36,15 +36,44 @@ interface WithOptionalSuwArguments {
  * @property isSubactivityFirstLaunched Return true if the ActivityWrapper is Created and not start
  *   SubActivity yet
  */
-data class SuwArguments(
-  val isSuwSuggestedActionFlow: Boolean,
-  val isSetupFlow: Boolean,
-  val preDeferredSetup: Boolean,
-  val deferredSetup: Boolean,
-  val firstRun: Boolean,
-  val portalSetup: Boolean,
-  val wizardBundle: Bundle,
-  val theme: String,
-  val hasMultipleUsers: Boolean? = null,
-  val isSubactivityFirstLaunched: Boolean? = null,
-)
+interface SuwArguments {
+  val isSuwSuggestedActionFlow: Boolean
+  val isSetupFlow: Boolean
+  val preDeferredSetup: Boolean
+  val deferredSetup: Boolean
+  val firstRun: Boolean
+  val portalSetup: Boolean
+  val wizardBundle: Bundle
+  val theme: String
+  val hasMultipleUsers: Boolean?
+  val isSubactivityFirstLaunched: Boolean?
+
+  companion object {
+    @JvmStatic
+    @JvmName("of")
+    operator fun invoke(
+      isSuwSuggestedActionFlow: Boolean,
+      isSetupFlow: Boolean,
+      preDeferredSetup: Boolean,
+      deferredSetup: Boolean,
+      firstRun: Boolean,
+      portalSetup: Boolean,
+      wizardBundle: Bundle,
+      theme: String,
+      hasMultipleUsers: Boolean?,
+      isSubactivityFirstLaunched: Boolean?,
+    ): SuwArguments =
+      object : SuwArguments {
+        override val isSuwSuggestedActionFlow = isSuwSuggestedActionFlow
+        override val isSetupFlow = isSetupFlow
+        override val preDeferredSetup = preDeferredSetup
+        override val deferredSetup = deferredSetup
+        override val firstRun = firstRun
+        override val portalSetup = portalSetup
+        override val wizardBundle = wizardBundle
+        override val theme = theme
+        override val hasMultipleUsers = hasMultipleUsers
+        override val isSubactivityFirstLaunched = isSubactivityFirstLaunched
+      }
+  }
+}
