@@ -3,8 +3,6 @@ package com.android.onboarding.versions
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import com.android.onboarding.versions.annotations.ChangeId
-import com.android.onboarding.versions.annotations.ChangeId.Companion.NOT_AVAILABLE
 
 /** The meta-data key used to indicate compliance date. */
 private const val COMPLIANCE_DATE_METADATA_KEY = "onboarding-compliance-date"
@@ -33,18 +31,5 @@ class Versions internal constructor(private val context: Context) {
     val complianceDateString = app.metaData?.getString(COMPLIANCE_DATE_METADATA_KEY)
 
     complianceDateString?.let(::ComplianceDate) ?: ComplianceDate()
-  }
-
-  companion object {
-    /**
-     * True if the [complianceDate] is greater than or equal to the available date of the
-     * [changeId].
-     */
-    fun isAvailable(complianceDate: ComplianceDate, changeId: ChangeId) =
-      if (changeId.available == NOT_AVAILABLE) {
-        false
-      } else {
-        complianceDate.isAtLeast(changeId.available)
-      }
   }
 }

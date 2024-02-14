@@ -1,5 +1,6 @@
 package com.android.onboarding.versions
 
+import com.android.onboarding.versions.annotations.ChangeId
 import java.time.LocalDate
 
 /**
@@ -40,6 +41,16 @@ value class ComplianceDate(private val complianceDate: LocalDate) {
 
   /** True if the package's version is less than {@code version} */
   fun isLessThan(version: ComplianceDate): Boolean = version.complianceDate.isAfter(complianceDate)
+
+  /**
+   * True if the [complianceDate] is greater than or equal to the available date of the [changeId].
+   */
+  fun isAvailable(changeId: ChangeId) =
+    if (changeId.available == ChangeId.NOT_AVAILABLE) {
+      false
+    } else {
+      isAtLeast(changeId.available)
+    }
 
   companion object {
     /**
