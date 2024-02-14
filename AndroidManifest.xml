@@ -6,4 +6,8 @@
   <uses-sdk
       android:minSdkVersion="26"
       android:targetSdkVersion="34" />
+
+  <application>
+    <meta-data android:name="onboarding_compliance_date" android:value="2024-02-02" />
+  </application>
 </manifest>

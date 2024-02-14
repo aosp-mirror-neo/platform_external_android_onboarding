@@ -17,6 +17,8 @@ android_library {
         "androidx.fragment_fragment-ktx",
         "androidx.appcompat_appcompat",
         "Robolectric_all-target_upstream",
+        "apache-commons-lang3",
+        "kotlin-reflect",
         "truth",
     ],
 }
