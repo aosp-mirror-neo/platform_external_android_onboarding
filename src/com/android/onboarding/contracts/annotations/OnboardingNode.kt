@@ -45,7 +45,16 @@ annotation class OnboardingNode(
     EDUCATION,
 
     /** This node's primary purpose is to input a decision or some data from the user. */
-    INPUT
+    INPUT,
+
+    /**
+     * This node's primary purpose is to host some other UI node. This node must not show UI itself
+     * independently of another node.
+     *
+     * For example, an Activity which hosts fragments, where those fragments themselves are nodes,
+     * could be marked as [HOST].
+     */
+    HOST
   }
 
   enum class SpecificationType {
