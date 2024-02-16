@@ -22,6 +22,7 @@ package com.android.onboarding.versions.annotations
  *   present in all active versions of apps and no longer needs to be checked).
  */
 @Target(AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.SOURCE)
 annotation class ChangeId(
   val bugId: Long,
   val owner: String,
