@@ -8,8 +8,9 @@ import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Binder
 import android.os.Build
-import android.os.Process
+import android.util.Log
 import com.android.onboarding.bedsteadonboarding.data.NodeData
 import com.android.onboarding.bedsteadonboarding.data.TestConfigData
 import com.android.onboarding.bedsteadonboarding.permissions.TestPermissions
@@ -108,7 +109,16 @@ class TestContentProvider : ContentProvider() {
     throw UnsupportedOperationException("update")
   }
 
-  private fun hasPermission() =
-    "robolectric" == Build.FINGERPRINT ||
-      TestPermissions.canCallerExecuteTestFunctionality(Process.myUid())
+  private fun hasPermission(): Boolean {
+    val context = context
+    return when {
+      "robolectric" == Build.FINGERPRINT -> true
+      context != null ->
+        TestPermissions.canCallerExecuteTestFunctionality(context, Binder.getCallingUid())
+      else -> {
+        Log.e(TAG, "Can't check test permission since context is null")
+        false
+      }
+    }
+  }
 }
