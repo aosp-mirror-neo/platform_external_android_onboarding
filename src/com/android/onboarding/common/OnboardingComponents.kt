@@ -13,12 +13,14 @@ import com.android.onboarding.common.annotations.Triage
     ),
 )
 const val MANAGED_PROVISIONING = "com.android.managedprovisioning"
+
 @OnboardingComponent(
   name = "Test App",
   packageName = "com.android.onboarding.nodes.testing.testapp",
   triage = Triage(buganizerComponentId = 1392556, assigneeEmailAddress = "scottjonathan@google.com"),
 )
 const val TEST_APP = "com.android.onboarding.nodes.testing.testapp"
+
 @OnboardingComponent(
   name = "Auth Managed",
   packageName = "com.google.android.gms",
