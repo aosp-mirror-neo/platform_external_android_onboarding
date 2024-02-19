@@ -720,6 +720,49 @@ interface OnboardingGraphLog {
       }
     }
 
+    /** At [timestamp], the activity node with id [nodeId] called finish. */
+    data class ActivityNodeResumed
+    private constructor(
+      override val nodeId: Long,
+      override val nodeName: String,
+      override val nodeComponent: String,
+      val timestamp: Instant = Instant.now(),
+    ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
+      constructor(
+        nodeId: Long,
+        nodeClass: Class<*>,
+        timestamp: Instant = Instant.now(),
+      ) : this(
+        nodeId,
+        OnboardingNode.extractNodeNameFromClass(nodeClass),
+        OnboardingNode.extractComponentNameFromClass(nodeClass),
+        timestamp,
+      )
+
+      override fun serialize(): OnboardingProtos.LogProto {
+        return OnboardingProtos.LogProto.newBuilder()
+          .setActivityNodeResumed(
+            OnboardingProtos.ActivityNodeResumedProto.newBuilder()
+              .setNodeId(nodeId)
+              .setNodeName(nodeName)
+              .setNodeComponent(nodeComponent)
+              .setTimestamp(timestamp.toEpochMilli())
+              .build()
+          )
+          .build()
+      }
+
+      companion object {
+        fun fromProto(proto: OnboardingProtos.ActivityNodeResumedProto) =
+          ActivityNodeResumed(
+            nodeId = proto.nodeId,
+            nodeName = proto.nodeName,
+            nodeComponent = proto.nodeComponent,
+            timestamp = Instant.ofEpochMilli(proto.timestamp),
+          )
+      }
+    }
+
     /**
      * Wrapper around the same information as [android.content.Intent] but can be used without
      * dependency on Android.
@@ -758,6 +801,7 @@ interface OnboardingGraphLog {
             ActivityNodeFinished.fromProto(proto.activityNodeFinished)
           proto.hasActivityNodeResumedAfterLaunch() ->
             ActivityNodeResumedAfterLaunch.fromProto(proto.activityNodeResumedAfterLaunch)
+          proto.hasActivityNodeResumed() -> ActivityNodeResumed.fromProto(proto.activityNodeResumed)
           else -> throw IllegalStateException("Could not parse $proto")
         }
       }

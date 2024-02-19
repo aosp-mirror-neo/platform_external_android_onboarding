@@ -172,6 +172,16 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
             type = NodeType.ACTIVITY,
           )
         }
+        is OnboardingGraphLog.OnboardingEvent.ActivityNodeResumed -> {
+          nodeMap.updateNode(
+            e,
+            e.nodeId,
+            e.timestamp,
+            name = e.nodeName,
+            component = e.nodeComponent,
+            type = NodeType.ACTIVITY,
+          )
+        }
       }
     }
 
