@@ -160,10 +160,19 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         Lifecycle.Event.ON_CREATE,
         Lifecycle.Event.ON_START,
         Lifecycle.Event.ON_RESUME -> {
-          val waitingForResume = waitingForResumeActivity.contains(activity?.nodeId)
+          val nodeId = activity?.nodeId ?: UNKNOWN_NODE_ID
+          if (nodeId == UNKNOWN_NODE_ID) {
+            Log.w(TAG, "${activity?.componentName} does not contain node id.")
+          }
+          if (event == Lifecycle.Event.ON_RESUME) {
+            AndroidOnboardingGraphLog.log(
+              OnboardingGraphLog.OnboardingEvent.ActivityNodeResumed(nodeId, contract.javaClass)
+            )
+          }
+          val waitingForResume =
+            nodeId != UNKNOWN_NODE_ID && waitingForResumeActivity.contains(nodeId)
           if (waitingForResume) {
-            val nodeId = activity?.nodeId ?: UNKNOWN_NODE_ID
-            val sourceNodeId = waitingForResumeActivity[activity?.nodeId] ?: UNKNOWN_NODE_ID
+            val sourceNodeId = waitingForResumeActivity[nodeId] ?: UNKNOWN_NODE_ID
             AndroidOnboardingGraphLog.log(
               OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch(
                 sourceNodeId,
@@ -322,7 +331,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
       // actityResultRegistry.onLaunch. We will use the outgoing which was just created in
       // performCreateIntent.
       forResultOutGoingId = intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE_ID)
-      Log.w("OnboardingApiContract", "getSynchronousResult was not called when creating intent.")
+      Log.w(TAG, "getSynchronousResult was not called when creating intent.")
     }
 
     AndroidOnboardingGraphLog.log(
@@ -392,6 +401,8 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
         ),
     )
     const val UNKNOWN_NODE: NodeId = UNKNOWN_NODE_ID
+
+    const val TAG = "OnboardingApiContract"
 
     // nodeId to outgoingId
     private val waitingForResumeActivity: MutableMap<Long, Long> = mutableMapOf()
