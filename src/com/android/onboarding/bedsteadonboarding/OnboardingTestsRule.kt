@@ -102,10 +102,13 @@ class OnboardingTestsRule : TestRule {
   }
 
   /**
-   * Launches an activity using [OnboardingActivityApiContract]. Each call to launch() will start a
-   * new graph.
+   * Launches an activity using [OnboardingActivityApiContract]. It will wait indefinitely until the
+   * activity starts. Each call to this method will start a new graph.
    */
-  fun <I, O> launch(activityContract: OnboardingActivityApiContract<I, O>, args: I) {
+  fun <I, O> launchAndWaitForNodeToStart(
+    activityContract: OnboardingActivityApiContract<I, O>,
+    args: I,
+  ) {
     ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
       instrumentationContext,
       activityContract::class.java,
@@ -115,10 +118,12 @@ class OnboardingTestsRule : TestRule {
   }
 
   /**
-   * Launches an activity using [ArgumentFreeOnboardingActivityApiContract]. Each call to launch()
-   * will start a new graph.
+   * Launches an activity using [ArgumentFreeOnboardingActivityApiContract]. It will wait
+   * indefinitely until the activity starts. Each call to this method will start a new graph.
    */
-  fun <O> launch(activityContract: ArgumentFreeOnboardingActivityApiContract<O>) {
+  fun <O> launchAndWaitForNodeToStart(
+    activityContract: ArgumentFreeOnboardingActivityApiContract<O>
+  ) {
     ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
       instrumentationContext,
       activityContract::class.java,
@@ -129,9 +134,13 @@ class OnboardingTestsRule : TestRule {
 
   /**
    * Launches an activity which do not return result using [VoidOnboardingActivityApiContract] and
-   * contract arguments. Each call to launch() will start a new graph.
+   * contract arguments. It will wait indefinitely until the activity starts. Each call to this
+   * method will start a new graph.
    */
-  fun <I> launch(activityContract: VoidOnboardingActivityApiContract<I>, args: I) {
+  fun <I> launchAndWaitForNodeToStart(
+    activityContract: VoidOnboardingActivityApiContract<I>,
+    args: I,
+  ) {
     ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
       instrumentationContext,
       activityContract::class.java,
@@ -142,9 +151,10 @@ class OnboardingTestsRule : TestRule {
 
   /**
    * Launches an activity which do not return result using
-   * [ArgumentFreeVoidOnboardingActivityApiContract]. Each call to launch() will start a new graph.
+   * [ArgumentFreeVoidOnboardingActivityApiContract]. It will wait indefinitely until the activity
+   * starts. Each call to this method will start a new graph.
    */
-  fun launch(activityContract: ArgumentFreeVoidOnboardingActivityApiContract) {
+  fun launchAndWaitForNodeToStart(activityContract: ArgumentFreeVoidOnboardingActivityApiContract) {
     ContractExecutionEligibilityChecker.terminateIfNodeIsTriggeredByTestAndIsNotAllowed(
       instrumentationContext,
       activityContract::class.java,
@@ -299,6 +309,59 @@ class OnboardingTestsRule : TestRule {
     }
   }
 
+  /**
+   * Given the [contractIdentifierOfNodeOfInterest] of the activity node, find if it has started by
+   * querying the onboarding events [graph] for [ActivityNodeResumed] event. If the
+   * [ActivityNodeResumed] event is logged for the node then it means that the activity has started
+   * and is visible.
+   */
+  internal fun hasActivityNodeStarted(
+    contractIdentifierOfNodeOfInterest: String,
+    graph: OnboardingGraph,
+  ): Boolean {
+    // Find the [OnboardingGraph.Node] entry for the source node of graph.
+    val startNode = graph.nodes.entries.find { it.key == startNodeIdOfGraph } ?: return false
+    return hasEventOccurred(
+      OnboardingGraphLog.OnboardingEvent.ActivityNodeResumed::class,
+      contractIdentifierOfNodeOfInterest,
+      startNode.key,
+      graph,
+    )
+  }
+
+  /**
+   * Returns if the event represented by its class [eventClassOfInterest] has occurred for the node
+   * whose contractIdentifier = [contractIdentifierOfNodeOfInterest]. This will do a bfs traversal
+   * of the given [graph] whose initial node is [startNodeId].
+   */
+  internal fun hasEventOccurred(
+    eventClassOfInterest: KClass<*>,
+    contractIdentifierOfNodeOfInterest: String,
+    startNodeId: Long,
+    graph: OnboardingGraph,
+  ): Boolean {
+    val queue = ArrayDeque<Long>().apply { add(startNodeId) } // Add initial node
+    val visitedNodes = mutableSetOf<Long>()
+    while (queue.isNotEmpty()) {
+      val currentNode = graph.nodes[queue.removeFirst()]!!
+      visitedNodes.add(currentNode.id)
+      if (
+        ContractUtils.getContractIdentifierForNode(currentNode) ==
+          contractIdentifierOfNodeOfInterest &&
+          currentNode.events.any { it::class == eventClassOfInterest }
+      ) {
+        return true
+      }
+
+      for (outgoingNode in currentNode.outgoingEdgesOfValidNodes) {
+        if (!visitedNodes.contains(outgoingNode.node.id)) {
+          queue.add(outgoingNode.node.id)
+        }
+      }
+    }
+    return false
+  }
+
   /** Returns if the calling function is executed on robolectric. */
   private fun requireRobolectric() = "robolectric" == Build.FINGERPRINT
 
@@ -358,7 +421,7 @@ class OnboardingTestsRule : TestRule {
 
     // Start activity and wait.
     instrumentationContext.startActivity(trampolineActivityIntent)
-    waitForActivityLaunch()
+    waitForActivityLaunch(activityContract)
   }
 
   /** Get the [Intent] action to launch Trampoline Activity of the application owning [contract]. */
@@ -539,9 +602,15 @@ class OnboardingTestsRule : TestRule {
    */
   private fun getScreenshotName() =
     "$componentOfNodeToTakeScreenshot/$nameOfNodeToTakeScreenshot/${currentTestName}.png"
-  private fun waitForActivityLaunch() {
+
+  private fun waitForActivityLaunch(activityContract: OnboardingActivityApiContract<*, *>) {
     if (!requireRobolectric()) {
-      Thread.sleep(10000)
+      val contractIdentifier = ContractUtils.getContractIdentifier(activityContract::class.java)
+      while (true) {
+        val graph = OnboardingGraph(getOnboardingEvents())
+        if (hasActivityNodeStarted(contractIdentifier, graph)) return
+        Thread.sleep(100)
+      }
     }
   }
 
