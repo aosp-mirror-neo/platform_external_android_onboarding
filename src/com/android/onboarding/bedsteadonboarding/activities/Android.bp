@@ -9,6 +9,7 @@ android_library {
         "*.kt",
     ],
     static_libs: [
+        "android_onboarding.bedsteadonboarding.permissions",
         "android_onboarding.bedsteadonboarding.providers",
         "androidx.activity_activity-ktx",
     ],

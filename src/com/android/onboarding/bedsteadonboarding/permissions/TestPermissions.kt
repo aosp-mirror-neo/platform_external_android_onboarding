@@ -58,7 +58,7 @@ object TestPermissions {
    * @param context context of the current application from which the function is called.
    * @param uid userid of the caller for which to check if the associated process is instrumented.
    */
-  internal fun uidIsInstrumented(context: Context, uid: Int): Boolean {
+  fun uidIsInstrumented(context: Context, uid: Int): Boolean {
     try {
       // Get all the app packages associated with [uid].
       val packagesForUid = context.packageManager.getPackagesForUid(uid) ?: arrayOf()
