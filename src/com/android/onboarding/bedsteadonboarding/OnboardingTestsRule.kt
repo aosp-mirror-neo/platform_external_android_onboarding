@@ -1,5 +1,6 @@
 package com.android.onboarding.bedsteadonboarding
 
+import android.app.ActivityOptions
 import android.content.ContentValues
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -419,8 +420,15 @@ class OnboardingTestsRule : TestRule {
         flags = INTENT_FLAGS_START_IN_NEW_TASK
       }
 
+    val activityOptions =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        ActivityOptions.makeBasic().apply { isShareIdentityEnabled = true }
+      } else {
+        null
+      }
+
     // Start activity and wait.
-    instrumentationContext.startActivity(trampolineActivityIntent)
+    instrumentationContext.startActivity(trampolineActivityIntent, activityOptions?.toBundle())
     waitForActivityLaunch(activityContract)
   }
 

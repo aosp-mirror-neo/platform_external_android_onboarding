@@ -13,5 +13,6 @@ const val TEST_APP = "com.android.onboarding.nodes.testing.testapp"
   name = "Auth Managed",
   packageName = "com.google.android.gms",
   subName = "auth_managed",
+  blueprint = "//java/com/google/android/gmscore/integ/modules/auth_managed/auth_managed.blueprint",
 )
 const val AUTH_MANAGED = "com.google.android.gms/auth_managed"
