@@ -16,3 +16,10 @@ const val TEST_APP = "com.android.onboarding.nodes.testing.testapp"
   blueprint = "//java/com/google/android/gmscore/integ/modules/auth_managed/auth_managed.blueprint",
 )
 const val AUTH_MANAGED = "com.google.android.gms/auth_managed"
+
+val COMPONENTS =
+  mapOf(
+    "MANAGED_PROVISIONING" to MANAGED_PROVISIONING,
+    "TEST_APP" to TEST_APP,
+    "AUTH_MANAGED" to AUTH_MANAGED,
+  )
