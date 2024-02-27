@@ -13,7 +13,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue
 import kotlin.reflect.KClass
 
 /** A [Truth] [Subject] to assert expected [Throwable]s being thrown. */
-class ErrorSubject private constructor(metadata: FailureMetadata, private val actual: () -> Any?) :
+class ErrorSubject
+private constructor(metadata: FailureMetadata, private val actual: (() -> Any?)?) :
   Subject(metadata, actual) {
 
   @CanIgnoreReturnValue
@@ -21,6 +22,13 @@ class ErrorSubject private constructor(metadata: FailureMetadata, private val ac
 
   @CanIgnoreReturnValue
   fun <T : Throwable> failsWith(expected: KClass<T>): ThrowableSubject {
+    if (actual == null) {
+      failWithoutActual(
+        fact("expected to fail with", expected.qualifiedName),
+        simpleFact("but no action was provided"),
+      )
+      return assertThat(null as Throwable?)
+    }
     val error = runCatching(actual).exceptionOrNull()
     if (error == null) {
       failWithoutActual(
@@ -38,7 +46,7 @@ class ErrorSubject private constructor(metadata: FailureMetadata, private val ac
 
   companion object : Factory<ErrorSubject, () -> Any?> {
     override fun createSubject(metadata: FailureMetadata, actual: (() -> Any?)?): ErrorSubject =
-      ErrorSubject(metadata, actual ?: error("Unable to assert empty lambda"))
+      ErrorSubject(metadata, actual)
   }
 }
 
@@ -48,6 +56,8 @@ inline fun <reified T : Throwable> StandardSubjectBuilder.failsWith(noinline act
 }
 
 /**
+ * Asserts that the given [action] fails with the expected [Throwable] [T]
+ *
  * Unfortunately @[CanIgnoreReturnValue] is not supported on inline library functions and as such
  * this utility function is not returning [ThrowableSubject] for further assertions. If you need
  * further assertions consider using one of the more verbose forms:

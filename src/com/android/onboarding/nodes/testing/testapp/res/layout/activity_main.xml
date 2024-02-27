@@ -19,8 +19,8 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:ems="10"
-      android:inputType="text"
-      android:hint="Argument/Result" />
+      android:hint="Argument/Result"
+      android:inputType="text" />
   <Spinner
       android:id="@+id/processSpinner"
       android:layout_width="match_parent"
@@ -30,26 +30,26 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content" />
 
-      <Button
-          android:id="@+id/startActivityButton"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          android:text="Start Activity" />
+  <Button
+      android:id="@+id/startActivityButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Activity" />
   <Button
       android:id="@+id/startActivityAndForwardButton"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:text="Start Activity and Forward" />
-      <Button
-          android:id="@+id/startActivityForResultButton"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          android:text="Start Activity For Result" />
-      <Button
-          android:id="@+id/startActivityAndFinishButton"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          android:text="Start Activity And Finish" />
+  <Button
+      android:id="@+id/startActivityForResultButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Activity For Result" />
+  <Button
+      android:id="@+id/startActivityAndFinishButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Activity And Finish" />
   <Button
       android:id="@+id/failNodeButton"
       android:layout_width="fill_parent"
