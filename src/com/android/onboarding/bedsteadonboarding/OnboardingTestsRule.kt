@@ -7,8 +7,12 @@ import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Bitmap
 import android.os.Build
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.services.storage.TestStorage
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import com.android.onboarding.bedsteadonboarding.annotations.OnboardingNodeScreenshot
 import com.android.onboarding.bedsteadonboarding.annotations.TestNodes
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
@@ -31,6 +35,7 @@ import com.android.onboarding.nodes.OnboardingGraphLog
 import java.lang.AssertionError
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
+import java.time.Duration
 import java.time.Instant
 import kotlin.reflect.KClass
 import org.junit.rules.TestRule
@@ -42,6 +47,7 @@ import org.junit.runners.model.Statement
  */
 class OnboardingTestsRule : TestRule {
 
+  private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
   private val instrumentationContext = InstrumentationRegistry.getInstrumentation().context
   private val testStorage = TestStorage()
 
@@ -166,6 +172,7 @@ class OnboardingTestsRule : TestRule {
 
   /** Captures the current UI on the device and saves it to the test output file. */
   fun takeScreenshot() {
+    Log.i(TAG, "Taking screenshot of node $nameOfNodeToTakeScreenshot")
     hasTakenScreenshot = true
 
     val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
@@ -614,10 +621,20 @@ class OnboardingTestsRule : TestRule {
   private fun waitForActivityLaunch(activityContract: OnboardingActivityApiContract<*, *>) {
     if (!requireRobolectric()) {
       val contractIdentifier = ContractUtils.getContractIdentifier(activityContract::class.java)
+      val contractPackageName = extractAllowedNodeAndItsAppPackage(activityContract::class).second
       while (true) {
         val graph = OnboardingGraph(getOnboardingEvents())
-        if (hasActivityNodeStarted(contractIdentifier, graph)) return
-        Thread.sleep(100)
+        if (hasActivityNodeStarted(contractIdentifier, graph)) {
+          // Pause the test for up to 60 seconds, waiting for a top-level UI element (depth 0) from
+          // the package specified by [contractPackageName] to appear on the screen.
+          device.wait(
+            Until.hasObject(By.pkg(contractPackageName).depth(0)),
+            Duration.ofSeconds(60).toMillis(),
+          )
+          Thread.sleep(1000) // Wait an additional second in case UI automator is flaky.
+          return
+        }
+        Thread.sleep(100) // Check every 100 milliseconds.
       }
     }
   }
@@ -639,6 +656,7 @@ class OnboardingTestsRule : TestRule {
   )
 
   companion object {
+    const val TAG = "OnboardingTestsRule"
     const val ONBOARDING_EVENT_LOG_TAG = "ZZOnboardingGraph"
     const val EXTRA_NODE_START_INTENT_KEY =
       "com.android.onboarding.bedsteadonboarding.activities.extra.NODE_START_INTENT"
