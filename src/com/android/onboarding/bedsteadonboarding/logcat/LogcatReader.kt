@@ -19,6 +19,7 @@ class LogcatReader(private val startClean: Boolean = true, private val filterTag
   private val LOGCAT_COMMAND = "logcat"
   private val TAG = "LogcatReader"
   private val filteredLogs = arrayListOf<String>()
+  private val logsLock = Any() // Lock to provide thread safe access to [filteredLogs].
   private val logcatReaderExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
 
   private var shouldReadLogs = false
@@ -27,7 +28,9 @@ class LogcatReader(private val startClean: Boolean = true, private val filterTag
   private lateinit var logcatFileDescriptor: ParcelFileDescriptor
 
   private val logcatReaderRunnable = Runnable {
-    filteredLogs.clear()
+    synchronized(logsLock) {
+      filteredLogs.clear()
+    }
     if (startClean) {
       try {
         InstrumentationRegistry.getInstrumentation()
@@ -46,7 +49,10 @@ class LogcatReader(private val startClean: Boolean = true, private val filterTag
     hasLogcatStarted = true
     Log.i(TAG, "Started Reading Logs")
     while (shouldReadLogs) {
-      logcatReader.readLine()?.takeIf { it.contains(filterTag) }?.also { filteredLogs.add(it) }
+      logcatReader
+        .readLine()
+        ?.takeIf { it.contains(filterTag) }
+        ?.also { synchronized(logsLock) { filteredLogs.add(it) } }
     }
   }
 
@@ -68,14 +74,20 @@ class LogcatReader(private val startClean: Boolean = true, private val filterTag
    */
   fun stopReadingLogs() {
     shouldReadLogs = false
-    filteredLogs.clear()
+    synchronized(logsLock) {
+      filteredLogs.clear()
+    }
     Log.i(TAG, "Closing logcat file descriptor")
     logcatFileDescriptor.close()
     logcatReaderExecutorService.shutdown()
   }
 
   /** Returns the immutable set of log lines with tag = [filterTag] from logs */
-  fun getFilteredLogs() = filteredLogs.toSet()
+  fun getFilteredLogs(): Set<String> {
+    synchronized(logsLock) {
+      return filteredLogs.toSet()
+    }
+  }
 
   /** Returns if the logs have started to be read. */
   fun hasLogcatStarted() = hasLogcatStarted
