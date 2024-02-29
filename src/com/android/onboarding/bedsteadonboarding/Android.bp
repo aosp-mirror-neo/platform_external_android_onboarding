@@ -33,6 +33,7 @@ android_library {
         "android_onboarding.nodes",
         "androidx.test.ext.junit",
         "androidx.test.core",
+        "androidx.test.uiautomator_uiautomator",
         "junit",
         "kotlin-reflect",
     ],
