@@ -1,12 +1,22 @@
 package com.android.onboarding.common
 
 import com.android.onboarding.common.annotations.OnboardingComponent
+import com.android.onboarding.common.annotations.Triage
 
-@OnboardingComponent(name = "Managed Provisioning", packageName = "com.android.managedprovisioning")
+@OnboardingComponent(
+  name = "Managed Provisioning",
+  packageName = "com.android.managedprovisioning",
+  triage =
+    Triage(
+      buganizerComponentId = 1337923,
+      assigneeEmailAddress = "ae-provisioning-triage@google.com",
+    ),
+)
 const val MANAGED_PROVISIONING = "com.android.managedprovisioning"
 @OnboardingComponent(
   name = "Test App",
   packageName = "com.android.onboarding.nodes.testing.testapp",
+  triage = Triage(buganizerComponentId = 1392556, assigneeEmailAddress = "scottjonathan@google.com"),
 )
 const val TEST_APP = "com.android.onboarding.nodes.testing.testapp"
 @OnboardingComponent(
