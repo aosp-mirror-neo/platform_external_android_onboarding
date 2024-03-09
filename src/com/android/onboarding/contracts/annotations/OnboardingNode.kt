@@ -59,18 +59,24 @@ annotation class OnboardingNode(
 
   enum class SpecificationType {
     /**
+     * No requirements.
+     *
+     * Most "Light" nodes will be lacking documentation, and using Intents and Bundles as arguments
+     * and return values.
+     */
+    LIGHT,
+
+    /**
      * This means that full Javadoc is provided, all arguments are fully defined, documented and
      * typed (no undefined Bundles or Intents), and return values are properly defined and typed.
      */
-    V1,
+    BASELINE,
 
     /**
-     * No requirements.
-     *
-     * Most "Light" nodes will be lacking Javadoc, and using Intents and Bundles as arguments and
-     * return values.
+     * Same as [BASELINE] except that we have confidence in our contract completeness so can enforce
+     * strict validation
      */
-    LIGHT
+    V1,
   }
 
   companion object {

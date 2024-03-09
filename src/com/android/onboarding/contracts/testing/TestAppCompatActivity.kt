@@ -1,8 +1,8 @@
 package com.android.onboarding.contracts.testing
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.appcompat.R
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.R
 
 /**
  * An Activity to be used in tests. It can be created with Robolectric, and makes it possible to use

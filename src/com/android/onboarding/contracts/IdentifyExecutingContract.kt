@@ -6,8 +6,8 @@ import android.content.Intent
  * Interface implemented by a [OnboardingActivityApiContract] to allow it to be used with
  * [findExecutingContract].
  *
- * This allows a single activity to implement multiple contracts, as long as those contracts
- * can be distinguished based on properties of the [Intent].
+ * This allows a single activity to implement multiple contracts, as long as those contracts can be
+ * distinguished based on properties of the [Intent].
  *
  * Recommended usage:
  * ```
@@ -27,3 +27,19 @@ interface IdentifyExecutingContract {
  */
 fun <I : IdentifyExecutingContract> Intent.findExecutingContract(vararg contracts: I) =
   contracts.firstOrNull { it.isExecuting(this) }
+
+/**
+ * More lightweight version of [IdentifyExecutingContract] working with intent actions only.
+ */
+interface IdentifyExecutingContractByAction : IdentifyExecutingContract {
+  /** Returns true if this [OnboardingActivityApiContract] is currently executing. */
+  fun isExecuting(action: String?): Boolean
+
+  override fun isExecuting(intent: Intent): Boolean = isExecuting(intent.action)
+}
+
+/** @see Intent.findExecutingContract */
+fun <I : IdentifyExecutingContractByAction> findExecutingContract(
+  action: String?,
+  vararg contracts: I,
+) = contracts.firstOrNull { it.isExecuting(action) }
