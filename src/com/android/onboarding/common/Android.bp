@@ -12,7 +12,6 @@ android_library {
     static_libs: [
         "dagger2",
         "jsr330",
-        "androidx.annotation_annotation",
         "android_onboarding.common.annotations",
     ],
     plugins: ["dagger2-compiler"],
