@@ -11,7 +11,7 @@ android_library {
     dont_merge_manifests: true,
     static_libs: [
         "android_onboarding.contracts",
-        "android-support-v7-appcompat",
+        "androidx.appcompat_appcompat",
         "androidx.test.core",
         "androidx.activity_activity-ktx",
         "androidx.fragment_fragment-ktx",

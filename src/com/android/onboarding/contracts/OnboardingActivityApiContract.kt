@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
 import com.android.onboarding.contracts.ContractResult.Failure
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
+import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
 import com.android.onboarding.nodes.OnboardingGraphLog
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeArgumentExtracted
@@ -27,6 +28,7 @@ import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityN
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.util.UUID
+import kotlin.reflect.KClass
 
 /**
  * A Contract used for launching an activity as part of the Onboarding flow.
@@ -35,6 +37,16 @@ import java.util.UUID
  * is to allow for better central tracking of onboarding sessions.
  */
 abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O>() {
+  /**
+   * Extracted [OnboardingNode] metadata for this contract.
+   *
+   * Resolved lazily and throws an error if the annotation is not present.
+   */
+  @InternalOnboardingApi
+  val metadata: OnboardingNode by lazy {
+    this::class.java.getAnnotation(OnboardingNode::class.java)
+      ?: error("${this::class.qualifiedName} is missing OnboardingNode annotation")
+  }
 
   /**
    * Create a new ID to be used for the node started by this contract.
@@ -53,12 +65,19 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    */
   protected abstract fun performCreateIntent(context: Context, arg: I): Intent
 
+  /** Provides internal access to [performCreateIntent] */
+  internal fun performCreateIntentInternal(context: Context, arg: I) =
+    performCreateIntent(context, arg)
+
   /**
    * Extracts the argument from the given [Intent].
    *
    * <p>This should be symmetric with [performCreateIntent].
    */
   protected abstract fun performExtractArgument(intent: Intent): I
+
+  /** Provides internal access to [performExtractArgument] */
+  internal fun performExtractArgumentInternal(intent: Intent) = performExtractArgument(intent)
 
   /**
    * Sets the given result.
@@ -67,12 +86,18 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
    */
   protected abstract fun performSetResult(result: O): ContractResult
 
+  /** Provides internal access to [performSetResult] */
+  internal fun performSetResultInternal(result: O) = performSetResult(result)
+
   /**
    * Extracts the result from the given [ContractResult].
    *
    * This should be symmetric with [performSetResult].
    */
   protected abstract fun performParseResult(result: ContractResult): O
+
+  /** Provides internal access to [performParseResult] */
+  internal fun performParseResultInternal(result: ContractResult) = performParseResult(result)
 
   /**
    * Fetches the result without starting the activity.
@@ -116,7 +141,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
     AndroidOnboardingGraphLog.log(ActivityNodeSetResult(activity.nodeId, this.javaClass, result))
 
-    var contractResult = performSetResult(result)
+    val contractResult = performSetResult(result)
 
     if (contractResult is Failure) {
       AndroidOnboardingGraphLog.log(ActivityNodeFail(activity.nodeId, contractResult.reason))
@@ -300,7 +325,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     val outgoingId = newOutgoingId()
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, outgoingId)
     // Track for resume event for activity node id.
-    waitingForResumeActivity.put(extractNodeId(context), outgoingId)
+    waitingForResumeActivity[extractNodeId(context)] = outgoingId
 
     AndroidOnboardingGraphLog.log(
       ActivityNodeExecutedDirectly(extractNodeId(context), outgoingId, this.javaClass, input)
@@ -436,6 +461,15 @@ abstract class ArgumentFreeVoidOnboardingActivityApiContract :
     // Does nothing - no argument
   }
 }
+
+/**
+ * Marks a given [Activity] as an Onboarding entity fulfilling given [contract].
+ *
+ * @property contract fulfilled by this activity
+ */
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.CLASS)
+annotation class OnboardingActivity(val contract: KClass<OnboardingActivityApiContract<*, *>>)
 
 /** Returns [true] if the activity is launched using onboarding contract, [false] otherwise. */
 fun Activity.isLaunchedByOnboardingContract(): Boolean {

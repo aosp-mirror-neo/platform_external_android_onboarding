@@ -308,6 +308,7 @@ class OnboardingTestsRule : TestRule {
       // [TrampolineActivity], so the graph is broken, i.e. we can't know what is the nodeId of the
       // [activityContract]. So as a workaround we set the nodeId in the [Intent] here itself.
       startNodeIdOfGraph = nodeIntent.nodeId
+      Log.i(TAG, "Activity will be launched with nodeId $startNodeIdOfGraph")
       nodeIntent.putExtra(EXTRA_ONBOARDING_NODE_ID, startNodeIdOfGraph)
       return nodeIntent
     } else {
@@ -369,6 +370,36 @@ class OnboardingTestsRule : TestRule {
     }
     return false
   }
+
+  /**
+   * Checks if the activity launched has been validated using the correct contract with which it was
+   * launched. If not it will throw an error. Note that it will also throw an error if the activity
+   * was validated twice once using correct and another time using incorrect correct.
+   */
+  internal fun throwErrorIfActivityNotValidatedUsingCorrectContract(
+    onboardingEvents: Set<OnboardingGraphLog.OnboardingEvent>,
+    contractIdentifierOfInterest: String,
+  ) {
+    val invalidEvent =
+      onboardingEvents.find {
+        isInvalidActivityNodeValidatingEvent(it, contractIdentifierOfInterest, startNodeIdOfGraph)
+      }
+    if (invalidEvent != null) {
+      error(
+        "Please use the correct contract to validate the launched activity. Invalid event is $invalidEvent"
+      )
+    }
+  }
+
+  private fun isInvalidActivityNodeValidatingEvent(
+    event: OnboardingGraphLog.OnboardingEvent,
+    expectedContractIdentifier: String,
+    activityNodeId: Long,
+  ) =
+    event.nodeId == activityNodeId &&
+      event is OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating &&
+      ContractUtils.getContractIdentifier(event.nodeComponent, event.nodeName) !=
+        expectedContractIdentifier
 
   /** Returns if the calling function is executed on robolectric. */
   private fun requireRobolectric() = "robolectric" == Build.FINGERPRINT
@@ -623,7 +654,9 @@ class OnboardingTestsRule : TestRule {
       val contractIdentifier = ContractUtils.getContractIdentifier(activityContract::class.java)
       val contractPackageName = extractAllowedNodeAndItsAppPackage(activityContract::class).second
       while (true) {
-        val graph = OnboardingGraph(getOnboardingEvents())
+        val onboardingEvents = getOnboardingEvents()
+        throwErrorIfActivityNotValidatedUsingCorrectContract(onboardingEvents, contractIdentifier)
+        val graph = OnboardingGraph(onboardingEvents)
         if (hasActivityNodeStarted(contractIdentifier, graph)) {
           // Pause the test for up to 60 seconds, waiting for a top-level UI element (depth 0) from
           // the package specified by [contractPackageName] to appear on the screen.
