@@ -13,7 +13,7 @@ interface OnboardingFlagsProvider {
 
   @Deprecated(
     message = "Replaced with a property",
-    replaceWith = ReplaceWith("isNodeLoggingEnabled")
+    replaceWith = ReplaceWith("isNodeLoggingEnabled"),
   )
   fun isOnboardingNodeLoggingEnabled(): Boolean = isNodeLoggingEnabled
 
@@ -23,6 +23,8 @@ interface OnboardingFlagsProvider {
   /** Returns `true` if onboarding UI logging should be uploaded remotely. */
   val isUiLoggingEnabled: Boolean
 
+  /** Returns `true` if dimensions are being attached to logs. */
+  val isDimensionLoggingEnabled: Boolean
   /**
    * Indicates that all onboarding components should activate the flagged changes regardless of
    * other flag values.
