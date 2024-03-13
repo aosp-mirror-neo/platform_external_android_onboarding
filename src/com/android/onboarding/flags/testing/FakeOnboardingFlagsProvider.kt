@@ -7,6 +7,7 @@ class FakeOnboardingFlagsProvider(
   override var isContractEnabled: Boolean = false,
   override var isNodeLoggingEnabled: Boolean = false,
   override var isUiLoggingEnabled: Boolean = false,
+  override var isDimensionLoggingEnabled: Boolean = false,
   override var isDebug: Boolean = false,
   override val shouldVisualiseNodeTransitionsInLogcat: Boolean = false,
 ) : OnboardingFlagsProvider {
@@ -15,7 +16,7 @@ class FakeOnboardingFlagsProvider(
 
   @Deprecated(
     message = "Replaced with overrides",
-    replaceWith = ReplaceWith("isNodeLoggingEnabled")
+    replaceWith = ReplaceWith("isNodeLoggingEnabled"),
   )
   var isOnboardingNodeLoggingEnabledFlag: Boolean by ::isNodeLoggingEnabled
 }
