@@ -15,6 +15,13 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     get() =
       SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_UI_LOGGING_ENABLED", false)
 
+  override val isDimensionLoggingEnabled: Boolean
+    get() =
+      SystemProperties.getBoolean(
+        "$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DIMENSION_LOGGING_ENABLED",
+        false,
+      )
+
   override val isDebug: Boolean
     get() = SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DEBUG_ENABLED", false)
 
@@ -22,7 +29,7 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     get() =
       SystemProperties.getBoolean(
         "$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_VISUALISE_TRANSITIONS",
-        false
+        false,
       ) || isDebug
 
   companion object {
@@ -33,5 +40,6 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     private const val FEATURE_DEBUG_ENABLED = "debug"
     private const val FEATURE_UI_LOGGING_ENABLED = "ui_logging"
     private const val FEATURE_VISUALISE_TRANSITIONS = "vis_transitions"
+    private const val FEATURE_DIMENSION_LOGGING_ENABLED = "dimension_logging"
   }
 }
