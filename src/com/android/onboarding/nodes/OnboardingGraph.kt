@@ -12,10 +12,11 @@ import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityN
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating
 import java.lang.IllegalStateException
+import java.time.Duration
 import java.time.Instant
 import java.util.Objects
 
-class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
+class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
   val nodes: Map<Long, Node> by lazy {
     val nodeMap = mutableMapOf<Long, Node>()
 
@@ -373,6 +374,13 @@ class OnboardingGraph(events: Set<OnboardingGraphLog.OnboardingEvent>) {
 
     val isComplete: Boolean
       get() = _events.size >= 2
+
+    val totalRuntime: Duration = if (_start == null || _end == null) Duration.ofSeconds(-1) else Duration.between(start, end)
+
+    val individualRuntime: Duration =
+      totalRuntime.minus(
+        outgoingEdges.map { it.node.totalRuntime }.reduceOrNull { acc, duration -> acc.plus(duration) } ?: Duration.ofSeconds(0)
+      )
 
     override fun hashCode(): Int = Objects.hash(_id, _name)
 
