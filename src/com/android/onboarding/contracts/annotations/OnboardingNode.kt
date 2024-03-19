@@ -54,7 +54,12 @@ annotation class OnboardingNode(
      * For example, an Activity which hosts fragments, where those fragments themselves are nodes,
      * could be marked as [HOST].
      */
-    HOST
+    HOST,
+
+    /**
+     * This node's primary purpose is to show error screen to the user.
+     */
+    ERROR,
   }
 
   enum class SpecificationType {
