@@ -534,6 +534,7 @@ class OnboardingTestsRule : TestRule {
           OnboardingNode.UiType.EDUCATION,
           OnboardingNode.UiType.INPUT,
           OnboardingNode.UiType.LOADING,
+          OnboardingNode.UiType.ERROR,
           OnboardingNode.UiType.OTHER -> {
             nameOfNodeToTakeScreenshot = annotation.name
             componentOfNodeToTakeScreenshot = annotation.component
