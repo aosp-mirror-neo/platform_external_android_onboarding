@@ -375,12 +375,16 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
     val isComplete: Boolean
       get() = _events.size >= 2
 
-    val totalRuntime: Duration = if (_start == null || _end == null) Duration.ofSeconds(-1) else Duration.between(start, end)
+    val totalRuntime: Duration
+      get() = if (_start == null || _end == null) Duration.ofSeconds(-1) else Duration.between(start, end)
 
-    val individualRuntime: Duration =
-      totalRuntime.minus(
-        outgoingEdges.map { it.node.totalRuntime }.reduceOrNull { acc, duration -> acc.plus(duration) } ?: Duration.ofSeconds(0)
-      )
+    val individualRuntime: Duration
+      get() =
+        totalRuntime.minus(
+          outgoingEdges
+            .map { it.node.totalRuntime }
+            .fold(Duration.ZERO) { acc, duration -> acc.plus(duration) }
+        )
 
     override fun hashCode(): Int = Objects.hash(_id, _name)
 
