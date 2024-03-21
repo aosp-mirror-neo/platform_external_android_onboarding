@@ -10,6 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
+import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
 import com.android.onboarding.contracts.ContractResult.Failure
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.OnboardingNode
@@ -390,6 +391,12 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
   final override fun getSynchronousResult(context: Context, input: I): SynchronousResult<O>? {
     // Injection point when making a synchronous call
+
+    val contractResult = ContractUtils.getContractResultIfNodeIsFakedInTest(context, this.javaClass)
+    if (contractResult != null) {
+      Log.i(TAG, "Contract result fetched for fake node ${this.javaClass} is $contractResult")
+      return SynchronousResult(performParseResult(contractResult))
+    }
 
     val thisNodeId = extractNodeId(context)
 

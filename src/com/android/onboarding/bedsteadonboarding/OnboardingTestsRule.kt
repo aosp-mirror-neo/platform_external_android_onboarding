@@ -19,6 +19,7 @@ import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecution
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
 import com.android.onboarding.bedsteadonboarding.data.NodeData
 import com.android.onboarding.bedsteadonboarding.data.OnboardingNodeMetadata
+import com.android.onboarding.bedsteadonboarding.fakes.FakeActivityNode
 import com.android.onboarding.bedsteadonboarding.logcat.LogcatReader
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
@@ -43,15 +44,17 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 /**
  * TestRule to run before and after each test run. It will store all the test node related configs
- * like which nodes are allowed to execute.
+ * such as which nodes are allowed to execute.
  */
 class OnboardingTestsRule : TestRule {
 
-  private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+  val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
   private val instrumentationContext = InstrumentationRegistry.getInstrumentation().context
   private val testStorage = TestStorage()
 
   private lateinit var logcatReader: LogcatReader
+  private lateinit var testNodesConfiguration: TestNodesConfiguration
 
   // Initial/ Source node of the graph. In a test multiple nodes could be launched or even a single
   // node could be launched multiple times using [OnboardingTestRule#launch] call. Each such call
@@ -77,10 +80,10 @@ class OnboardingTestsRule : TestRule {
     return object : Statement() {
       override fun evaluate() {
         currentTestName = description.methodName
-        // Extract test configuration from all the annotations applied to the test.
-        val testNodesConfiguration = extractTestNodesConfiguration(description)
-
         try {
+          // Extract test configuration from all the annotations applied to the test.
+          testNodesConfiguration = extractTestNodesConfiguration(description)
+
           // Start Reading OnboardingEvents Logs.
           logcatReader = LogcatReader(filterTag = ONBOARDING_EVENT_LOG_TAG).apply { start() }
 
@@ -106,6 +109,19 @@ class OnboardingTestsRule : TestRule {
         }
       }
     }
+  }
+
+  /** Creates a fake activity node from given node contract [nodeToFake]. */
+  fun <I, O> fake(
+    nodeToFake: KClass<out OnboardingActivityApiContract<I, O>>
+  ): FakeActivityNode<I, O> {
+    val appsStoringFakeNodeConfig = testNodesConfiguration.appsStoringTestConfig.toMutableSet()
+    appsStoringFakeNodeConfig.add(extractNodeDataAndItsAppPackage(nodeToFake).second)
+    return FakeActivityNode(
+      appsStoringFakeNodeConfig = appsStoringFakeNodeConfig.toSet(),
+      activityNode = nodeToFake,
+      context = instrumentationContext,
+    )
   }
 
   /**
@@ -498,7 +514,7 @@ class OnboardingTestsRule : TestRule {
     val appsStoringTestConfig = mutableSetOf<String>(instrumentationContext.packageName)
 
     for (node in testNodes.nodes) {
-      extractAllowedNodeAndItsAppPackage(node.contract).apply {
+      extractNodeDataAndItsAppPackage(node.contract).apply {
         allowedNodes.add(first)
         appsStoringTestConfig.add(second)
       }
@@ -519,7 +535,7 @@ class OnboardingTestsRule : TestRule {
     var allowedNode: NodeData
     val appsStoringTestConfig = mutableSetOf(instrumentationContext.packageName)
 
-    extractAllowedNodeAndItsAppPackage(onboardingNodeScreenshot.node.contract).apply {
+    extractNodeDataAndItsAppPackage(onboardingNodeScreenshot.node.contract).apply {
       allowedNode = first
       appsStoringTestConfig.add(second)
     }
@@ -554,7 +570,7 @@ class OnboardingTestsRule : TestRule {
    * Given a node's contract class, returns its [NodeData] representation and the package name of
    * the app to which it belongs.
    */
-  private fun extractAllowedNodeAndItsAppPackage(nodeContract: KClass<*>): Pair<NodeData, String> {
+  internal fun extractNodeDataAndItsAppPackage(nodeContract: KClass<*>): Pair<NodeData, String> {
     for (annotation in nodeContract.annotations) {
       if (annotation is OnboardingNode) {
         val onboardingNodeMetadata = getOnboardingNodeMetadata(annotation)
@@ -653,7 +669,7 @@ class OnboardingTestsRule : TestRule {
   private fun waitForActivityLaunch(activityContract: OnboardingActivityApiContract<*, *>) {
     if (!requireRobolectric()) {
       val contractIdentifier = ContractUtils.getContractIdentifier(activityContract::class.java)
-      val contractPackageName = extractAllowedNodeAndItsAppPackage(activityContract::class).second
+      val contractPackageName = extractNodeDataAndItsAppPackage(activityContract::class).second
       while (true) {
         val onboardingEvents = getOnboardingEvents()
         throwErrorIfActivityNotValidatedUsingCorrectContract(onboardingEvents, contractIdentifier)
