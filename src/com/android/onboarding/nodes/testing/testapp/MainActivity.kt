@@ -81,11 +81,9 @@ class MainActivity : CompositeOnboardingActivity<ContractArg, String, ColourCont
       is RedContract -> {
         checkNotNull(findViewById<LinearLayout>(R.id.bg)).setBackgroundColor(Color.RED)
       }
-
       is BlueContract -> {
         checkNotNull(findViewById<LinearLayout>(R.id.bg)).setBackgroundColor(Color.BLUE)
       }
-
       is GreenContract -> {
         checkNotNull(findViewById<LinearLayout>(R.id.bg)).setBackgroundColor(Color.GREEN)
       }
@@ -134,7 +132,9 @@ class MainActivity : CompositeOnboardingActivity<ContractArg, String, ColourCont
     }
 
     checkNotNull(findViewById<Button>(R.id.finishButton)).setOnClickListener { finish() }
-    checkNotNull(findViewById<Button>(R.id.crashButton)).setOnClickListener { error("Crashing, as requested...") }
+    checkNotNull(findViewById<Button>(R.id.crashButton)).setOnClickListener {
+      error("Crashing, as requested...")
+    }
     checkNotNull(findViewById<Button>(R.id.failNodeButton)).setOnClickListener {
       failNode(checkNotNull(findViewById<EditText>(R.id.argument)).text.toString())
     }
@@ -177,8 +177,14 @@ sealed class ColourContract(val colour: Int, private val name: String) :
       intent.hasFlag(FLAG_ACTIVITY_FORWARD_RESULT),
     )
 
-  override fun performParseResult(result: ContractResult): String =
-    checkNotNull(result.intent?.getStringExtra("KEY"))
+  override fun performParseResult(result: ContractResult): String {
+    return checkNotNull(result.intent?.getStringExtra("KEY")).apply {
+      // Also concatenate the failure reason in response if the result is Failure
+      if ((result is ContractResult.Failure) && !result.reason.isNullOrEmpty()) {
+        return this + "|" + result.reason
+      }
+    }
+  }
 
   override fun performSetResult(result: String): ContractResult =
     ContractResult.Success(1, Intent().apply { putExtra("KEY", result) })

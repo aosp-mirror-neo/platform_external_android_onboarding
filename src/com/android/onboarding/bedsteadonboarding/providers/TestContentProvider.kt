@@ -10,11 +10,14 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import com.android.onboarding.bedsteadonboarding.data.NodeData
 import com.android.onboarding.bedsteadonboarding.data.TestConfigData
+import com.android.onboarding.bedsteadonboarding.fakes.FakeActivityNodeHelper
 import com.android.onboarding.bedsteadonboarding.permissions.TestPermissions
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
+import com.android.onboarding.contracts.ContractResult
 
 /**
  * Content Provider used for storing all the test configs. Each production onboarding app will have
@@ -26,17 +29,25 @@ class TestContentProvider : ContentProvider() {
   private lateinit var baseTestConfigUri: Uri
 
   private val testConfigUriMatcher = UriMatcher(UriMatcher.NO_MATCH)
-  private val IS_TEST_CONFIG_KEY = 1
-  private val TAG = "TestContentProvider"
 
   private var testConfigData = TestConfigData(listOf())
-  private var nodeConfigList = mutableListOf<NodeData>()
+  private var fakeActivityNodesConfig = mapOf<String, ContractResult>()
 
   override fun attachInfo(context: Context?, info: ProviderInfo) {
     super.attachInfo(context, info)
     val authority = info.authority
     baseTestConfigUri = ConfigProviderUtil.getBaseContentUri(authority)
     testConfigUriMatcher.addURI(authority, ConfigProviderUtil.TEST_CONFIG_PATH, IS_TEST_CONFIG_KEY)
+    testConfigUriMatcher.addURI(
+      authority,
+      ConfigProviderUtil.FAKE_ACTIVITY_NODE_CONFIG_QUERY_PATH,
+      IS_FAKE_ACTIVITY_NODE_CONFIG_QUERY_KEY,
+    )
+    testConfigUriMatcher.addURI(
+      authority,
+      ConfigProviderUtil.FAKE_ACTIVITY_NODE_CONFIG_INSERT_PATH,
+      IS_FAKE_ACTIVITY_NODE_CONFIG_INSERT_KEY,
+    )
   }
 
   override fun onCreate(): Boolean {
@@ -58,6 +69,21 @@ class TestContentProvider : ContentProvider() {
         }
         return matrixCursor
       }
+      IS_FAKE_ACTIVITY_NODE_CONFIG_QUERY_KEY -> {
+        val matrixCursor = MatrixCursor(arrayOf())
+        val contractIdentifier = uri.lastPathSegment
+        if (contractIdentifier != null) {
+          val contractResult = fakeActivityNodesConfig[contractIdentifier]
+          if (contractResult != null) {
+            matrixCursor.extras =
+              FakeActivityNodeHelper.createBundleFromContractResultAndIdentifier(
+                contractResult,
+                contractIdentifier,
+              )
+          }
+        }
+        return matrixCursor
+      }
       else -> throw UnsupportedOperationException("Unsupported Query Uri $uri")
     }
   }
@@ -66,11 +92,34 @@ class TestContentProvider : ContentProvider() {
     throw UnsupportedOperationException("getType")
   }
 
-  override fun insert(uri: Uri, values: ContentValues?): Uri? {
+  override fun insert(uri: Uri, values: ContentValues?): Uri {
     throw UnsupportedOperationException("insert")
   }
+
+  override fun insert(uri: Uri, values: ContentValues?, extras: Bundle?): Uri? {
+    if (checkPermissionOrThrow()) {
+      when (testConfigUriMatcher.match(uri)) {
+        IS_FAKE_ACTIVITY_NODE_CONFIG_INSERT_KEY -> {
+          if (extras == null) {
+            Log.e(TAG, "Fake activity node config passed is null while inserting")
+            return Uri.EMPTY
+          }
+          val contractIdentifierAndResult =
+            FakeActivityNodeHelper.extractContractIdentifierAndContractResultFromBundle(extras)
+              ?: error("contract identifier in bundle in null")
+          val mutableFakeActivityNodesConfig = fakeActivityNodesConfig.toMutableMap()
+          mutableFakeActivityNodesConfig[contractIdentifierAndResult.first] =
+            contractIdentifierAndResult.second
+          fakeActivityNodesConfig = mutableFakeActivityNodesConfig.toMap()
+        }
+        else -> throw UnsupportedOperationException("Unsupported Insertion Uri $uri")
+      }
+    }
+    return Uri.EMPTY
+  }
   override fun bulkInsert(uri: Uri, contentValuesList: Array<ContentValues>): Int {
-    if (hasPermission()) {
+    if (checkPermissionOrThrow()) {
+      val nodeConfigList = mutableListOf<NodeData>()
       when (testConfigUriMatcher.match(uri)) {
         IS_TEST_CONFIG_KEY -> {
           for (contentValues in contentValuesList) {
@@ -84,20 +133,21 @@ class TestContentProvider : ContentProvider() {
       testConfigData = TestConfigData(nodeConfigList.toList())
       return nodeConfigList.size
     }
-    throw SecurityException("Does not have permission to insert")
+    return 0
   }
 
   override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-    if (hasPermission()) {
+    if (checkPermissionOrThrow()) {
       when (testConfigUriMatcher.match(uri)) {
         IS_TEST_CONFIG_KEY -> {
           testConfigData = TestConfigData(listOf())
+          fakeActivityNodesConfig = mapOf()
         }
         else -> throw UnsupportedOperationException("Unsupported Deletion Uri $uri")
       }
       return 1
     }
-    throw SecurityException("Does not have permission to delete")
+    return 0
   }
 
   override fun update(
@@ -107,6 +157,11 @@ class TestContentProvider : ContentProvider() {
     selectionArgs: Array<String>?,
   ): Int {
     throw UnsupportedOperationException("update")
+  }
+
+  private fun checkPermissionOrThrow(): Boolean {
+    if (hasPermission()) return true
+    throw SecurityException("Does not have permission")
   }
 
   private fun hasPermission(): Boolean {
@@ -120,5 +175,12 @@ class TestContentProvider : ContentProvider() {
         false
       }
     }
+  }
+
+  companion object {
+    private const val IS_TEST_CONFIG_KEY = 1
+    private const val IS_FAKE_ACTIVITY_NODE_CONFIG_QUERY_KEY = 2
+    private const val IS_FAKE_ACTIVITY_NODE_CONFIG_INSERT_KEY = 3
+    private const val TAG = "TestContentProvider"
   }
 }
