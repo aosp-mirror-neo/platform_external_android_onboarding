@@ -15,6 +15,16 @@ object ConfigProviderUtil {
    */
   internal const val TEST_CONFIG_PATH = "test_config"
 
+  /** The base path for content provider for querying fake activity node configs. */
+  private const val FAKE_ACTIVITY_NODE_CONFIG_QUERY_BASE_PATH = "fake_activity_node_config"
+
+  /** The relative path of the content provider for querying fake activity node configs. */
+  internal const val FAKE_ACTIVITY_NODE_CONFIG_QUERY_PATH =
+    "$FAKE_ACTIVITY_NODE_CONFIG_QUERY_BASE_PATH/*"
+
+  /** The relative path of the content provider for inserting fake activity node configs. */
+  internal const val FAKE_ACTIVITY_NODE_CONFIG_INSERT_PATH = "fake_activity_node_config"
+
   /** The projection/ column name representing one single allowed node in a test. */
   const val TEST_NODE_CLASS_COLUMN = "allowed_node"
 
@@ -41,6 +51,27 @@ object ConfigProviderUtil {
    * @param context context of the application being executed
    */
   fun getTestConfigUri(context: Context): Uri = getTestConfigUri(getAuthority(context.packageName))
+
+  /**
+   * Returns the uri for fetching the fake activity node configs for node identified by
+   * [contractIdentifier].
+   */
+  fun getFakeActivityNodeConfigQueryUri(context: Context, contractIdentifier: String): Uri =
+    getBaseContentUri(getAuthority(context.packageName))
+      .buildUpon()
+      .path(FAKE_ACTIVITY_NODE_CONFIG_QUERY_BASE_PATH)
+      .appendPath(contractIdentifier)
+      .build()
+
+  /**
+   * Returns the uri for inserting the fake activity node config. This will be stored using the
+   * content provider of the app with given [packageName].
+   */
+  fun getFakeActivityNodeConfigInsertionUri(packageName: String): Uri =
+    getBaseContentUri(getAuthority(packageName))
+      .buildUpon()
+      .path(FAKE_ACTIVITY_NODE_CONFIG_INSERT_PATH)
+      .build()
 
   // LINT.IfChange(authority)
   /**

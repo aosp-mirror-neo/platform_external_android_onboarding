@@ -25,6 +25,7 @@ android_library {
         "android_onboarding.bedsteadonboarding.activities",
         "android_onboarding.bedsteadonboarding.annotations",
         "android_onboarding.bedsteadonboarding.data",
+        "android_onboarding.bedsteadonboarding.fakes",
         "android_onboarding.bedsteadonboarding.contract_eligibility_checker",
         "android_onboarding.bedsteadonboarding.contractutils",
         "android_onboarding.bedsteadonboarding.logcat",
