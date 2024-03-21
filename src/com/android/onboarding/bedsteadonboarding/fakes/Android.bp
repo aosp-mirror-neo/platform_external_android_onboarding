@@ -1,0 +1,32 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.bedsteadonboarding.fakes",
+    manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
+    srcs: [
+        "FakeActivityNode.kt",
+    ],
+    static_libs: [
+        "androidx.activity_activity-ktx",
+        "android_onboarding.bedsteadonboarding.contractutils",
+        "android_onboarding.contracts",
+        "android_onboarding.contract_result",
+        "android_onboarding.bedsteadonboarding.providers",
+        "android_onboarding.bedsteadonboarding.fake_node_helper",
+        "error_prone_annotations",
+    ],
+}
+
+android_library {
+    name: "android_onboarding.bedsteadonboarding.fake_node_helper",
+    manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
+    srcs: [
+        "FakeActivityNodeHelper.kt",
+    ],
+    static_libs: [
+        "androidx.activity_activity-ktx",
+        "android_onboarding.contract_result",
+    ],
+}

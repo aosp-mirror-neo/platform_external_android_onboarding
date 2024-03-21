@@ -1,5 +1,10 @@
 package com.android.onboarding.bedsteadonboarding.contractutils
 
+import android.content.Context
+import android.util.Log
+import com.android.onboarding.bedsteadonboarding.fakes.FakeActivityNodeHelper
+import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
+import com.android.onboarding.contracts.ContractResult
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.nodes.OnboardingGraph
 
@@ -7,6 +12,7 @@ import com.android.onboarding.nodes.OnboardingGraph
 object ContractUtils {
 
   private const val contractIdentifierSeparator = "."
+  private const val TAG = "ContractUtils"
 
   /** Returns a string uniquely identifying a node's contract given its [contractClass]. */
   fun getContractIdentifier(contractClass: Class<*>) =
@@ -22,4 +28,52 @@ object ContractUtils {
    */
   fun getContractIdentifier(nodeComponent: String, nodeName: String) =
     "${nodeComponent}$contractIdentifierSeparator${nodeName}"
+
+  /**
+   * Returns the [ContractResult] configured in test if the node identified by [contractClass] is
+   * faked. This will always return null when the node is being executed in production. It will also
+   * return null when running in test environment if the node is not faked.
+   */
+  fun getContractResultIfNodeIsFakedInTest(
+    context: Context,
+    contractClass: Class<*>,
+  ): ContractResult? =
+    getContractResultForContractIdentifier(context, getContractIdentifier(contractClass))
+
+  /**
+   * Returns the [ContractResult] configured in test if the node identified by [contractIdentifier]
+   * is faked. This will always return null when the node is being executed in production. It will
+   * also return null when running in test environment if the node is not faked.
+   */
+  fun getContractResultForContractIdentifier(
+    context: Context,
+    contractIdentifier: String,
+  ): ContractResult? {
+    try {
+      val uri = ConfigProviderUtil.getFakeActivityNodeConfigQueryUri(context, contractIdentifier)
+
+      val cursor =
+        context.contentResolver.query(
+          uri,
+          arrayOf(),
+          /* selection= */ null,
+          /* selectionArgs= */ null,
+          /* sortOrder= */ null,
+          /* cancellationSignal= */ null,
+        ) ?: return null
+
+      cursor.use {
+        if (it.extras != null) {
+          val contractResult =
+            FakeActivityNodeHelper.extractContractIdentifierAndContractResultFromBundle(it.extras)
+          if (contractResult != null) return contractResult.second
+        }
+      }
+      return null
+    } catch (t: Throwable) {
+      // For safety, ignore the exception since current function would run in production flow.
+      Log.e(TAG, "Error while fetching fake contract response of node $contractIdentifier", t)
+      return null
+    }
+  }
 }
