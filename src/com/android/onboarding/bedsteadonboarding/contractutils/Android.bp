@@ -23,5 +23,8 @@ android_library {
     static_libs: [
         "android_onboarding.contracts.annotations",
         "android_onboarding.nodes",
+        "android_onboarding.contract_result",
+        "android_onboarding.bedsteadonboarding.fake_node_helper",
+        "android_onboarding.bedsteadonboarding.providers",
     ],
 }
