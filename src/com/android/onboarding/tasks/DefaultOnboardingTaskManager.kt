@@ -19,37 +19,41 @@ private constructor(private val appContext: Context, private val coroutineScope:
   private val tasksStates = ConcurrentHashMap<OnboardingTaskToken, OnboardingTaskState<*>>()
 
   override fun <
-    Args,
-    Result,
-    Task : OnboardingTask<Args, Result>,
-    Contract : OnboardingTaskContract<Args, Result>,
-  > runTask(task: Task, taskContract: Contract, taskArgs: Args): OnboardingTaskToken {
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+    TaskT : OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+  > runTask(taskContract: TaskContractT, task: TaskT, taskArgs: TaskArgsT): OnboardingTaskToken {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
     // We have to update the task status as soon as possible to prevent immediate query status
     // action.
-    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
 
     // Run the task asynchronously.
-    coroutineScope.launch { performTask(task, taskContract, taskArgs, taskToken) }
+    coroutineScope.launch { performTask(taskContract, task, taskArgs, taskToken) }
 
     Log.d(TAG, "runTask#Return task token immediately.")
     return taskToken
   }
 
-  override suspend fun <Args, Result> runTaskAndGetResult(
-    task: OnboardingTask<Args, Result>,
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
-  ): OnboardingTaskState<Result> {
+  override suspend fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResult(
+    taskContract: TaskContractT,
+    task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+    taskArgs: TaskArgsT,
+  ): OnboardingTaskState<TaskResultT> {
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
     // We have to update the task status as soon as possible to prevent immediate query status
     // action.
-    tasksStates[taskToken] = OnboardingTaskState.InProgress<Result>()
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
 
     // Execute the task and await its completion.
-    performTask(task, taskContract, taskArgs, taskToken)
+    performTask(taskContract, task, taskArgs, taskToken)
 
     return getTaskState(taskToken)
       ?: error(
@@ -57,28 +61,34 @@ private constructor(private val appContext: Context, private val coroutineScope:
       )
   }
 
-  override fun <Args, Result> runTaskAndGetResultAsync(
-    task: OnboardingTask<Args, Result>,
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
-  ): ListenableFuture<OnboardingTaskState<Result>> {
-    return coroutineScope.future { runTaskAndGetResult(task, taskContract, taskArgs) }
+  override fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResultAsync(
+    taskContract: TaskContractT,
+    task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+    taskArgs: TaskArgsT,
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>> {
+    return coroutineScope.future { runTaskAndGetResult(taskContract, task, taskArgs) }
   }
 
   @Suppress("UNCHECKED_CAST")
-  override fun <Result> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<Result>? {
+  override fun <TaskResultT> getTaskState(
+    taskToken: OnboardingTaskToken
+  ): OnboardingTaskState<TaskResultT>? {
     // This method performs a cast from a wildcard type (`OnboardingTaskState<*>) to the expected
     // result type (`OnboardingTaskState<Result>`). The cast is unchecked due to type erasure at
     // runtime, and the `as?` operator is used to safely handle cases where the cast might fail,
     // resulting in a null value.
-    return tasksStates[taskToken] as? OnboardingTaskState<Result>
+    return tasksStates[taskToken] as? OnboardingTaskState<TaskResultT>
   }
 
-  override suspend fun <Result> waitForCompleted(
+  override suspend fun <TaskResultT> waitForCompleted(
     taskToken: OnboardingTaskToken
-  ): OnboardingTaskState<Result>? {
+  ): OnboardingTaskState<TaskResultT>? {
     while (true) {
-      val currentState: OnboardingTaskState<Result>? = getTaskState(taskToken)
+      val currentState: OnboardingTaskState<TaskResultT>? = getTaskState(taskToken)
       when (currentState) {
         null -> return null
         is OnboardingTaskState.Completed,
@@ -93,16 +103,20 @@ private constructor(private val appContext: Context, private val coroutineScope:
     }
   }
 
-  override fun <Result> waitForCompletedAsync(
+  override fun <TaskResultT> waitForCompletedAsync(
     taskToken: OnboardingTaskToken
-  ): ListenableFuture<OnboardingTaskState<Result>?> {
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>?> {
     return coroutineScope.future { waitForCompleted(taskToken) }
   }
 
-  private suspend fun <Args, Result> performTask(
-    task: OnboardingTask<Args, Result>,
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
+  private suspend fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > performTask(
+    taskContract: TaskContractT,
+    task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+    taskArgs: TaskArgsT,
     taskToken: OnboardingTaskToken,
   ) {
     Log.d(TAG, "performTask#start")

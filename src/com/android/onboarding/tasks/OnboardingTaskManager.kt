@@ -12,68 +12,76 @@ interface OnboardingTaskManager {
   /**
    * Executes an onboarding task asynchronously and returns a token for subsequent status queries.
    *
-   * @param task The onboarding task to be executed. This parameter will be removed in the later
-   *   milestone stage.
    * @param taskContract The contract defining the task's arguments and result for the onboarding
    *   task.
+   * @param task The onboarding task to be executed. This parameter will be removed in the later
+   *   milestone stage.
    * @return The token associated with the initiated onboarding task.
    */
   fun <
-    Result,
-    Task : OnboardingTask<Unit, Result>,
-    Contract : OnboardingTaskContract<Unit, Result>,
-  > runTask(task: Task, taskContract: Contract): OnboardingTaskToken =
-    runTask(task, taskContract, Unit)
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<Unit, TaskResultT>,
+    TaskT : OnboardingTask<Unit, TaskResultT, TaskContractT>,
+  > runTask(taskContract: TaskContractT, task: TaskT): OnboardingTaskToken =
+    runTask(taskContract, task, Unit)
 
   /**
    * Executes an onboarding task asynchronously and returns a token for subsequent status queries.
    *
+   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param task The onboarding task to be executed. This parameter will be removed in the later
    *   milestone stage.
-   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param taskArgs A defined argument for the onboarding task.
    * @return The token associated with the initiated onboarding task.
    */
   fun <
-    Args,
-    Result,
-    Task : OnboardingTask<Args, Result>,
-    Contract : OnboardingTaskContract<Args, Result>,
-  > runTask(task: Task, taskContract: Contract, taskArgs: Args): OnboardingTaskToken
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+    TaskT : OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+  > runTask(taskContract: TaskContractT, task: TaskT, taskArgs: TaskArgsT): OnboardingTaskToken
 
   /**
    * Executes an onboarding task asynchronously and waits for its completion, providing the final
    * result.
    *
+   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param task The onboarding task to be executed. This parameter will be removed in the later
    *   milestone stage.
-   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param taskArgs A defined argument for the onboarding task.
    * @return The final result of the onboarding task.
    */
-  suspend fun <Args, Result> runTaskAndGetResult(
-    task: OnboardingTask<Args, Result>,
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
-  ): OnboardingTaskState<Result>
+  suspend fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResult(
+    taskContract: TaskContractT,
+    task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+    taskArgs: TaskArgsT,
+  ): OnboardingTaskState<TaskResultT>
 
   /**
    * Executes an onboarding task asynchronously and waits for its completion, providing the final
    * result.
    *
+   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param task The onboarding task to be executed. This parameter will be removed in the later
    *   milestone stage.
-   * @param taskContract The contract defining task's arguments and result for the onboarding task.
    * @param taskArgs A defined argument for the onboarding task.
    * @return A [ListenableFuture] representing the final state of the onboarding task. The future
    *   encapsulates the asynchronous execution and completion of the task, allowing for the
    *   retrieval of the task state or result.
    */
-  fun <Args, Result> runTaskAndGetResultAsync(
-    task: OnboardingTask<Args, Result>,
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
-  ): ListenableFuture<OnboardingTaskState<Result>>
+  fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResultAsync(
+    taskContract: TaskContractT,
+    task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
+    taskArgs: TaskArgsT,
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>>
 
   /**
    * Retrieves the current state of a previously initiated onboarding task.
@@ -81,7 +89,7 @@ interface OnboardingTaskManager {
    * @param taskToken The token associated with the onboarding task.
    * @return The result of the onboarding task, or null if no matching task exists.
    */
-  fun <RESULT> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<RESULT>?
+  fun <TaskResultT> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<TaskResultT>?
 
   /**
    * Waits for the result of a previously initiated onboarding task.
@@ -98,9 +106,9 @@ interface OnboardingTaskManager {
    * @param taskToken The token associated with the onboarding task.
    * @return The final result of the onboarding task, or null if the token is not valid.
    */
-  suspend fun <Result> waitForCompleted(
+  suspend fun <TaskResultT> waitForCompleted(
     taskToken: OnboardingTaskToken
-  ): OnboardingTaskState<Result>? = null
+  ): OnboardingTaskState<TaskResultT>? = null
 
   /**
    * Asynchronously waits for the result of a previously initiated onboarding task.
@@ -117,7 +125,7 @@ interface OnboardingTaskManager {
    * @param taskToken The token associated with the onboarding task.
    * @return A [ListenableFuture] containing the final result of the onboarding task.
    */
-  fun <Result> waitForCompletedAsync(
+  fun <TaskResultT> waitForCompletedAsync(
     taskToken: OnboardingTaskToken
-  ): ListenableFuture<OnboardingTaskState<Result>?>
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>?>
 }
