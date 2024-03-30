@@ -9,10 +9,15 @@ import kotlinx.coroutines.withTimeout
  * An abstract base class for defining onboarding tasks in the onboarding process.
  *
  * @param context The application context to be used during task execution.
- * @param Args The type representing the input arguments for the onboarding task.
- * @param Result The type representing the result of the onboarding task.
+ * @param TaskArgsT The type representing the input arguments for the onboarding task.
+ * @param TaskResultT The type representing the result of the onboarding task.
+ * @param TaskContractT The type representing the onboarindg contract which can work with this task.
  */
-abstract class OnboardingTask<Args, Result>(val context: Context) {
+abstract class OnboardingTask<
+  TaskArgsT,
+  TaskResultT,
+  TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+>(val context: Context) {
 
   // Default timeout value if not specified by the child class
   protected open val defaultTimeout: Duration = Duration.ofSeconds(5)
@@ -28,11 +33,11 @@ abstract class OnboardingTask<Args, Result>(val context: Context) {
    *   times out, a failed result will be returned.
    */
   suspend fun runTask(
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
+    taskContract: TaskContractT,
+    taskArgs: TaskArgsT,
     timeout: Duration = defaultTimeout,
-  ): OnboardingTaskState<Result> {
-    var result: Result? = null
+  ): OnboardingTaskState<TaskResultT> {
+    var result: TaskResultT? = null
     return try {
       if (!taskContract.validate(taskArgs)) {
         return OnboardingTaskState.Failed(
@@ -62,7 +67,7 @@ abstract class OnboardingTask<Args, Result>(val context: Context) {
    * @return The result of the onboarding task.
    */
   protected abstract suspend fun runTask(
-    taskContract: OnboardingTaskContract<Args, Result>,
-    taskArgs: Args,
-  ): Result
+    taskContract: TaskContractT,
+    taskArgs: TaskArgsT,
+  ): TaskResultT
 }
