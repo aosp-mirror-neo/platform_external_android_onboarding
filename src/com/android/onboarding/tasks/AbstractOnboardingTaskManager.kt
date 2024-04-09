@@ -47,8 +47,8 @@ abstract class AbstractOnboardingTaskManager(
     TaskArgsT,
     TaskResultT,
     TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
-    TaskT : OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
-  > runTask(taskContract: TaskContractT, task: TaskT, taskArgs: TaskArgsT): OnboardingTaskToken {
+  > runTask(taskContract: TaskContractT, taskArgs: TaskArgsT): OnboardingTaskToken {
+    val task = tryCreateTaskInstance(taskContract::class.java) ?: return OnboardingTaskToken.INVALID
     val taskToken =
       OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
     // We have to update the task status as soon as possible to prevent immediate query status
@@ -58,10 +58,37 @@ abstract class AbstractOnboardingTaskManager(
     // Run the task asynchronously.
     coroutineScope.launch { performTask(taskContract, task, taskArgs, taskToken) }
 
-    Log.d(TAG, "runTask#Return task token immediately.")
+    Log.d(TAG, "runTask() - Return task token immediately.")
     return taskToken
   }
 
+  override suspend fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResult(
+    taskContract: TaskContractT,
+    taskArgs: TaskArgsT,
+  ): OnboardingTaskState<TaskResultT> {
+    val task =
+      tryCreateTaskInstance(taskContract::class.java)
+        ?: return OnboardingTaskState.Failed(ERROR_INSTANTIATING_TASK)
+    val taskToken =
+      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    // We have to update the task status as soon as possible to prevent immediate query status
+    // action.
+    tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
+
+    // Execute the task and await its completion.
+    performTask(taskContract, task, taskArgs, taskToken)
+
+    return getTaskState(taskToken)
+      ?: error(
+        "Unexpected: No task result retrieved. You must see a task result when developer calls the suspend [runTaskAndGetResult]."
+      )
+  }
+
+  @Deprecated("Use new overload function - runTaskAndGetResult().")
   override suspend fun <
     TaskArgsT,
     TaskResultT,
@@ -86,6 +113,18 @@ abstract class AbstractOnboardingTaskManager(
       )
   }
 
+  override fun <
+    TaskArgsT,
+    TaskResultT,
+    TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
+  > runTaskAndGetResultAsync(
+    taskContract: TaskContractT,
+    taskArgs: TaskArgsT,
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>> {
+    return coroutineScope.future { runTaskAndGetResult(taskContract, taskArgs) }
+  }
+
+  @Deprecated("Use new overload function - runTaskAndGetResultAsync().")
   override fun <
     TaskArgsT,
     TaskResultT,
@@ -160,6 +199,27 @@ abstract class AbstractOnboardingTaskManager(
 
     // Update the tasksStates map with the actual task result after completion.
     tasksStates[taskToken] = taskResult
+  }
+
+  private fun <
+    TaskArgs,
+    TaskResult,
+    TaskContract : OnboardingTaskContract<TaskArgs, TaskResult>,
+  > tryCreateTaskInstance(
+    contractClass: Class<out TaskContract>
+  ): OnboardingTask<TaskArgs, TaskResult, TaskContract>? {
+    val taskClass = contractAndTaskMap[contractClass] ?: return null
+
+    try {
+      val constructor = taskClass.getDeclaredConstructor(Context::class.java)
+      // Create a new instance of the contract class using the constructor
+      @Suppress("UNCHECKED_CAST")
+      return constructor.newInstance(appContext)
+        as? OnboardingTask<TaskArgs, TaskResult, TaskContract>
+    } catch (e: Exception) {
+      Log.w(TAG, "Error instantiating task: $e")
+    }
+    return null
   }
 
   companion object {
