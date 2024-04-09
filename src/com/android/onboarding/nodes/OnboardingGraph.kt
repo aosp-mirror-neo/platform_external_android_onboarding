@@ -169,7 +169,6 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
             e.timestamp,
             name = e.nodeName,
             component = e.nodeComponent,
-            incomingEdge = InternalEdge.ClosedIncomingEdge(e.sourceNodeId, e.timestamp),
             type = NodeType.ACTIVITY,
           )
         }
@@ -249,6 +248,7 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
     }
 
     nodesToRemove.forEach { nodeMap.remove(it) }
+
     nodeMap.toMap()
   }
 
@@ -280,7 +280,14 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
 
         failureReason?.also { node._failureReasons.add(it) }
 
-        outgoingEdge?.also { node._outgoingEdges.add(it) }
+        outgoingEdge?.also {
+          node._outgoingEdges
+            .getOrPut(it.id) { it }
+            .let { created ->
+              created.timestamp =
+                if (it.timestamp.isBefore(created.timestamp)) it.timestamp else created.timestamp
+            }
+        }
         incomingEdge?.also { node._incomingEdge = it }
 
         event?.also { node._events.add(it) }
@@ -297,7 +304,7 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
     internal var _result: Any? = null,
     internal var _start: Instant? = null,
     internal var _end: Instant? = null,
-    internal var _outgoingEdges: MutableSet<InternalEdge> = mutableSetOf(),
+    internal var _outgoingEdges: MutableMap<Long, InternalEdge> = mutableMapOf(),
     internal var _incomingEdge: InternalEdge? = null,
     internal var _failureReasons: MutableSet<Throwable> = mutableSetOf(),
     internal var _type: NodeType = NodeType.UNKNOWN,
@@ -323,12 +330,12 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
     val end: Instant
       get() = _end ?: throw IllegalStateException("No end time for node $id")
 
-    val outgoingEdges: Set<Edge>
+    val outgoingEdges: Set<OutgoingEdge>
       get() =
-        _outgoingEdges
+        _outgoingEdges.values
           .map {
             if (nodeMap.contains(it.id)) {
-              Edge(nodeMap[it.id]!!, it.timestamp)
+              OutgoingEdge(nodeMap[it.id]!!, it.timestamp)
             } else {
               throw IllegalStateException("$id relies on non-existing outgoing node $it")
             }
@@ -337,18 +344,18 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
 
     // It filters the invalid outgoing edges i.e. edges to non existent node and returns only the
     // valid ones.
-    val outgoingEdgesOfValidNodes: Set<Edge>
+    val outgoingEdgesOfValidNodes: Set<OutgoingEdge>
       get() =
-        _outgoingEdges
+        _outgoingEdges.values
           .filter { nodeMap.containsKey(it.id) }
-          .map { Edge(nodeMap[it.id]!!, it.timestamp) }
+          .map { OutgoingEdge(nodeMap[it.id]!!, it.timestamp) }
           .toSet()
 
-    val incomingEdge: Edge?
+    val incomingEdge: IncomingEdge?
       get() =
         _incomingEdge?.let {
           if (nodeMap.containsKey(it.id)) {
-            Edge(nodeMap[it.id]!!, it.timestamp)
+            IncomingEdge(nodeMap[it.id]!!, it.timestamp)
           } else {
             throw IllegalStateException("$id relies on non-existing incoming node $it")
           }
@@ -382,6 +389,7 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
       get() =
         totalRuntime.minus(
           outgoingEdges
+            .filter { it.isOpen }
             .map { it.node.totalRuntime }
             .fold(Duration.ZERO) { acc, duration -> acc.plus(duration) }
         )
@@ -395,15 +403,22 @@ class OnboardingGraph(val events: Set<OnboardingGraphLog.OnboardingEvent>) {
         " incomingEdge=$_incomingEdge}"
   }
 
-  sealed class InternalEdge(val id: Long, val timestamp: Instant) {
-    class OutgoingEdge(id: Long, timestamp: Instant) : InternalEdge(id, timestamp)
+  sealed class InternalEdge(open val id: Long, open var timestamp: Instant) {
+    data class OutgoingEdge(override val id: Long, override var timestamp: Instant) :
+      InternalEdge(id, timestamp)
 
-    class OpenIncomingEdge(id: Long, timestamp: Instant) : InternalEdge(id, timestamp)
+    data class OpenIncomingEdge(override val id: Long, override var timestamp: Instant) :
+      InternalEdge(id, timestamp)
 
-    class ClosedIncomingEdge(id: Long, timestamp: Instant) : InternalEdge(id, timestamp)
+    data class ClosedIncomingEdge(override val id: Long, override var timestamp: Instant) :
+      InternalEdge(id, timestamp)
   }
 
-  data class Edge(val node: Node, val timestamp: Instant)
+  data class IncomingEdge(val node: Node, val timestamp: Instant)
+
+  data class OutgoingEdge(val node: Node, val timestamp: Instant) {
+    val isOpen = node._incomingEdge is InternalEdge.OpenIncomingEdge
+  }
 
   enum class NodeType {
     UNKNOWN,
