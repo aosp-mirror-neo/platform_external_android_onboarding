@@ -30,3 +30,5 @@ sealed class OnboardingTaskState<Result> {
   data class Failed<Result>(val errorMessage: String, val result: Result? = null) :
     OnboardingTaskState<Result>()
 }
+
+const val ERROR_INSTANTIATING_TASK = "Error instantiating task"
