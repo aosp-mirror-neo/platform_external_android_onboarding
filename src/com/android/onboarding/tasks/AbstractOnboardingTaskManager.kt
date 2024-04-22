@@ -140,21 +140,23 @@ abstract class AbstractOnboardingTaskManager(
   @Suppress("UNCHECKED_CAST")
   override fun <TaskResultT> getTaskState(
     taskToken: OnboardingTaskToken
-  ): OnboardingTaskState<TaskResultT>? {
+  ): OnboardingTaskState<TaskResultT> {
     // This method performs a cast from a wildcard type (`OnboardingTaskState<*>) to the expected
     // result type (`OnboardingTaskState<Result>`). The cast is unchecked due to type erasure at
     // runtime, and the `as?` operator is used to safely handle cases where the cast might fail,
     // resulting in a null value.
-    return tasksStates[taskToken] as? OnboardingTaskState<TaskResultT>
+    return tasksStates[taskToken]?.let { taskState ->
+      // Only attempt the cast if the value in the map is not null
+      taskState as? OnboardingTaskState<TaskResultT>
+    } ?: OnboardingTaskState.Failed(ERROR_TASK_CANT_BE_FOUND)
   }
 
   override suspend fun <TaskResultT> waitForCompleted(
     taskToken: OnboardingTaskToken
-  ): OnboardingTaskState<TaskResultT>? {
+  ): OnboardingTaskState<TaskResultT> {
     while (true) {
-      val currentState: OnboardingTaskState<TaskResultT>? = getTaskState(taskToken)
+      val currentState: OnboardingTaskState<TaskResultT> = getTaskState(taskToken)
       when (currentState) {
-        null -> return null
         is OnboardingTaskState.Completed,
         is OnboardingTaskState.Failed -> return currentState
         else -> {
@@ -169,7 +171,7 @@ abstract class AbstractOnboardingTaskManager(
 
   override fun <TaskResultT> waitForCompletedAsync(
     taskToken: OnboardingTaskToken
-  ): ListenableFuture<OnboardingTaskState<TaskResultT>?> {
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>> {
     return coroutineScope.future { waitForCompleted(taskToken) }
   }
 
