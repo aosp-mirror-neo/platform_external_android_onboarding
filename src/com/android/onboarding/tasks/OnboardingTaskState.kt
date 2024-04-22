@@ -31,4 +31,5 @@ sealed class OnboardingTaskState<Result> {
     OnboardingTaskState<Result>()
 }
 
-const val ERROR_INSTANTIATING_TASK = "Error instantiating task"
+const val ERROR_INSTANTIATING_TASK = "Error instantiating task."
+const val ERROR_TASK_CANT_BE_FOUND = "Task can't be found."

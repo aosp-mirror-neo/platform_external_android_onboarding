@@ -115,9 +115,9 @@ interface OnboardingTaskManager {
    * Retrieves the current state of a previously initiated onboarding task.
    *
    * @param taskToken The token associated with the onboarding task.
-   * @return The result of the onboarding task, or null if no matching task exists.
+   * @return The result of the onboarding task.
    */
-  fun <TaskResultT> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<TaskResultT>?
+  fun <TaskResultT> getTaskState(taskToken: OnboardingTaskToken): OnboardingTaskState<TaskResultT>
 
   /**
    * Waits for the result of a previously initiated onboarding task.
@@ -132,11 +132,11 @@ interface OnboardingTaskManager {
    * [OnboardingTaskState.Completed] state with [Result] data.
    *
    * @param taskToken The token associated with the onboarding task.
-   * @return The final result of the onboarding task, or null if the token is not valid.
+   * @return The final result of the onboarding task.
    */
   suspend fun <TaskResultT> waitForCompleted(
     taskToken: OnboardingTaskToken
-  ): OnboardingTaskState<TaskResultT>? = null
+  ): OnboardingTaskState<TaskResultT>
 
   /**
    * Asynchronously waits for the result of a previously initiated onboarding task.
@@ -155,5 +155,5 @@ interface OnboardingTaskManager {
    */
   fun <TaskResultT> waitForCompletedAsync(
     taskToken: OnboardingTaskToken
-  ): ListenableFuture<OnboardingTaskState<TaskResultT>?>
+  ): ListenableFuture<OnboardingTaskState<TaskResultT>>
 }
