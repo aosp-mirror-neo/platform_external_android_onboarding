@@ -25,6 +25,9 @@ data class OnboardingTaskToken(val taskClass: String, val taskContractClass: Str
   override fun describeContents(): Int = 0
 
   companion object CREATOR : Parcelable.Creator<OnboardingTaskToken> {
+    // Constant representing an invalid token
+    val INVALID: OnboardingTaskToken = OnboardingTaskToken("", "")
+
     override fun createFromParcel(parcel: Parcel): OnboardingTaskToken {
       return OnboardingTaskToken(parcel)
     }
