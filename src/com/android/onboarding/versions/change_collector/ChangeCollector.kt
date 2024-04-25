@@ -29,66 +29,64 @@ import javax.tools.StandardLocation
 class ChangeCollector : AbstractProcessor() {
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
 
+  private val changeIds = mutableListOf<ChangeId>()
+
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     val annotatedIds = roundEnv.getElementsAnnotatedWith(ChangeId::class.java)
+    for (annotatedId in annotatedIds) {
+      changeIds.add(annotatedId.getAnnotation(ChangeId::class.java))
+    }
 
-    val changeIds = annotatedIds.map { it.getAnnotation(ChangeId::class.java) }
+    if (roundEnv.processingOver()) {
+      val changesClass = ClassName("com.android.onboarding.versions.changes", "AllChanges")
 
-    val changesClass = ClassName("com.android.onboarding.versions.changes", "AllChanges")
+      val fileBuilder =
+        FileSpec.scriptBuilder(
+          "com.android.onboarding.versions.changes.AllChanges",
+          "com.android.onboarding.versions.changes",
+        )
 
-    val fileBuilder =
-      FileSpec.scriptBuilder(
-        "com.android.onboarding.versions.changes.AllChanges",
-        "com.android.onboarding.versions.changes",
+      fileBuilder.addImport(
+        ChangeRadius::class.qualifiedName!!,
+        ChangeRadius.entries.map { it.name }.toList(),
       )
+      fileBuilder.addImport(
+        ExpeditedReason::class.qualifiedName!!,
+        ExpeditedReason.entries.map { it.name }.toList(),
+      )
+      fileBuilder.addImport(
+        BreakingReason::class.qualifiedName!!,
+        BreakingReason.entries.map { it.name }.toList(),
+      )
+      fileBuilder.addImport(ChangeId::class.java.packageName, ChangeId::class.java.simpleName)
 
-    fileBuilder.addImport(
-      ChangeRadius::class.qualifiedName!!,
-      ChangeRadius.entries.map { it.name }.toList(),
-    )
-    fileBuilder.addImport(
-      ExpeditedReason::class.qualifiedName!!,
-      ExpeditedReason.entries.map { it.name }.toList(),
-    )
-    fileBuilder.addImport(
-      BreakingReason::class.qualifiedName!!,
-      BreakingReason.entries.map { it.name }.toList(),
-    )
-    fileBuilder.addImport(ChangeId::class.java.packageName, ChangeId::class.java.simpleName)
+      val file =
+        fileBuilder
+          .addCode(
+            CodeBlock.builder()
+              .add(
+                "val ALL_CHANGE_IDS = mapOf(" +
+                  changeIds
+                    .map { "${it.bugId}L to ${generateChangeIdCode(it)}" }
+                    .joinToString(",\n") +
+                  ")"
+              )
+              .build()
+          )
+          .build()
 
-    val file =
-      fileBuilder
-        .addCode(
-          CodeBlock.builder()
-            .add(
-              "val ALL_CHANGE_IDS = mapOf(" +
-                changeIds
-                  .map { "${it.bugId}L to ${generateChangeIdCode(it)}" }
-                  .joinToString(",\n") +
-                ")"
-            )
-            .build()
-        )
-        .build()
-
-    try {
-      val builderFile =
-        processingEnv.filer.createResource(
-          StandardLocation.SOURCE_OUTPUT,
-          changesClass.packageName,
-          "${changesClass.simpleName}.kt",
-        )
-      PrintWriter(builderFile.openWriter()).use { out -> file.writeTo(out) }
-    } catch (e: FileAlreadyExistsException) {
-      // This is fine - it occurs because of multiple passes
-    } catch (e: IOException) {
-      if (e.message?.contains("already created") == true) {
-        // This is fine - it occurs because of multiple passes
-      } else {
+      try {
+        val builderFile =
+          processingEnv.filer.createResource(
+            StandardLocation.SOURCE_OUTPUT,
+            changesClass.packageName,
+            "${changesClass.simpleName}.kt",
+          )
+        PrintWriter(builderFile.openWriter()).use { out -> file.writeTo(out) }
+      } catch (e: IOException) {
         throw java.lang.IllegalStateException("Error writing change map to file", e)
       }
     }
-
     return false
   }
 }
