@@ -40,9 +40,14 @@ object TestPermissions {
   fun canCallerExecuteTestFunctionality(context: Context, uid: Int): Boolean =
     isRunningOnDebuggableDevice() && uidIsInstrumented(context, uid)
 
-  internal fun isRunningOnDebuggableDevice(): Boolean {
+  /**
+   * Returns true if the code is executed during a Robolectric test or on a real device with
+   * debugging enabled.
+   */
+  fun isRunningOnDebuggableDevice(): Boolean {
     return try {
-      Build::class.java.getDeclaredField("IS_DEBUGGABLE").get(null) as Boolean
+      ("robolectric" == Build.FINGERPRINT) ||
+        Build::class.java.getDeclaredField("IS_DEBUGGABLE").get(null) as Boolean
     } catch (t: Throwable) {
       Log.e(
         TAG,
