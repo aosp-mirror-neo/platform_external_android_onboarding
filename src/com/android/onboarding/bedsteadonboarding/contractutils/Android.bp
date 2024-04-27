@@ -11,6 +11,7 @@ android_library {
     static_libs: [
         "android_onboarding.bedsteadonboarding.providers",
         "android_onboarding.bedsteadonboarding.contractutils",
+        "android_onboarding.bedsteadonboarding.permissions",
     ],
 }
 
@@ -26,5 +27,6 @@ android_library {
         "android_onboarding.contract_result",
         "android_onboarding.bedsteadonboarding.fake_node_helper",
         "android_onboarding.bedsteadonboarding.providers",
+        "android_onboarding.bedsteadonboarding.permissions",
     ],
 }
