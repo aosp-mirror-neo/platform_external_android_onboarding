@@ -22,9 +22,12 @@ java_library_host {
     name: "android_onboarding.nodes_host",
     installable: false,
     srcs: [
+        "DefaultOnboardingGraph.kt",
         "DefaultOnboardingGraphLog.kt",
         "OnboardingGraph.kt",
+        "OnboardingGraphEdge.kt",
         "OnboardingGraphLog.kt",
+        "OnboardingGraphNode.kt",
     ],
     static_libs: [
         "guava",

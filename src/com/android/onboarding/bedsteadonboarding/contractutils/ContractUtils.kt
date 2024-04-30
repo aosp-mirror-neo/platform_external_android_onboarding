@@ -7,7 +7,7 @@ import com.android.onboarding.bedsteadonboarding.permissions.TestPermissions
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.contracts.ContractResult
 import com.android.onboarding.contracts.annotations.OnboardingNode
-import com.android.onboarding.nodes.OnboardingGraph
+import com.android.onboarding.nodes.OnboardingGraphNode
 
 /** Contains utility methods for node contracts. */
 object ContractUtils {
@@ -21,10 +21,12 @@ object ContractUtils {
 
   /** Returns a string uniquely identifying a node's contract given its [contractClass]. */
   fun getContractIdentifier(contractClass: Class<*>) =
-    "${OnboardingNode.extractComponentNameFromClass(contractClass)}${contractIdentifierSeparator}${OnboardingNode.extractNodeNameFromClass(contractClass)}"
+    "${OnboardingNode.extractComponentNameFromClass(contractClass)}${contractIdentifierSeparator}${
+      OnboardingNode.extractNodeNameFromClass(contractClass)
+    }"
 
   /** Returns a string uniquely identifying the contract for the given [node]. */
-  fun getContractIdentifierForNode(node: OnboardingGraph.Node) =
+  fun getContractIdentifierForNode(node: OnboardingGraphNode) =
     "${node.component}$contractIdentifierSeparator${node.name}"
 
   /**
