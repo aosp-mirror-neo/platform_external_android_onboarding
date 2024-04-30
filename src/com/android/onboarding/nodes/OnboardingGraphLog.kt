@@ -41,6 +41,7 @@ interface OnboardingGraphLog {
     open val nodeName: String?,
     open val nodeComponent: String?,
   ) {
+    abstract val timestamp: Instant
 
     /** Writes this event to a string which can be parsed by [OnboardingGraphLog#deserialize]. */
     fun serializeToString(): String {
@@ -63,7 +64,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val argument: Any? = null,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -120,7 +121,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val argument: Any? = null,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -175,7 +176,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val intent: IntentData? = null,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -227,7 +228,7 @@ interface OnboardingGraphLog {
       override val nodeComponent: String,
       val exception: Throwable = IllegalArgumentException("Failed validation"),
       val intent: IntentData? = null,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -281,7 +282,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val intent: IntentData,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -339,7 +340,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val argument: Any?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -391,7 +392,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val result: Any?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -440,7 +441,7 @@ interface OnboardingGraphLog {
     data class ActivityNodeFail(
       override val nodeId: Long,
       val reason: String?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName = null, nodeComponent = null) {
 
       override fun serialize(): OnboardingProtos.LogProto {
@@ -478,7 +479,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val result: Any?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -531,7 +532,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val argument: Any?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -584,7 +585,7 @@ interface OnboardingGraphLog {
       override val nodeName: String,
       override val nodeComponent: String,
       val result: Any?,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
 
       constructor(
@@ -632,7 +633,7 @@ interface OnboardingGraphLog {
       override val nodeId: Long,
       override val nodeName: String,
       override val nodeComponent: String,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
       constructor(
         nodeId: Long,
@@ -679,7 +680,7 @@ interface OnboardingGraphLog {
       override val nodeId: Long,
       override val nodeName: String,
       override val nodeComponent: String,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
       constructor(
         sourceNodeId: Long,
@@ -726,7 +727,7 @@ interface OnboardingGraphLog {
       override val nodeId: Long,
       override val nodeName: String,
       override val nodeComponent: String,
-      val timestamp: Instant = Instant.now(),
+      override val timestamp: Instant = Instant.now(),
     ) : OnboardingEvent(nodeId, nodeName, nodeComponent) {
       constructor(
         nodeId: Long,
