@@ -8,4 +8,7 @@ android_library {
     srcs: [
         "*.kt",
     ],
+    static_libs: [
+        "android_onboarding.contracts",
+    ],
 }
