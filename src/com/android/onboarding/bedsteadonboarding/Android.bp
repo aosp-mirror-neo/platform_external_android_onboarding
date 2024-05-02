@@ -6,7 +6,7 @@ package {
 android_library {
     name: "android_onboarding.testable_onboarding",
     srcs: [],
-    manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
+    manifest: "AndroidManifest_testable_onboarding.xml",
     static_libs: [
         "android_onboarding.bedsteadonboarding.providers",
         "android_onboarding.bedsteadonboarding.activities",
@@ -15,12 +15,13 @@ android_library {
 
 // Onboarding bedstead target which tests should depend on.
 android_library {
-    name: "android_onboarding.bedsteadonboarding_testing",
+    name: "android_onboarding.bedsteadonboarding",
     manifest: ":android_onboarding.bedsteadonboarding.AndroidManifest",
     srcs: [
         "*.kt",
     ],
     static_libs: [
+        "Harrier",
         "android_onboarding.contracts.annotations",
         "android_onboarding.bedsteadonboarding.activities",
         "android_onboarding.bedsteadonboarding.annotations",

@@ -5,7 +5,7 @@
     package="com.android.onboarding.nodes.testing.testapp">
 
   <uses-sdk
-      android:minSdkVersion="21"
+      android:minSdkVersion="29"
       android:targetSdkVersion="33"/>
 
   <queries>
