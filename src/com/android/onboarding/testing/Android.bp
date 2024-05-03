@@ -2,9 +2,16 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "android_onboarding.testing.AndroidManifest",
+    srcs: [
+        "AndroidManifest.xml",
+    ],
+}
+
 android_library {
     name: "android_onboarding.testing",
-    manifest: ":android_onboarding.AndroidManifest",
+    manifest: ":android_onboarding.testing.AndroidManifest",
     srcs: [
         "*.kt",
     ],
