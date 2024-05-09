@@ -142,10 +142,29 @@ class MainActivity : CompositeOnboardingActivity<ContractArg, String, ColourCont
       setResult(checkNotNull(findViewById<EditText>(R.id.argument)).text.toString())
       finish()
     }
+
+    checkNotNull(findViewById<Button>(R.id.startServiceButton)).setOnClickListener {
+      startService(
+        Intent(this, BackgroundTaskService::class.java).putExtra("usingKeepAlive", false)
+      )
+    }
+
+    checkNotNull(findViewById<Button>(R.id.startServiceUsingKeepAliveButton)).setOnClickListener {
+      startService(Intent(this, BackgroundTaskService::class.java).putExtra("usingKeepAlive", true))
+    }
+
+    checkNotNull(findViewById<Button>(R.id.stopServiceButton)).setOnClickListener {
+      stopService(Intent(this, BackgroundTaskService::class.java))
+    }
   }
 
   fun onResult(result: String) {
     checkNotNull(findViewById<TextView>(R.id.status)).text = "Received result: $result"
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    stopService(Intent(this, BackgroundTaskService::class.java))
   }
 }
 
