@@ -27,7 +27,7 @@ interface OnboardingGraphNode {
   val incomingEdge: OnboardingGraphEdge.Incoming?
   val failureReasons: Set<Throwable>
   val isFailed: Boolean
-  val type: OnboardingGraphNode.Type
+  val type: Type
 
   /** The name of the onboarding component that owns this node. */
   val component: String?

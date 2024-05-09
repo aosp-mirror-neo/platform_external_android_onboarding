@@ -13,6 +13,7 @@ android_library {
         "android_onboarding.testable_onboarding",
         "android_onboarding.common",
         "android_onboarding.contracts",
+        "android_onboarding.process",
         "android_onboarding.contracts.annotations",
         "androidx.activity_activity-ktx",
         "androidx.appcompat_appcompat",

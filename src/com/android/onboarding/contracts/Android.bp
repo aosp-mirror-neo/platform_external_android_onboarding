@@ -7,6 +7,7 @@ android_library {
     manifest: ":android_onboarding.AndroidManifest",
     srcs: [
         "ContractResult.kt",
+        "Results.kt",
     ],
     optimize: {
         proguard_flags_files: ["proguard.pgcfg"],
@@ -14,6 +15,7 @@ android_library {
     dont_merge_manifests: true,
     static_libs: [
         "android_onboarding.contracts.annotations",
+        "androidx.activity_activity-ktx",
     ],
 }
 
