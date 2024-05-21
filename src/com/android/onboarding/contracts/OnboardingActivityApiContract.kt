@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractExecutionEligibilityChecker
 import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
-import com.android.onboarding.contracts.ContractResult.Failure
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
@@ -81,24 +81,24 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   internal fun performExtractArgumentInternal(intent: Intent) = performExtractArgument(intent)
 
   /**
-   * Sets the given result.
+   * Convert the given result into the low-level representation [ActivityResult].
    *
    * This should be symmetric with [performParseResult].
    */
-  protected abstract fun performSetResult(result: O): ContractResult
+  protected abstract fun performSetResult(result: O): ActivityResult
 
   /** Provides internal access to [performSetResult] */
   internal fun performSetResultInternal(result: O) = performSetResult(result)
 
   /**
-   * Extracts the result from the given [ContractResult].
+   * Extracts the result from the low-level representation [ActivityResult].
    *
    * This should be symmetric with [performSetResult].
    */
-  protected abstract fun performParseResult(result: ContractResult): O
+  protected abstract fun performParseResult(result: ActivityResult): O
 
   /** Provides internal access to [performParseResult] */
-  internal fun performParseResultInternal(result: ContractResult) = performParseResult(result)
+  internal fun performParseResultInternal(result: ActivityResult) = performParseResult(result)
 
   /**
    * Fetches the result without starting the activity.
@@ -141,17 +141,16 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     // Injection point when we are returning a result from the current activity
 
     AndroidOnboardingGraphLog.log(ActivityNodeSetResult(activity.nodeId, this.javaClass, result))
-
-    val contractResult = performSetResult(result)
-
-    if (contractResult is Failure) {
-      AndroidOnboardingGraphLog.log(ActivityNodeFail(activity.nodeId, contractResult.reason))
+    if (result is NodeResult.Failure) {
+      AndroidOnboardingGraphLog.log(ActivityNodeFail(activity.nodeId, result.toString()))
     }
 
-    val intent = contractResult.intent ?: Intent()
+    val activityResult = performSetResult(result)
+
+    val intent = activityResult.data ?: Intent()
     intent.putExtra(EXTRA_ONBOARDING_NODE_ID, activity.nodeId)
 
-    activity.setResult(contractResult.resultCode, intent)
+    activity.setResult(activityResult.resultCode, intent)
   }
 
   class OnboardingLifecycleObserver<I, O>(
@@ -378,12 +377,12 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
     val id = intent?.nodeId ?: UNKNOWN_NODE_ID
 
-    val result = performParseResult(UnknownContractResult(resultCode, intent))
+    val result = performParseResult(ActivityResult(resultCode, intent))
 
     AndroidOnboardingGraphLog.log(ActivityNodeResultReceived(id, this.javaClass, result))
 
-    if (result is Failure) {
-      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, result.reason))
+    if (result is NodeResult.Failure) {
+      AndroidOnboardingGraphLog.log(ActivityNodeFail(id, result.toString()))
     }
 
     return result
@@ -392,10 +391,9 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   final override fun getSynchronousResult(context: Context, input: I): SynchronousResult<O>? {
     // Injection point when making a synchronous call
 
-    val contractResult = ContractUtils.getContractResultIfNodeIsFakedInTest(context, this.javaClass)
-    if (contractResult != null) {
-      Log.i(TAG, "Contract result fetched for fake node ${this.javaClass} is $contractResult")
-      return SynchronousResult(performParseResult(contractResult))
+    ContractUtils.getContractResultIfNodeIsFakedInTest(context, this.javaClass)?.let { result ->
+      Log.i(TAG, "Contract result fetched for fake node ${this.javaClass} is $result")
+      return SynchronousResult(performParseResult(result.toActivityResult()))
     }
 
     val thisNodeId = extractNodeId(context)
@@ -443,12 +441,12 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
 
 /** Equivalent to [OnboardingActivityApiContract] for contracts which do not return a result. */
 abstract class VoidOnboardingActivityApiContract<I> : OnboardingActivityApiContract<I, Unit>() {
-  final override fun performSetResult(result: Unit): ContractResult {
+  final override fun performSetResult(result: Unit): ActivityResult {
     // Does nothing - no result
-    return Failure(0, reason = "Should never be called")
+    return ActivityResult(resultCode = 0, data = null)
   }
 
-  final override fun performParseResult(result: ContractResult) {
+  final override fun performParseResult(result: ActivityResult) {
     // Does nothing - no result
   }
 }
