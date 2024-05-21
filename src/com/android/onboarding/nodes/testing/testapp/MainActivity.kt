@@ -13,9 +13,9 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.activity.result.ActivityResult
 import com.android.onboarding.activity.CompositeOnboardingActivity
 import com.android.onboarding.common.TEST_APP
-import com.android.onboarding.contracts.ContractResult
 import com.android.onboarding.contracts.IdentifyExecutingContractByAction
 import com.android.onboarding.contracts.OnboardingActivityApiContract
 import com.android.onboarding.contracts.annotations.DiscouragedOnboardingApi
@@ -196,17 +196,11 @@ sealed class ColourContract(val colour: Int, private val name: String) :
       intent.hasFlag(FLAG_ACTIVITY_FORWARD_RESULT),
     )
 
-  override fun performParseResult(result: ContractResult): String {
-    return checkNotNull(result.intent?.getStringExtra("KEY")).apply {
-      // Also concatenate the failure reason in response if the result is Failure
-      if ((result is ContractResult.Failure) && !result.reason.isNullOrEmpty()) {
-        return this + "|" + result.reason
-      }
-    }
-  }
+  override fun performParseResult(result: ActivityResult): String =
+    checkNotNull(result.data?.getStringExtra("KEY"))
 
-  override fun performSetResult(result: String): ContractResult =
-    ContractResult.Success(1, Intent().apply { putExtra("KEY", result) })
+  override fun performSetResult(result: String): ActivityResult =
+    ActivityResult(1, Intent().apply { putExtra("KEY", result) })
 }
 
 @OnboardingNode(component = TEST_APP, name = "Red", uiType = OnboardingNode.UiType.OTHER)

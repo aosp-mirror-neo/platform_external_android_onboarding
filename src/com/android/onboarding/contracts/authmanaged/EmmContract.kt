@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
 import com.android.onboarding.common.AUTH_MANAGED
 import com.android.onboarding.contracts.ContractResult
@@ -144,7 +145,7 @@ constructor(
 
   override fun performExtractArgument(intent: Intent): EmmArguments = read(intent)
 
-  override fun performParseResult(result: ContractResult): EmmResult =
+  override fun performParseResult(result: ActivityResult): EmmResult =
     when {
       result.resultCode == RESULTS.RESULT_LAUNCH_APP_FAILED -> EmmResult.Failure.LaunchAppFailed
       result.resultCode == RESULTS.RESULT_FETCH_APP_INFO_FAILED ->
@@ -167,12 +168,13 @@ constructor(
       else -> EmmResult.Failure.Unknown(result.resultCode)
     }
 
-  override fun performSetResult(result: EmmResult): ContractResult =
+  override fun performSetResult(result: EmmResult): ActivityResult =
     if (result is EmmResult.Success) {
-      ContractResult.Success(result.code)
-    } else {
-      ContractResult.Failure(result.code)
-    }
+        ContractResult.Success(result.code)
+      } else {
+        ContractResult.Failure(result.code)
+      }
+      .toActivityResult()
 
   override fun NodeAwareIntentScope.write(value: EmmArguments) {
     intent[suwArgumentsSerializer] = value::suwArguments
