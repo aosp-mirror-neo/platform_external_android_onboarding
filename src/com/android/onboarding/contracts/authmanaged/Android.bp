@@ -14,6 +14,7 @@ android_library {
         "android_onboarding.contracts",
         "android_onboarding.contracts.setupwizard",
         "android_onboarding.contracts.annotations",
+        "androidx.activity_activity-ktx",
         "androidx.annotation_annotation",
         "setupcompat",
         "jsr330",

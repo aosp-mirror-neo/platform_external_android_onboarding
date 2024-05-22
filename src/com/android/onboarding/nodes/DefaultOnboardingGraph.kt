@@ -4,7 +4,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.Objects
 
-class DefaultOnboardingGraph(override val events: Set<OnboardingGraphLog.OnboardingEvent>) :
+class DefaultOnboardingGraph(override val events: Iterable<OnboardingGraphLog.OnboardingEvent>) :
   OnboardingGraph {
   override val nodes: Map<Long, NodeImpl> by lazy {
     val nodeMap = mutableMapOf<Long, NodeImpl>()
@@ -197,7 +197,7 @@ class DefaultOnboardingGraph(override val events: Set<OnboardingGraphLog.Onboard
         val node = nodeMap[e.nodeId]!!
         with(node._incomingEdge) {
           if (this == null) {
-            println("node._incomingEdge is null. Event: $e, Node: $node")
+            System.err.println("W: node._incomingEdge is null. Event: $e, Node: $node")
           } else {
             nodeMap.updateNode(id = this.id, timestamp = e.timestamp)
           }
@@ -325,11 +325,10 @@ class DefaultOnboardingGraph(override val events: Set<OnboardingGraphLog.Onboard
       get() =
         _outgoingEdges.values
           .map {
-            if (nodeMap.contains(it.id)) {
-              OutgoingEdge(checkNotNull(nodeMap[it.id]) { "Node[${it.id} not found" }, it.timestamp)
-            } else {
-              throw IllegalStateException("$id relies on non-existing outgoing node $it")
-            }
+            val adjNode =
+              nodeMap[it.id]
+                ?: throw IllegalStateException("$id relies on non-existing outgoing node $it")
+            OutgoingEdge(adjNode, it.timestamp)
           }
           .toSet()
 
@@ -338,18 +337,15 @@ class DefaultOnboardingGraph(override val events: Set<OnboardingGraphLog.Onboard
     override val outgoingEdgesOfValidNodes: Set<OutgoingEdge>
       get() =
         _outgoingEdges.values
-          .asSequence()
           .filter { it.id in nodeMap }
-          .map {
-            OutgoingEdge(checkNotNull(nodeMap[it.id]) { "Node[${it.id} not found" }, it.timestamp)
-          }
+          .map { OutgoingEdge(nodeMap.getValue(it.id), it.timestamp) }
           .toSet()
 
     override val incomingEdge: IncomingEdge?
       get() =
         _incomingEdge?.let {
-          if (it.id in nodeMap) {
-            IncomingEdge(checkNotNull(nodeMap[it.id]) { "Node[${it.id} not found" }, it.timestamp)
+          if (nodeMap.containsKey(it.id)) {
+            IncomingEdge(nodeMap[it.id]!!, it.timestamp)
           } else {
             throw IllegalStateException("$id relies on non-existing incoming node $it")
           }
