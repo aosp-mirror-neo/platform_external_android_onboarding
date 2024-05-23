@@ -4,13 +4,14 @@ import java.time.Duration
 import java.time.Instant
 import java.util.Objects
 
-class DefaultOnboardingGraph(override val events: Iterable<OnboardingGraphLog.OnboardingEvent>) :
-  OnboardingGraph {
+class DefaultOnboardingGraph(
+  override val events: Iterable<OnboardingGraphLog.OnboardingEventDelegate>
+) : OnboardingGraph {
   override val nodes: Map<Long, NodeImpl> by lazy {
     val nodeMap = mutableMapOf<Long, NodeImpl>()
 
-    for (e in events) {
-      when (e) {
+    for (delegate in events) {
+      when (val e = delegate.event) {
         is OnboardingGraphLog.OnboardingEvent.ActivityNodeExecutedDirectly -> {
           nodeMap.updateNode(
             e,
@@ -175,7 +176,8 @@ class DefaultOnboardingGraph(override val events: Iterable<OnboardingGraphLog.On
     }
 
     // We run through a second time to update results now that all nodes exist
-    for (e in events) {
+    for (delegate in events) {
+      val e = delegate.event
       if (e is OnboardingGraphLog.OnboardingEvent.ActivityNodeResultReceived) {
         nodeMap.updateNode(
           e,
