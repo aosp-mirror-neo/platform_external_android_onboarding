@@ -32,11 +32,30 @@ interface OnboardingGraphLog {
     fun onEvent(event: OnboardingEvent)
   }
 
+  /** Common data applicable to all onboarding events. */
   interface OnboardingEventData {
     val nodeName: String?
     val nodeComponent: String?
     val nodeId: Long
     val timestamp: Instant
+  }
+
+  /** A wrapper over an actual onboarding event. */
+  interface OnboardingEventDelegate : OnboardingEventData {
+    /** The actual [OnboardingEvent] this delegates to. */
+    val event: OnboardingEvent
+
+    override val nodeName: String?
+      get() = event.nodeName
+
+    override val nodeComponent: String?
+      get() = event.nodeComponent
+
+    override val nodeId: Long
+      get() = event.nodeId
+
+    override val timestamp: Instant
+      get() = event.timestamp
   }
 
   // LINT.IfChange
@@ -45,7 +64,10 @@ interface OnboardingGraphLog {
     override val nodeName: String?,
     override val nodeComponent: String?,
     override val nodeId: Long,
-  ) : OnboardingEventData {
+  ) : OnboardingEventDelegate {
+    override val event
+      get() = this
+
     /** Writes this event to a string which can be parsed by [OnboardingGraphLog#deserialize]. */
     fun serializeToString(): String {
       return BaseEncoding.base64().encode(serialize().toByteArray())
