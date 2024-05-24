@@ -29,7 +29,6 @@ import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityN
 import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.util.UUID
-import kotlin.reflect.KClass
 
 /**
  * A Contract used for launching an activity as part of the Onboarding flow.
@@ -466,15 +465,6 @@ abstract class ArgumentFreeVoidOnboardingActivityApiContract :
     // Does nothing - no argument
   }
 }
-
-/**
- * Marks a given [Activity] as an Onboarding entity fulfilling given [contract].
- *
- * @property contract fulfilled by this activity
- */
-@Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.CLASS)
-annotation class OnboardingActivity(val contract: KClass<OnboardingActivityApiContract<*, *>>)
 
 /** Returns [true] if the activity is launched using onboarding contract, [false] otherwise. */
 fun Activity.isLaunchedByOnboardingContract(): Boolean {
