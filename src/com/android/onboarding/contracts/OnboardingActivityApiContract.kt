@@ -464,6 +464,10 @@ abstract class ArgumentFreeVoidOnboardingActivityApiContract :
   final override fun performExtractArgument(intent: Intent) {
     // Does nothing - no argument
   }
+
+  final override fun performCreateIntent(context: Context, arg: Unit) = performCreateIntent(context)
+
+  abstract fun performCreateIntent(context: Context): Intent
 }
 
 /** Returns [true] if the activity is launched using onboarding contract, [false] otherwise. */
