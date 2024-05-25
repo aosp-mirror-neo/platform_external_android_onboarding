@@ -313,7 +313,7 @@ class OnboardingTestsRule : TestRule {
     // Use reflection to invoke the [OnboardingActivityApiContract#performCreateIntent()] of
     // [activityContract] to create [Intent]. We assume that the instrumented app is not proguarded.
     val intentCreationMethod =
-      activityContract::class.java.methods.firstOrNull { it.name == INTENT_CREATION_METHOD_NAME }
+      activityContract::class.java.methods.firstOrNull { it.name == INTENT_CREATION_METHOD_NAME && it.parameterCount == 2 }
 
     if (intentCreationMethod != null) {
       intentCreationMethod.isAccessible = true
