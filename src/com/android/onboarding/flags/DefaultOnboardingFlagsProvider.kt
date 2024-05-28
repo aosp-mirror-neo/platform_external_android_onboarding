@@ -10,10 +10,8 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
   override val isNodeLoggingEnabled: Boolean
     get() =
       SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_NODE_LOGGING_ENABLED", false)
-
   override val isUiLoggingEnabled: Boolean
-    get() =
-      SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_UI_LOGGING_ENABLED", false)
+    get() = true
 
   override val isDimensionLoggingEnabled: Boolean
     get() =
