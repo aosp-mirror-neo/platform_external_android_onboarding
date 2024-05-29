@@ -2,13 +2,22 @@ package com.android.onboarding.nodes
 
 import java.time.Instant
 
-typealias OnboardingGraph = TypedOnboardingGraph<OnboardingGraphNode>
+/**
+ * Basic [TypedOnboardingGraph] representation with data available from a set of
+ * [OnboardingGraphLog.OnboardingEventDelegate] only.
+ */
+typealias OnboardingGraph =
+  TypedOnboardingGraph<OnboardingGraphNode, OnboardingGraphLog.OnboardingEventDelegate>
 
-interface TypedOnboardingGraph<out TNode : OnboardingGraphNode> {
+/** A core representation of the onboarding graph mainly built from [TEvent]s. */
+interface TypedOnboardingGraph<
+  out TNode : OnboardingGraphNode,
+  out TEvent : OnboardingGraphLog.OnboardingEventDelegate,
+> {
   /**
    * All events related to this graph, sorted by [OnboardingGraphLog.OnboardingEventData.timestamp]
    */
-  val events: Iterable<OnboardingGraphLog.OnboardingEvent>
+  val events: Iterable<TEvent>
 
   /** A map of all the nodes in the graph as identified by [OnboardingGraphNode.id] */
   val nodes: Map<Long, TNode>
@@ -27,7 +36,9 @@ interface TypedOnboardingGraph<out TNode : OnboardingGraphNode> {
      *
      * @param events [TypedOnboardingGraph.events]
      */
-    operator fun invoke(events: Iterable<OnboardingGraphLog.OnboardingEvent>): OnboardingGraph =
+    operator fun invoke(
+      events: Iterable<OnboardingGraphLog.OnboardingEventDelegate>
+    ): OnboardingGraph =
       DefaultOnboardingGraph(
         events.distinct().sortedBy(OnboardingGraphLog.OnboardingEventData::timestamp)
       )

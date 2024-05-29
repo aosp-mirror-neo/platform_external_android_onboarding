@@ -18,7 +18,41 @@ annotation class OnboardingNode(
 
   /** The type of specification given for this node. */
   val specificationType: SpecificationType = SpecificationType.LIGHT,
+
+  /** The packages which are expected to launch this node without making use of the contract. */
+  // Once we need it - we can add constants representing categories of caller that can be
+  // special cased. For example, DPCs or Settings apps.
+  val offGraphCallers: Array<String> = [],
+
+  /**
+   * True if this node is expected to terminate the Onboarding flow in some circumstances.
+   *
+   * This is only applicable to UI Nodes.
+   *
+   * No node with this set to false should exit without returning a result or starting another
+   * contract which continues the flow.
+   */
+  // We should refactor this into the UiType option somehow so it can't be specified on non-UI nodes
+  // or at least we should enforce it in the linter
+  val isTerminalNode: Boolean = false,
+
+  /**
+   * How the back button behaves when this node is active.
+   *
+   * This is only applicable to UI Nodes.
+   */
+  // We should refactor this into the UiType option somehow so it can't be specified on non-UI nodes
+  // or at least we should enforce it in the linter
+  val backButtonBehavior: BackButtonBehavior = BackButtonBehavior.UNKNOWN,
 ) {
+
+  enum class BackButtonBehavior {
+    UNKNOWN,
+
+    /** Disabled via some screen-specific logic. */
+    CUSTOM_DISABLED,
+  }
+
   enum class UiType {
     /** This node shows no UI. */
     NONE,
@@ -56,9 +90,7 @@ annotation class OnboardingNode(
      */
     HOST,
 
-    /**
-     * This node's primary purpose is to show error screen to the user.
-     */
+    /** This node's primary purpose is to show error screen to the user. */
     ERROR,
   }
 
