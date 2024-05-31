@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.annotations.ValidChangeId
 import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
@@ -38,11 +39,11 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
       put(context.packageName, version.myComplianceDate)
     }
 
-  override fun currentProcessSupportsChange(changeId: Long): Boolean {
+  override fun currentProcessSupportsChange(@ValidChangeId changeId: Long): Boolean {
     return componentSupportsChange(context.packageName, changeId)
   }
 
-  override fun requireCurrentProcessSupportsChange(changeId: Long) {
+  override fun requireCurrentProcessSupportsChange(@ValidChangeId changeId: Long) {
     if (currentProcessSupportsChange(changeId)) {
       return
     }
@@ -82,7 +83,15 @@ class DefaultOnboardingChanges(val context: Context) : OnboardingChanges {
     }
   }
 
-  override fun componentSupportsChange(component: String, changeId: Long): Boolean {
+  override fun componentSupportsChange(
+    component: String,
+    @ValidChangeId(
+      allowedChangeRadii = [ChangeRadius.MULTI_COMPONENT],
+      disallowedChangeRadiiError =
+        "You cannot query changes which are SINGLE_COMPONENT across process boundaries.",
+    )
+    changeId: Long,
+  ): Boolean {
     val packageName = extractPackageFromComponent(component)
 
     val changeData =
