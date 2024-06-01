@@ -49,8 +49,7 @@ abstract class AbstractOnboardingTaskManager(
     TaskContractT : OnboardingTaskContract<TaskArgsT, TaskResultT>,
   > runTask(taskContract: TaskContractT, taskArgs: TaskArgsT): OnboardingTaskToken {
     val task = tryCreateTaskInstance(taskContract::class.java) ?: return OnboardingTaskToken.INVALID
-    val taskToken =
-      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    val taskToken = OnboardingTaskToken(taskContract::class.java.simpleName, taskComponentName = "")
     // We have to update the task status as soon as possible to prevent immediate query status
     // action.
     tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
@@ -73,8 +72,7 @@ abstract class AbstractOnboardingTaskManager(
     val task =
       tryCreateTaskInstance(taskContract::class.java)
         ?: return OnboardingTaskState.Failed(ERROR_INSTANTIATING_TASK)
-    val taskToken =
-      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    val taskToken = OnboardingTaskToken(taskContract::class.java.simpleName, taskComponentName = "")
     // We have to update the task status as soon as possible to prevent immediate query status
     // action.
     tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
@@ -98,8 +96,7 @@ abstract class AbstractOnboardingTaskManager(
     task: OnboardingTask<TaskArgsT, TaskResultT, TaskContractT>,
     taskArgs: TaskArgsT,
   ): OnboardingTaskState<TaskResultT> {
-    val taskToken =
-      OnboardingTaskToken(task::class.java.simpleName, taskContract::class.java.simpleName)
+    val taskToken = OnboardingTaskToken(taskContract::class.java.simpleName, taskComponentName = "")
     // We have to update the task status as soon as possible to prevent immediate query status
     // action.
     tasksStates[taskToken] = OnboardingTaskState.InProgress<TaskResultT>()
