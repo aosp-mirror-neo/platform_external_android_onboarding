@@ -129,6 +129,19 @@ annotation class OnboardingNode(
           "Node name length (${it.length}) exceeds maximum length of $MAX_NODE_NAME_LENGTH characters"
         }
       } ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
+
+    /** Returns the node [OnboardingNodeMetadata] for given node's component name. */
+    fun getOnboardingNodeMetadata(nodeClass: Class<*>): OnboardingNodeMetadata {
+      val component =
+        nodeClass.getAnnotation(OnboardingNode::class.java)?.component
+          ?: error("OnboardingNode annotation or component is missing for class ${nodeClass.name}")
+      val nodeMetadata = component.split("/")
+      return when (nodeMetadata.size) {
+        1 -> OnboardingNodeMetadata(nodeMetadata[0], nodeMetadata[0])
+        2 -> OnboardingNodeMetadata(nodeMetadata[0], nodeMetadata[1])
+        else -> error("OnboardingNode component ${component} is invalid")
+      }
+    }
   }
 }
 
