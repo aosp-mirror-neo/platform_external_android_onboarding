@@ -8,25 +8,33 @@ import android.os.Parcelable
  *
  * This class is used to uniquely identify and reference an onboarding task executor and its
  * contract.
+ *
+ * @property taskContractClass The fully qualified class name of the associated
+ *   [OnboardingTaskContract].
+ * @property taskComponentName The component name of the task. Name is defined in
+ *   [OnboardingComponents].
  */
-data class OnboardingTaskToken(val taskClass: String, val taskContractClass: String) : Parcelable {
+data class OnboardingTaskToken(val taskContractClass: String, val taskComponentName: String) :
+  Parcelable {
   constructor(
     parcel: Parcel
   ) : this(
-    taskClass = parcel.readString() ?: error("taskClass is missing in the parcel"),
     taskContractClass = parcel.readString() ?: error("taskContractClass is missing in the parcel"),
+    taskComponentName = parcel.readString() ?: error("taskComponentName is missing in the parcel"),
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeString(taskClass)
     parcel.writeString(taskContractClass)
+    parcel.writeString(taskComponentName)
   }
 
   override fun describeContents(): Int = 0
 
   companion object CREATOR : Parcelable.Creator<OnboardingTaskToken> {
+    const val INVALID_STRING = "INVALID"
     // Constant representing an invalid token
-    val INVALID: OnboardingTaskToken = OnboardingTaskToken("", "")
+    val INVALID: OnboardingTaskToken =
+      OnboardingTaskToken(taskContractClass = INVALID_STRING, taskComponentName = INVALID_STRING)
 
     override fun createFromParcel(parcel: Parcel): OnboardingTaskToken {
       return OnboardingTaskToken(parcel)
