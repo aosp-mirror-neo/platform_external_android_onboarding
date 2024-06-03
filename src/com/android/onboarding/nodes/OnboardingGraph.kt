@@ -3,16 +3,16 @@ package com.android.onboarding.nodes
 import java.time.Instant
 
 /**
- * Basic [IOnboardingGraph] representation with data available from a set of
+ * Basic [TypedOnboardingGraph] representation with data available from a set of
  * [OnboardingGraphLog.OnboardingEventDelegate] only.
  */
 typealias OnboardingGraph =
-  IOnboardingGraph<OnboardingGraphLog.OnboardingEventDelegate, OnboardingGraphNode>
+  TypedOnboardingGraph<OnboardingGraphNode, OnboardingGraphLog.OnboardingEventDelegate>
 
 /** A core representation of the onboarding graph mainly built from [TEvent]s. */
-interface IOnboardingGraph<
+interface TypedOnboardingGraph<
+  out TNode : OnboardingGraphNode,
   out TEvent : OnboardingGraphLog.OnboardingEventDelegate,
-  out TNode : IOnboardingGraphNode<TEvent>,
 > {
   /**
    * All events related to this graph, sorted by [OnboardingGraphLog.OnboardingEventData.timestamp]
@@ -34,10 +34,13 @@ interface IOnboardingGraph<
     /**
      * Constructs default implementation of the [OnboardingGraph]
      *
-     * @param events [IOnboardingGraph.events]
+     * @param events [TypedOnboardingGraph.events]
      */
     operator fun invoke(
       events: Iterable<OnboardingGraphLog.OnboardingEventDelegate>
-    ): OnboardingGraph = OnboardingGraphBuilder.build(events)
+    ): OnboardingGraph =
+      DefaultOnboardingGraph(
+        events.distinct().sortedBy(OnboardingGraphLog.OnboardingEventData::timestamp)
+      )
   }
 }

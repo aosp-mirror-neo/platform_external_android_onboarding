@@ -15,7 +15,7 @@ class OnboardingGraphNodeTransitionObserver(private val observer: OnboardingGrap
 
   private var currentNodeId: Long? = null
 
-  override fun onEvent(event: OnboardingEvent) {
+  override fun onEvent(event: OnboardingGraphLog.OnboardingEvent) {
     if (event.nodeId != currentNodeId) {
       currentNodeId = event.nodeId
 

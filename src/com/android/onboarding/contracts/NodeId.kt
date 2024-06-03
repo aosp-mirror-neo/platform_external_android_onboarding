@@ -3,7 +3,7 @@ package com.android.onboarding.contracts
 import android.app.Activity
 import android.content.Intent
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
-import com.android.onboarding.nodes.OnboardingEvent
+import com.android.onboarding.nodes.OnboardingGraphLog
 import java.util.UUID
 import javax.inject.Qualifier
 
@@ -49,5 +49,5 @@ val Activity.nodeId: NodeId
 
 /** Mark the executing node as failed with [reason]. */
 fun Activity.failNode(reason: String? = null) {
-  AndroidOnboardingGraphLog.log(OnboardingEvent.ActivityNodeFail(nodeId, reason))
+  AndroidOnboardingGraphLog.log(OnboardingGraphLog.OnboardingEvent.ActivityNodeFail(nodeId, reason))
 }

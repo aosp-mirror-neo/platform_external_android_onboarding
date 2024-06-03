@@ -9,7 +9,7 @@ android_library {
         "*.kt",
     ],
     static_libs: [
-        "androidx.test.core",
         "androidx.test.ext.junit",
+        "androidx.test.core",
     ],
 }

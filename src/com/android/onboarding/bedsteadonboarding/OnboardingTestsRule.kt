@@ -31,8 +31,8 @@ import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.annotations.OnboardingNodeMetadata
 import com.android.onboarding.contracts.nodeId
-import com.android.onboarding.nodes.OnboardingEvent
 import com.android.onboarding.nodes.OnboardingGraph
+import com.android.onboarding.nodes.OnboardingGraphLog
 import java.lang.AssertionError
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
@@ -251,8 +251,8 @@ class OnboardingTestsRule : TestRule {
     val events = nodeToWaitFor.events
     // Unblock, once the node completion condition has reached.
     return events.any {
-      it.source is OnboardingEvent.ActivityNodeFinished ||
-        isAnotherNodeAttemptedToBeExecutedForResult(it.source, contractIdentifierOfNodeOfInterest)
+      it is OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished ||
+        isAnotherNodeAttemptedToBeExecutedForResult(it, contractIdentifierOfNodeOfInterest)
     } || nodeToWaitFor.outgoingEdgesOfValidNodes.isNotEmpty()
   }
 
@@ -349,7 +349,7 @@ class OnboardingTestsRule : TestRule {
     // Find the [OnboardingGraph.Node] entry for the source node of graph.
     val startNode = graph.nodes.entries.find { it.key == startNodeIdOfGraph } ?: return false
     return hasEventOccurred(
-      OnboardingEvent.ActivityNodeResumed::class,
+      OnboardingGraphLog.OnboardingEvent.ActivityNodeResumed::class,
       contractIdentifierOfNodeOfInterest,
       startNode.key,
       graph,
@@ -370,12 +370,12 @@ class OnboardingTestsRule : TestRule {
     val queue = ArrayDeque<Long>().apply { add(startNodeId) } // Add initial node
     val visitedNodes = mutableSetOf<Long>()
     while (queue.isNotEmpty()) {
-      val currentNode = graph.nodes.getValue(queue.removeFirst())
+      val currentNode = graph.nodes[queue.removeFirst()]!!
       visitedNodes.add(currentNode.id)
       if (
         ContractUtils.getContractIdentifierForNode(currentNode) ==
           contractIdentifierOfNodeOfInterest &&
-          currentNode.spawnedEvents.any { it.source::class == eventClassOfInterest }
+          currentNode.events.any { it::class == eventClassOfInterest }
       ) {
         return true
       }
@@ -395,7 +395,7 @@ class OnboardingTestsRule : TestRule {
    * was validated twice once using correct and another time using incorrect correct.
    */
   internal fun throwErrorIfActivityNotValidatedUsingCorrectContract(
-    onboardingEvents: Set<OnboardingEvent>,
+    onboardingEvents: Set<OnboardingGraphLog.OnboardingEvent>,
     contractIdentifierOfInterest: String,
   ) {
     val invalidEvent =
@@ -410,12 +410,12 @@ class OnboardingTestsRule : TestRule {
   }
 
   private fun isInvalidActivityNodeValidatingEvent(
-    event: OnboardingEvent,
+    event: OnboardingGraphLog.OnboardingEvent,
     expectedContractIdentifier: String,
     activityNodeId: Long,
   ) =
     event.nodeId == activityNodeId &&
-      event is OnboardingEvent.ActivityNodeValidating &&
+      event is OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating &&
       ContractUtils.getContractIdentifier(event.nodeComponent, event.nodeName) !=
         expectedContractIdentifier
 
@@ -436,14 +436,14 @@ class OnboardingTestsRule : TestRule {
   }
 
   /** Returns the immutable set of OnboardingEvents read from logs */
-  private fun getOnboardingEvents(): Set<OnboardingEvent> {
-    val onboardingEvents = mutableSetOf<OnboardingEvent>()
+  private fun getOnboardingEvents(): Set<OnboardingGraphLog.OnboardingEvent> {
+    val onboardingEvents = mutableSetOf<OnboardingGraphLog.OnboardingEvent>()
     for (logLines in logcatReader.getFilteredLogs()) {
       // Is an onboarding graph line containing OnboardingEvent.
       val encoded = logLines.split("${ONBOARDING_EVENT_LOG_TAG}: ")[1]
 
       // Deserialize and store the OnboardingEvent in-memory.
-      val event = OnboardingEvent.deserialize(encoded)
+      val event = OnboardingGraphLog.OnboardingEvent.deserialize(encoded)
       onboardingEvents.add(event)
     }
     return onboardingEvents.toSet()
@@ -454,10 +454,10 @@ class OnboardingTestsRule : TestRule {
    * started for result
    */
   private fun isAnotherNodeAttemptedToBeExecutedForResult(
-    event: OnboardingEvent,
+    event: OnboardingGraphLog.OnboardingEvent,
     contractIdentifierOfNode: String,
   ) =
-    (event is OnboardingEvent.ActivityNodeStartExecuteSynchronously) &&
+    (event is OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously) &&
       (ContractUtils.getContractIdentifier(event.nodeComponent, event.nodeName) !=
         contractIdentifierOfNode)
 

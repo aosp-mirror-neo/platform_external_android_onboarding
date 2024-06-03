@@ -10,9 +10,9 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "android_onboarding.common.annotations",
         "dagger2",
         "jsr330",
+        "android_onboarding.common.annotations",
     ],
     plugins: ["dagger2-compiler"],
 }
