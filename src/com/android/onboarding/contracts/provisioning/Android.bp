@@ -10,8 +10,8 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "setupcompat",
         "androidx.annotation_annotation",
+        "setupcompat",
     ],
     platform_apis: true,
 }

@@ -23,8 +23,8 @@ android_library {
     dont_merge_manifests: true,
     static_libs: [
         "android_onboarding.flags.testing",
-        "jsr330",
         "dagger2",
+        "jsr330",
     ],
 }
 

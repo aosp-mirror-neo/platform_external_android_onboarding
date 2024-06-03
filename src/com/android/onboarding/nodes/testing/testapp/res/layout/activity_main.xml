@@ -70,5 +70,19 @@
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:text="Set Result and Finish" />
-
+  <Button
+      android:id="@+id/startServiceButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Service" />
+  <Button
+      android:id="@+id/startServiceUsingKeepAliveButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Start Service using Keep Alive" />
+  <Button
+      android:id="@+id/stopServiceButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="Stop Service" />
 </LinearLayout>

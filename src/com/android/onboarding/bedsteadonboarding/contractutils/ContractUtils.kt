@@ -3,10 +3,11 @@ package com.android.onboarding.bedsteadonboarding.contractutils
 import android.content.Context
 import android.util.Log
 import com.android.onboarding.bedsteadonboarding.fakes.FakeActivityNodeHelper
+import com.android.onboarding.bedsteadonboarding.permissions.TestPermissions
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.contracts.ContractResult
 import com.android.onboarding.contracts.annotations.OnboardingNode
-import com.android.onboarding.nodes.OnboardingGraph
+import com.android.onboarding.nodes.OnboardingGraphNode
 
 /** Contains utility methods for node contracts. */
 object ContractUtils {
@@ -14,12 +15,18 @@ object ContractUtils {
   private const val contractIdentifierSeparator = "."
   private const val TAG = "ContractUtils"
 
+  private val isRunningOnDebuggableDevice: Boolean by lazy {
+    TestPermissions.isRunningOnDebuggableDevice()
+  }
+
   /** Returns a string uniquely identifying a node's contract given its [contractClass]. */
   fun getContractIdentifier(contractClass: Class<*>) =
-    "${OnboardingNode.extractComponentNameFromClass(contractClass)}${contractIdentifierSeparator}${OnboardingNode.extractNodeNameFromClass(contractClass)}"
+    "${OnboardingNode.extractComponentNameFromClass(contractClass)}${contractIdentifierSeparator}${
+      OnboardingNode.extractNodeNameFromClass(contractClass)
+    }"
 
   /** Returns a string uniquely identifying the contract for the given [node]. */
-  fun getContractIdentifierForNode(node: OnboardingGraph.Node) =
+  fun getContractIdentifierForNode(node: OnboardingGraphNode) =
     "${node.component}$contractIdentifierSeparator${node.name}"
 
   /**
@@ -37,8 +44,18 @@ object ContractUtils {
   fun getContractResultIfNodeIsFakedInTest(
     context: Context,
     contractClass: Class<*>,
-  ): ContractResult? =
-    getContractResultForContractIdentifier(context, getContractIdentifier(contractClass))
+  ): ContractResult? {
+    try {
+      if (isRunningOnDebuggableDevice) {
+        return getContractResultForContractIdentifier(context, getContractIdentifier(contractClass))
+      }
+      return null
+    } catch (t: Throwable) {
+      // For safety, ignore the exception since current function would run in production flow.
+      Log.e(TAG, "Error while fetching fake contract response of contract $contractClass", t)
+      return null
+    }
+  }
 
   /**
    * Returns the [ContractResult] configured in test if the node identified by [contractIdentifier]

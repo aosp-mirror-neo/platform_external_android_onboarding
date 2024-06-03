@@ -1,32 +1,23 @@
 package com.android.onboarding.versions
 
+import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.annotations.ValidChangeId
 import java.lang.UnsupportedOperationException
 
 /** Entry point to checking if processes support particular change ids. */
 interface OnboardingChanges {
 
-  /**
-   * True if the current executing process supports the given change ID.
-   *
-   * The [changeId] must reference a long constant annotated with
-   * [com.android.onboarding.versions.annotations.ChangeId]
-   */
-  fun currentProcessSupportsChange(changeId: Long): Boolean
+  /** True if the current executing process supports the given change ID. */
+  fun currentProcessSupportsChange(@ValidChangeId changeId: Long): Boolean
 
   /**
    * Throws an [UnsupportedOperationException] if the current executing process does not support the
    * given change ID.
-   *
-   * The changeId must reference a long constant annotated with
-   * [com.android.onboarding.versions.annotations.ChangeId]
    */
-  fun requireCurrentProcessSupportsChange(changeId: Long)
+  fun requireCurrentProcessSupportsChange(@ValidChangeId changeId: Long)
 
   /**
    * True if the given component supports the given change ID.
-   *
-   * The changeId must reference a long constant annotated with
-   * [com.android.onboarding.versions.annotations.ChangeId]
    *
    * If the component has not had [loadSupportedChanges] called previously, then it will be called
    * now. It is recommended that [loadSupportedChanges] is called ahead-of-time for all relevant
@@ -35,7 +26,15 @@ interface OnboardingChanges {
    * If the component does not exist or is not valid, then it is assumed to support all released
    * changes but no unreleased changes.
    */
-  fun componentSupportsChange(component: String, changeId: Long): Boolean
+  fun componentSupportsChange(
+    component: String,
+    @ValidChangeId(
+      allowedChangeRadii = [ChangeRadius.MULTI_COMPONENT],
+      disallowedChangeRadiiError =
+        "You cannot query changes which are SINGLE_COMPONENT across process boundaries.",
+    )
+    changeId: Long,
+  ): Boolean
 
   /**
    * Load the supported changes for the given component.

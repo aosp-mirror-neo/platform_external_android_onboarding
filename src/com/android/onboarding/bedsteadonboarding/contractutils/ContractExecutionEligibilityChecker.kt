@@ -3,6 +3,7 @@ package com.android.onboarding.bedsteadonboarding.contractutils
 import android.content.Context
 import android.os.Process
 import android.util.Log
+import com.android.onboarding.bedsteadonboarding.permissions.TestPermissions
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil
 import com.android.onboarding.bedsteadonboarding.providers.ConfigProviderUtil.TEST_NODE_CLASS_COLUMN
 
@@ -13,6 +14,9 @@ private const val TAG = "TestFramework"
  */
 object ContractExecutionEligibilityChecker {
 
+  private val isRunningOnDebuggableDevice: Boolean by lazy {
+    TestPermissions.isRunningOnDebuggableDevice()
+  }
   internal val ALLOW_ALL_NODES = null
 
   /**
@@ -52,6 +56,8 @@ object ContractExecutionEligibilityChecker {
    * return [ALLOW_ALL_NODES] when the node is being executed in production.
    */
   internal fun getAllowedNodes(context: Context): Set<String>? {
+    if (!isRunningOnDebuggableDevice) return ALLOW_ALL_NODES
+
     val uri = ConfigProviderUtil.getTestConfigUri(context)
     var allowedNodes: MutableSet<String>? = null
     // Fetch the list of contracts which are allowed to execute.

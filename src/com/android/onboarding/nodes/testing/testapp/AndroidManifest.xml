@@ -6,7 +6,16 @@
 
   <uses-sdk
       android:minSdkVersion="21"
-      android:targetSdkVersion="33"/>
+      android:targetSdkVersion="34"/>
+
+  <!-- Notification permission above Android T-->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+
+  <!-- Permission required to keep the process alive by displaying the foreground notification while doing the background work. -->
+  <uses-permission android:name="com.android.onboarding.process.permission.NOTIFICATION_KEEP_ALIVE"/>
 
   <queries>
     <intent>
@@ -53,5 +62,8 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity-alias>
+
+    <service
+        android:name=".BackgroundTaskService"/>
   </application>
 </manifest>

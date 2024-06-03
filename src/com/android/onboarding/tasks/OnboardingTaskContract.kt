@@ -10,16 +10,16 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue
  * should be handled. Implementing classes are expected to provide concrete implementations for
  * encoding and extracting task arguments/results.
  *
- * @param Args The type representing the task arguments.
- * @param Result The type representing the task result.
+ * @param TaskArgsT The type representing the task arguments.
+ * @param TaskResultT The type representing the task result.
  */
-interface OnboardingTaskContract<Args, Result> {
+abstract class OnboardingTaskContract<TaskArgsT, TaskResultT> {
   /**
    * Returns the package name associated with this contract.
    *
    * @return The package name.
    */
-  val packageName: String
+  abstract val packageName: String
 
   /**
    * Validates the integrity of the provided task arguments.
@@ -27,50 +27,51 @@ interface OnboardingTaskContract<Args, Result> {
    * This function checks whether the provided task arguments are valid and returns a Boolean
    * indicating the validation result.
    *
-   * @param args The task arguments to validate.
+   * @param taskArgs The task arguments to validate.
    * @return `true` if the task arguments are valid, `false` otherwise.
    */
-  @CanIgnoreReturnValue fun validate(args: Args?): Boolean
+  @CanIgnoreReturnValue abstract fun validate(taskArgs: TaskArgsT?): Boolean
 
   /**
    * Encodes task arguments into a [PersistableBundle] object.
    *
-   * @param args The task arguments to encode.
+   * @param taskArgs The task arguments to encode.
    * @return The encoded [PersistableBundle].
    */
-  fun encodeArgs(args: Args): PersistableBundle
+  abstract fun encodeArgs(taskArgs: TaskArgsT): PersistableBundle
 
   /**
-   * Extracts task arguments from a [PersistableBundle] and returns them as an [Args].
+   * Extracts task arguments from a [PersistableBundle] and returns them as an [TaskArgs].
    *
    * @param bundle The [PersistableBundle] containing the encoded task arguments.
    * @return The extracted task arguments.
    */
-  fun extractArgs(bundle: PersistableBundle): Args
+  abstract fun extractArgs(bundle: PersistableBundle): TaskArgsT
 
   /**
    * Encodes a task result into a [PersistableBundle].
    *
-   * @param result The task result to encode.
+   * @param taskResult The task result to encode.
    * @return The encoded [PersistableBundle].
    */
-  fun encodeResult(result: Result): PersistableBundle
+  abstract fun encodeResult(taskResult: TaskResultT): PersistableBundle
 
   /**
-   * Extracts task results from a [PersistableBundle] and returns them as a [Result].
+   * Extracts task results from a [PersistableBundle] and returns them as a [TaskResult].
    *
    * @param bundle The [PersistableBundle] containing the encoded task results.
    * @return The extracted task results.
    */
-  fun extractResult(bundle: PersistableBundle): Result
+  abstract fun extractResult(bundle: PersistableBundle): TaskResultT
 }
 
 /** Equivalent to [OnboardingTaskContract] for contracts which do not take arguments. */
-interface ArgumentFreeOnboardingTaskContract<Result> : OnboardingTaskContract<Unit, Result> {
+abstract class ArgumentFreeOnboardingTaskContract<TaskResultT> :
+  OnboardingTaskContract<Unit, TaskResultT>() {
 
-  override fun validate(args: Unit?): Boolean = true
+  override fun validate(taskArgs: Unit?): Boolean = true
 
-  override fun encodeArgs(args: Unit): PersistableBundle = PersistableBundle()
+  override fun encodeArgs(taskArgs: Unit): PersistableBundle = PersistableBundle()
 
   override fun extractArgs(bundle: PersistableBundle) {
     // Do nothing as no arguments.
@@ -78,9 +79,9 @@ interface ArgumentFreeOnboardingTaskContract<Result> : OnboardingTaskContract<Un
 }
 
 /** Equivalent to [OnboardingTaskContract] for contracts which do not return result. */
-interface VoidOnboardingTaskContract<Args> : OnboardingTaskContract<Args, Unit> {
+abstract class VoidOnboardingTaskContract<TaskArgsT> : OnboardingTaskContract<TaskArgsT, Unit>() {
 
-  override fun encodeResult(result: Unit): PersistableBundle = PersistableBundle()
+  override fun encodeResult(taskResult: Unit): PersistableBundle = PersistableBundle()
 
   override fun extractResult(bundle: PersistableBundle) {
     // Do nothing as no result.
@@ -91,9 +92,9 @@ interface VoidOnboardingTaskContract<Args> : OnboardingTaskContract<Args, Unit> 
  * Equivalent to [OnboardingTaskContract] for contracts which do not take arguments or return
  * results.
  */
-interface ArgumentFreeVoidOnboardingTaskContract : ArgumentFreeOnboardingTaskContract<Unit> {
+abstract class ArgumentFreeVoidOnboardingTaskContract : ArgumentFreeOnboardingTaskContract<Unit>() {
 
-  override fun encodeResult(result: Unit): PersistableBundle = PersistableBundle()
+  override fun encodeResult(taskResult: Unit): PersistableBundle = PersistableBundle()
 
   override fun extractResult(bundle: PersistableBundle) {
     // Do nothing as no result.
