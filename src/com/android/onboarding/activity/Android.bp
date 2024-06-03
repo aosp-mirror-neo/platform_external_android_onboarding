@@ -10,9 +10,9 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "androidx.appcompat_appcompat",
         "android_onboarding.contracts",
         "android_onboarding.contracts.annotations",
         "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
     ],
 }

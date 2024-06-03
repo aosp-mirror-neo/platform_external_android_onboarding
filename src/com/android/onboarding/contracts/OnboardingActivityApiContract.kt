@@ -15,18 +15,18 @@ import com.android.onboarding.bedsteadonboarding.contractutils.ContractUtils
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
-import com.android.onboarding.nodes.OnboardingGraphLog
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeArgumentExtracted
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeExecutedDirectly
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeExecutedForResult
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeExecutedSynchronously
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeExtractArgument
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeFail
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeFailedValidation
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeResultReceived
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeSetResult
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeStartExecuteSynchronously
-import com.android.onboarding.nodes.OnboardingGraphLog.OnboardingEvent.ActivityNodeValidating
+import com.android.onboarding.nodes.OnboardingEvent
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeArgumentExtracted
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeExecutedDirectly
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeExecutedForResult
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeExecutedSynchronously
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeExtractArgument
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeFail
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeFailedValidation
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeResultReceived
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeSetResult
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeStartExecuteSynchronously
+import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeValidating
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.util.UUID
 
@@ -108,7 +108,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
   protected open fun performGetSynchronousResult(context: Context, args: I): SynchronousResult<O>? =
     null
 
-  private var forResultOutGoingId: Long = UNKNOWN_NODE_ID
+  private var forResultOutGoingId: NodeId = UNKNOWN_NODE_ID
 
   /** Extracts an argument passed into the current activity using the contract. */
   fun extractArgument(intent: Intent): I {
@@ -126,13 +126,13 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     return argument
   }
 
-  private fun intentToIntentData(intent: Intent): OnboardingGraphLog.OnboardingEvent.IntentData {
+  private fun intentToIntentData(intent: Intent): OnboardingEvent.IntentData {
     val extras =
       buildMap<String, Any?> {
         intent.extras?.let { for (key in it.keySet()) put(key, it.get(key)) }
       }
 
-    return OnboardingGraphLog.OnboardingEvent.IntentData(intent.action, extras)
+    return OnboardingEvent.IntentData(intent.action, extras)
   }
 
   /** Sets a result for this contract. */
@@ -156,14 +156,13 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
     private var activity: Activity?,
     private val contract: OnboardingActivityApiContract<I, O>,
   ) : LifecycleEventObserver {
-
     private var isFinishLogged = false
 
     private fun maybeLogFinish() {
       if (!isFinishLogged && activity?.isFinishing == true) {
         isFinishLogged = true
         AndroidOnboardingGraphLog.log(
-          OnboardingGraphLog.OnboardingEvent.ActivityNodeFinished(
+          OnboardingEvent.ActivityNodeFinished(
             activity?.nodeId ?: UNKNOWN_NODE_ID,
             contract.javaClass,
           )
@@ -181,24 +180,20 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
           // Clear the activity reference to avoid memory leak.
           activity = null
         }
-        Lifecycle.Event.ON_CREATE,
-        Lifecycle.Event.ON_START,
         Lifecycle.Event.ON_RESUME -> {
           val nodeId = activity?.nodeId ?: UNKNOWN_NODE_ID
           if (nodeId == UNKNOWN_NODE_ID) {
             Log.w(TAG, "${activity?.componentName} does not contain node id.")
           }
-          if (event == Lifecycle.Event.ON_RESUME) {
-            AndroidOnboardingGraphLog.log(
-              OnboardingGraphLog.OnboardingEvent.ActivityNodeResumed(nodeId, contract.javaClass)
-            )
-          }
+          AndroidOnboardingGraphLog.log(
+            OnboardingEvent.ActivityNodeResumed(nodeId, contract.javaClass)
+          )
           val waitingForResume =
             nodeId != UNKNOWN_NODE_ID && waitingForResumeActivity.contains(nodeId)
           if (waitingForResume) {
             val sourceNodeId = waitingForResumeActivity[nodeId] ?: UNKNOWN_NODE_ID
             AndroidOnboardingGraphLog.log(
-              OnboardingGraphLog.OnboardingEvent.ActivityNodeResumedAfterLaunch(
+              OnboardingEvent.ActivityNodeResumedAfterLaunch(
                 sourceNodeId,
                 nodeId,
                 contract.javaClass,
@@ -207,6 +202,8 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
             waitingForResumeActivity.remove(nodeId)
           }
         }
+        Lifecycle.Event.ON_CREATE,
+        Lifecycle.Event.ON_START,
         Lifecycle.Event.ON_ANY -> {}
       }
     }
@@ -352,7 +349,7 @@ abstract class OnboardingActivityApiContract<I, O> : ActivityResultContract<I, O
       intent.putExtra(EXTRA_ONBOARDING_NODE_ID, forResultOutGoingId)
     } else {
       // getSynchronousResult is not called. This may be not called from
-      // actityResultRegistry.onLaunch. We will use the outgoing which was just created in
+      // activityResultRegistry.onLaunch. We will use the outgoing which was just created in
       // performCreateIntent.
       forResultOutGoingId = intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE_ID)
       Log.w(TAG, "getSynchronousResult was not called when creating intent.")

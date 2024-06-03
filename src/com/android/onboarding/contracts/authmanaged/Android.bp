@@ -12,11 +12,11 @@ android_library {
     static_libs: [
         "android_onboarding.common",
         "android_onboarding.contracts",
-        "android_onboarding.contracts.setupwizard",
         "android_onboarding.contracts.annotations",
+        "android_onboarding.contracts.setupwizard",
         "androidx.activity_activity-ktx",
         "androidx.annotation_annotation",
-        "setupcompat",
         "jsr330",
+        "setupcompat",
     ],
 }

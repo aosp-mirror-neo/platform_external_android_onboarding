@@ -9,9 +9,9 @@ android_library {
         "ContractExecutionEligibilityChecker.kt",
     ],
     static_libs: [
-        "android_onboarding.bedsteadonboarding.providers",
         "android_onboarding.bedsteadonboarding.contractutils",
         "android_onboarding.bedsteadonboarding.permissions",
+        "android_onboarding.bedsteadonboarding.providers",
     ],
 }
 
@@ -22,11 +22,11 @@ android_library {
         "ContractUtils.kt",
     ],
     static_libs: [
+        "android_onboarding.bedsteadonboarding.fake_node_helper",
+        "android_onboarding.bedsteadonboarding.permissions",
+        "android_onboarding.bedsteadonboarding.providers",
+        "android_onboarding.contract_result",
         "android_onboarding.contracts.annotations",
         "android_onboarding.nodes",
-        "android_onboarding.contract_result",
-        "android_onboarding.bedsteadonboarding.fake_node_helper",
-        "android_onboarding.bedsteadonboarding.providers",
-        "android_onboarding.bedsteadonboarding.permissions",
     ],
 }

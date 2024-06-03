@@ -12,7 +12,7 @@ class DefaultOnboardingGraphLog : OnboardingGraphLog {
     observers.remove(observer)
   }
 
-  override fun log(event: OnboardingGraphLog.OnboardingEvent) {
+  override fun log(event: OnboardingEvent) {
     observers.forEach { it.onEvent(event) }
   }
 }

@@ -12,7 +12,7 @@ android_library {
     static_libs: [
         "android_onboarding.common",
         "android_onboarding.contracts",
-        "setupcompat",
         "jsr330",
+        "setupcompat",
     ],
 }
