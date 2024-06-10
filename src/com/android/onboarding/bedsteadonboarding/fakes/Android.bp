@@ -9,12 +9,12 @@ android_library {
         "FakeActivityNode.kt",
     ],
     static_libs: [
-        "android_onboarding.bedsteadonboarding.contractutils",
-        "android_onboarding.bedsteadonboarding.fake_node_helper",
-        "android_onboarding.bedsteadonboarding.providers",
-        "android_onboarding.contract_result",
-        "android_onboarding.contracts",
         "androidx.activity_activity-ktx",
+        "android_onboarding.bedsteadonboarding.contractutils",
+        "android_onboarding.contracts",
+        "android_onboarding.contract_result",
+        "android_onboarding.bedsteadonboarding.providers",
+        "android_onboarding.bedsteadonboarding.fake_node_helper",
         "error_prone_annotations",
     ],
 }
@@ -26,7 +26,7 @@ android_library {
         "FakeActivityNodeHelper.kt",
     ],
     static_libs: [
-        "android_onboarding.contract_result",
         "androidx.activity_activity-ktx",
+        "android_onboarding.contract_result",
     ],
 }

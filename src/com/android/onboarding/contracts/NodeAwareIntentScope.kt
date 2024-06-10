@@ -9,7 +9,7 @@ import androidx.annotation.RequiresApi
 import com.android.onboarding.contracts.NodeAwareIntentScope.IntentExtra.Invalid
 import com.android.onboarding.contracts.NodeAwareIntentScope.IntentExtra.Present
 import com.android.onboarding.nodes.AndroidOnboardingGraphLog
-import com.android.onboarding.nodes.OnboardingEvent
+import com.android.onboarding.nodes.OnboardingGraphLog
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -148,7 +148,9 @@ class NodeAwareIntentScope(
     if (errors.isNotEmpty()) {
       val reason =
         errors.joinToString(prefix = "Detected invalid extras:\n\t", separator = "\n\t - ")
-      AndroidOnboardingGraphLog.log(OnboardingEvent.ActivityNodeFail(nodeId, reason))
+      AndroidOnboardingGraphLog.log(
+        OnboardingGraphLog.OnboardingEvent.ActivityNodeFail(nodeId, reason)
+      )
       if (strict) error(reason)
     }
   }
