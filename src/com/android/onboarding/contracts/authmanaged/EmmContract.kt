@@ -9,9 +9,11 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import com.android.onboarding.common.AUTH_MANAGED
 import com.android.onboarding.contracts.ContractResult
-import com.android.onboarding.contracts.IntentScope
+import com.android.onboarding.contracts.NodeAwareIntentScope
+import com.android.onboarding.contracts.NodeAwareIntentSerializer
+import com.android.onboarding.contracts.NodeId
 import com.android.onboarding.contracts.OnboardingActivityApiContract
-import com.android.onboarding.contracts.ScopedIntentSerializer
+import com.android.onboarding.contracts.OnboardingNodeId
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.setupwizard.SuwArguments
 import com.android.onboarding.contracts.setupwizard.SuwArgumentsSerializer
@@ -23,19 +25,49 @@ const val UNMANAGED_WORK_PROFILE_MODE_UNSPECIFIED: Int = 0
 
 // LINT.ThenChange(//depot/google3/java/com/google/android/gmscore/integ/libs/common_auth/src/com/google/android/gms/common/auth/ui/ManagedAccountUtil.java)
 
-data class EmmArguments(
-  override val suwArguments: SuwArguments,
-  val account: Account,
-  val options: Bundle = Bundle.EMPTY,
-  val flow: Int? = null,
-  val dmStatus: String? = null,
-  val isSetupWizard: Boolean = false,
-  val suppressDeviceManagement: Boolean = false,
-  val callingPackage: String = "",
-  val isMainUser: Boolean = false,
-  val isUnicornAccount: Boolean = false,
-  val unmanagedWorkProfileMode: Int = UNMANAGED_WORK_PROFILE_MODE_UNSPECIFIED,
-) : WithSuwArguments
+interface EmmArguments : WithSuwArguments {
+  val account: Account
+  val options: Bundle
+  val flow: Int?
+  val dmStatus: String?
+  val isSetupWizard: Boolean
+  val suppressDeviceManagement: Boolean
+  val callingPackage: String
+  val isMainUser: Boolean
+  val isUnicornAccount: Boolean
+  val unmanagedWorkProfileMode: Int
+
+  companion object {
+    @JvmStatic
+    @JvmName("of")
+    operator fun invoke(
+      suwArguments: SuwArguments,
+      account: Account,
+      options: Bundle = Bundle.EMPTY,
+      flow: Int? = null,
+      dmStatus: String? = null,
+      isSetupWizard: Boolean = false,
+      suppressDeviceManagement: Boolean = false,
+      callingPackage: String = "",
+      isMainUser: Boolean = false,
+      isUnicornAccount: Boolean = false,
+      unmanagedWorkProfileMode: Int = UNMANAGED_WORK_PROFILE_MODE_UNSPECIFIED,
+    ): EmmArguments =
+      object : EmmArguments {
+        override val suwArguments = suwArguments
+        override val account = account
+        override val options = options
+        override val flow = flow
+        override val dmStatus = dmStatus
+        override val isSetupWizard = isSetupWizard
+        override val suppressDeviceManagement = suppressDeviceManagement
+        override val callingPackage = callingPackage
+        override val isMainUser = isMainUser
+        override val isUnicornAccount = isUnicornAccount
+        override val unmanagedWorkProfileMode = unmanagedWorkProfileMode
+      }
+  }
+}
 
 sealed interface EmmResult {
   val code: Int
@@ -97,14 +129,16 @@ sealed interface EmmResult {
  * Contract for {@link EmmChimeraActivity}. Note that the component of this contract intent is
  * assumed to be set by the caller if launching via Component
  */
-@OnboardingNode(
-  component = AUTH_MANAGED,
-  name = "Emm",
-  uiType = OnboardingNode.UiType.INVISIBLE,
-)
+@OnboardingNode(component = AUTH_MANAGED, name = "Emm", uiType = OnboardingNode.UiType.INVISIBLE)
 @RequiresApi(Build.VERSION_CODES.Q)
-class EmmContract @Inject constructor(val suwArgumentsSerializer: SuwArgumentsSerializer) :
-  OnboardingActivityApiContract<EmmArguments, EmmResult>(), ScopedIntentSerializer<EmmArguments> {
+class EmmContract
+@Inject
+constructor(
+  @OnboardingNodeId override val nodeId: NodeId,
+  val suwArgumentsSerializer: SuwArgumentsSerializer,
+) :
+  OnboardingActivityApiContract<EmmArguments, EmmResult>(),
+  NodeAwareIntentSerializer<EmmArguments> {
 
   override fun performCreateIntent(context: Context, arg: EmmArguments): Intent = Intent(arg = arg)
 
@@ -140,35 +174,34 @@ class EmmContract @Inject constructor(val suwArgumentsSerializer: SuwArgumentsSe
       ContractResult.Failure(result.code)
     }
 
-  override fun IntentScope.write(value: EmmArguments) {
-    write(suwArgumentsSerializer, value.suwArguments)
-    intent[EXTRAS.EXTRA_ACCOUNT] = value.account
-    intent[EXTRAS.EXTRA_IS_SETUP_WIZARD] = value.isSetupWizard
-    intent[EXTRAS.EXTRA_SUPPRESS_DEVICE_MANAGEMENT] = value.suppressDeviceManagement
-    intent[EXTRAS.EXTRA_CALLING_PACKAGE] = value.callingPackage
-    intent[EXTRAS.EXTRA_IS_USER_OWNER] = value.isMainUser
-    intent[EXTRAS.EXTRA_DM_STATUS] = value.dmStatus
-    intent[EXTRAS.EXTRA_IS_UNICORN_ACCOUNT] = value.isUnicornAccount
-    intent[EXTRAS.EXTRA_FLOW] = value.flow
-    intent[EXTRAS.EXTRA_OPTIONS] = value.options
-    intent[EXTRAS.EXTRA_UNMANAGED_WORK_PROFILE_MODE] = value.unmanagedWorkProfileMode
+  override fun NodeAwareIntentScope.write(value: EmmArguments) {
+    intent[suwArgumentsSerializer] = value::suwArguments
+    intent[EXTRAS.EXTRA_ACCOUNT] = value::account
+    intent[EXTRAS.EXTRA_IS_SETUP_WIZARD] = value::isSetupWizard
+    intent[EXTRAS.EXTRA_SUPPRESS_DEVICE_MANAGEMENT] = value::suppressDeviceManagement
+    intent[EXTRAS.EXTRA_CALLING_PACKAGE] = value::callingPackage
+    intent[EXTRAS.EXTRA_IS_USER_OWNER] = value::isMainUser
+    intent[EXTRAS.EXTRA_DM_STATUS] = value::dmStatus
+    intent[EXTRAS.EXTRA_IS_UNICORN_ACCOUNT] = value::isUnicornAccount
+    intent[EXTRAS.EXTRA_FLOW] = value::flow
+    intent[EXTRAS.EXTRA_OPTIONS] = value::options
+    intent[EXTRAS.EXTRA_UNMANAGED_WORK_PROFILE_MODE] = value::unmanagedWorkProfileMode
   }
 
-  override fun IntentScope.read(): EmmArguments =
-    EmmArguments(
-      suwArguments = read(suwArgumentsSerializer),
-      account = parcelableExtra(EXTRAS.EXTRA_ACCOUNT),
-      options = parcelableExtra(EXTRAS.EXTRA_OPTIONS) ?: Bundle.EMPTY,
-      flow = intExtraOrNull(EXTRAS.EXTRA_FLOW),
-      dmStatus = stringExtraOrNull(EXTRAS.EXTRA_DM_STATUS),
-      isSetupWizard = booleanExtraOrNull(EXTRAS.EXTRA_IS_SETUP_WIZARD) ?: false,
-      suppressDeviceManagement =
-        booleanExtraOrNull(EXTRAS.EXTRA_SUPPRESS_DEVICE_MANAGEMENT) ?: false,
-      callingPackage = stringExtraOrNull(EXTRAS.EXTRA_CALLING_PACKAGE) ?: "",
-      isMainUser = booleanExtraOrNull(EXTRAS.EXTRA_IS_USER_OWNER) ?: false,
-      isUnicornAccount = booleanExtraOrNull(EXTRAS.EXTRA_IS_UNICORN_ACCOUNT) ?: false,
-      unmanagedWorkProfileMode =
-        intExtraOrNull(EXTRAS.EXTRA_UNMANAGED_WORK_PROFILE_MODE)
-          ?: UNMANAGED_WORK_PROFILE_MODE_UNSPECIFIED,
-    )
+  override fun NodeAwareIntentScope.read(): EmmArguments =
+    object : EmmArguments {
+      override val suwArguments by read(suwArgumentsSerializer)
+      override val account by parcelable<Account>(EXTRAS.EXTRA_ACCOUNT).required
+      override val options by parcelable<Bundle>(EXTRAS.EXTRA_OPTIONS) or Bundle.EMPTY
+      override val flow by int(EXTRAS.EXTRA_FLOW)
+      override val dmStatus by string(EXTRAS.EXTRA_DM_STATUS)
+      override val isSetupWizard by boolean(EXTRAS.EXTRA_IS_SETUP_WIZARD) or false
+      override val suppressDeviceManagement by
+        boolean(EXTRAS.EXTRA_SUPPRESS_DEVICE_MANAGEMENT) or false
+      override val callingPackage by string(EXTRAS.EXTRA_CALLING_PACKAGE) or ""
+      override val isMainUser by boolean(EXTRAS.EXTRA_IS_USER_OWNER) or false
+      override val isUnicornAccount by boolean(EXTRAS.EXTRA_IS_UNICORN_ACCOUNT) or false
+      override val unmanagedWorkProfileMode by
+        int(EXTRAS.EXTRA_UNMANAGED_WORK_PROFILE_MODE) or UNMANAGED_WORK_PROFILE_MODE_UNSPECIFIED
+    }
 }

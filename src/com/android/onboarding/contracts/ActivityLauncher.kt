@@ -10,11 +10,19 @@ fun <I> Context.registerForActivityLaunch(contract: OnboardingActivityApiContrac
 /** A wrapper around a request to launch a particular activity via a contract. */
 class ActivityLauncher<I>(
   private val context: Context,
-  private val contract: OnboardingActivityApiContract<I, *>
+  private val contract: OnboardingActivityApiContract<I, *>,
 ) {
 
   fun launch(arg: I) {
     context.startActivity(contract.createIntentDirectly(context, arg))
+  }
+
+  /** Launches an activity with given [intentFlags] and contract arguments [args]. */
+  fun launch(arg: I, intentFlags: Int): Long {
+    val intent = contract.createIntentDirectly(context, arg)
+    intent.flags = intentFlags
+    context.startActivity(intent)
+    return intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE_ID)
   }
 
   fun launch(arg: I, options: Bundle?) {

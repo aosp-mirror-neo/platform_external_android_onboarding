@@ -15,7 +15,7 @@ android_library {
         "android_onboarding.nodes_proto_lite",
         "android_onboarding.contracts.annotations",
         "android_onboarding.flags",
-    ]
+    ],
 }
 
 java_library_host {
@@ -30,21 +30,21 @@ java_library_host {
         "guava",
         "android_onboarding.nodes_proto_full",
         "android_onboarding.contracts.annotations_host",
-    ]
+    ],
 }
 
 filegroup {
     name: "android_onboarding.nodes_proto_src",
     srcs: [
-        "onboarding_nodes.proto"
-    ]
+        "onboarding_nodes.proto",
+    ],
 }
 
 java_library_host {
     name: "android_onboarding.nodes_proto_full",
     installable: false,
     srcs: [
-        ":android_onboarding.nodes_proto_src"
+        ":android_onboarding.nodes_proto_src",
     ],
     proto: {
         type: "full",
@@ -57,7 +57,7 @@ java_library_host {
 java_library {
     name: "android_onboarding.nodes_proto_lite",
     srcs: [
-        ":android_onboarding.nodes_proto_src"
+        ":android_onboarding.nodes_proto_src",
     ],
     proto: {
         type: "lite",
