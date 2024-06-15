@@ -1,0 +1,27 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.tasks",
+    manifest: ":android_onboarding.AndroidManifest",
+    srcs: [
+        "**/*.kt",
+        "aidl/**/*.aidl",
+    ],
+    dont_merge_manifests: true,
+    aidl: {
+        include_dirs: [
+            "frameworks/native/aidl/binder",
+        ],
+        export_include_dirs: ["aidl"],
+    },
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "androidx.activity_activity-ktx",
+        "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "kotlinx_coroutines",
+        "kotlinx_coroutines_guava",
+    ],
+}
