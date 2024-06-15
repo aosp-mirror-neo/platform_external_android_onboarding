@@ -1,0 +1,53 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.contract_result",
+    manifest: ":android_onboarding.AndroidManifest",
+    srcs: [
+        "ContractResult.kt",
+        "Results.kt",
+    ],
+    optimize: {
+        proguard_flags_files: ["proguard.pgcfg"],
+    },
+    dont_merge_manifests: true,
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "androidx.activity_activity-ktx",
+    ],
+}
+
+android_library {
+    name: "android_onboarding.contracts",
+    manifest: ":android_onboarding.AndroidManifest",
+    srcs: [
+        "ActivityLauncher.kt",
+        "ArgumentValidator.kt",
+        "AttachedResult.kt",
+        "IdentifyExecutingContract.kt",
+        "IntentSerializer.kt",
+        "Launchable.kt",
+        "NodeAwareIntentScope.kt",
+        "NodeId.kt",
+        "OnboardingActivityApiContract.kt",
+        "SuccessFail.kt",
+    ],
+    optimize: {
+        proguard_flags_files: ["proguard.pgcfg"],
+    },
+    dont_merge_manifests: true,
+    static_libs: [
+        "android_onboarding.bedsteadonboarding.contract_eligibility_checker",
+        "android_onboarding.bedsteadonboarding.contractutils",
+        "android_onboarding.contract_result",
+        "android_onboarding.contracts.annotations",
+        "android_onboarding.nodes",
+        "androidx.activity_activity-ktx",
+        "androidx.annotation_annotation",
+        "androidx.lifecycle_lifecycle-common",
+        "error_prone_annotations",
+        "jsr330",
+    ],
+}
