@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     val contracts = arrayOf(RedContract(), BlueContract(), GreenContract())
     val contract = intent?.findExecutingContract(*contracts) ?: RedContract()
 
-    if (contract.validate(this, intent)) {
+    if (contract.attach(this, intent).validated) {
       findViewById<TextView>(R.id.status).text =
         "Received argument: ${contract.extractArgument(intent).arg}"
     }
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
       packageManager
         .queryIntentActivities(
           Intent("com.android.onboarding.nodes.testing.testapp.red"),
-          ResolveInfoFlags.of(0)
+          ResolveInfoFlags.of(0),
         )
         .map { it.activityInfo.packageName }
         .toSet()
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
       ArrayAdapter(
         this,
         android.R.layout.simple_spinner_dropdown_item,
-        contracts.map { it.javaClass.getAnnotation(OnboardingNode::class.java)?.name ?: "Unknown" }
+        contracts.map { it.javaClass.getAnnotation(OnboardingNode::class.java)?.name ?: "Unknown" },
       )
     contractSpinner.setSelection(contracts.indexOf(contract))
 
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
 data class ContractArg(
   val arg: String,
   val targetPackageName: String,
-  val shouldForward: Boolean = false
+  val shouldForward: Boolean = false,
 )
 
 abstract class ColourContract(val colour: Int, private val name: String) :
@@ -164,7 +164,7 @@ abstract class ColourContract(val colour: Int, private val name: String) :
     ContractArg(
       intent.getStringExtra("KEY")!!,
       intent.`package` ?: "",
-      intent.hasFlag(FLAG_ACTIVITY_FORWARD_RESULT)
+      intent.hasFlag(FLAG_ACTIVITY_FORWARD_RESULT),
     )
 
   override fun performParseResult(result: ContractResult): String =

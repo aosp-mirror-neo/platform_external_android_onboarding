@@ -17,6 +17,8 @@
 
   <application
       android:label="Onboarding Graph TestApp" android:theme="@style/Theme.AppCompat.Light" android:taskAffinity="">
+    <meta-data android:name="onboarding_compliance_date" android:value="2024-01-26" />
+
     <activity android:name=".MainActivity" android:exported="false">
     </activity>
 
