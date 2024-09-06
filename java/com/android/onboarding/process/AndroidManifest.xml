@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.onboarding.process">
+  <uses-sdk
+      android:minSdkVersion="19"
+      android:targetSdkVersion="34"/>
+
+  <!-- Permission required to keep the process alive by displaying the foreground notification while doing the background work. -->
+  <permission android:name="com.android.onboarding.process.permission.NOTIFICATION_KEEP_ALIVE"
+      android:protectionLevel="signature"/>
+
+  <application>
+    <service
+        android:name=".NotificationKeepAliveService"
+        android:foregroundServiceType="specialUse"
+        android:permission="com.android.onboarding.process.permission.NOTIFICATION_KEEP_ALIVE">
+          <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+              android:value="Need to display foreground notification to keep the background task alive."/>
+    </service>
+  </application>
+</manifest>
