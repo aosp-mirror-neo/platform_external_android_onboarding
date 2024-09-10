@@ -1,0 +1,15 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.process",
+    manifest: "AndroidManifest.xml",
+    srcs: ["*.kt"],
+    resource_dirs: ["res"],
+    dont_merge_manifests: true,
+    static_libs: [
+        "dagger2",
+        "jsr330",
+    ],
+}
