@@ -7,3 +7,4 @@ mru@google.com #{LAST_RESORT_SUGGESTION}
 petuska@google.com #{LAST_RESORT_SUGGESTION}
 pastychang@google.com #{LAST_RESORT_SUGGESTION}
 tmfang@google.com #{LAST_RESORT_SUGGESTION}
+include platform/system/core:/janitors/OWNERS #{LAST_RESORT_SUGGESTION}
