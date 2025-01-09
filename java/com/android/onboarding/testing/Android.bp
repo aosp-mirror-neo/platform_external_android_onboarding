@@ -17,7 +17,7 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "Robolectric_all-target_upstream",
+        "Robolectric_all-target",
         "androidx.test.core",
         "error_prone_annotations",
         "truth",
