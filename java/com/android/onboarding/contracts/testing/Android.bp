@@ -10,7 +10,7 @@ android_library {
     ],
     dont_merge_manifests: true,
     static_libs: [
-        "Robolectric_all-target_upstream",
+        "Robolectric_all-target",
         "android_onboarding.contracts",
         "androidx.activity_activity-ktx",
         "androidx.appcompat_appcompat",
