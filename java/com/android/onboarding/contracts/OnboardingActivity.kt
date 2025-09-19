@@ -11,4 +11,5 @@ import kotlin.reflect.KClass
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS)
+@Repeatable // Temporary - long term each screen should relate to a single contract
 annotation class OnboardingActivity(val contract: KClass<out OnboardingActivityApiContract<*, *>>)

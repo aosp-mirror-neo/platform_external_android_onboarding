@@ -1,17 +1,18 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 java_library {
     name: "android_onboarding.common.annotations",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-}
-
-java_library_host {
-    name: "android_onboarding.common.annotations_host",
     srcs: [
-        "*.kt",
+        "OnboardingComponent.kt",
+        "StableEnvironmentReason.kt",
+        "UniqueKey.kt",
     ],
+    sdk_version: "system_current",
+    host_supported: true,
 }

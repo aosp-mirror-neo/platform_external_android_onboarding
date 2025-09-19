@@ -1,0 +1,25 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.utils.resources",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "BitmapResource.kt",
+        "StringResource.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.logging",
+        "android_onboarding.utils.persistable",
+        "androidx.annotation_annotation",
+        "androidx.core_core",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+}

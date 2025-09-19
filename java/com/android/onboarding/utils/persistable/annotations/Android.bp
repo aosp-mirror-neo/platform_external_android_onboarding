@@ -1,0 +1,83 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.utils.persistable.annotations",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    static_libs: [
+        "android_onboarding.utils.persistable.annotations.annotations_lib_android",
+    ],
+    exported_plugins: [
+        "android_onboarding.utils.persistable.annotations.plugin",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+}
+
+android_library {
+    name: "android_onboarding.utils.persistable.annotations.annotations_lib_android",
+    visibility: [
+        "//visibility:private",
+    ],
+    srcs: [
+        "KClassMetadata.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils.persistable",
+        "android_onboarding.utils.persistable.annotations.annotations_lib",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+}
+
+java_library_host {
+    name: "android_onboarding.utils.persistable.annotations.processor_lib",
+    visibility: [
+        "//visibility:private",
+    ],
+    srcs: [
+        "PersistableAnnotationGenerator.kt",
+        "PersistableAnnotationProcessor.kt",
+        "PersistableGenerator.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils.persistable.annotations.annotations_lib",
+        "android_onboarding.utils.persistable.persistable-jvm",
+        "auto_service_annotations",
+        "error_prone_annotations",
+        "kotlinpoet",
+    ],
+    plugins: [
+        "auto_service_plugin",
+    ],
+}
+
+java_library {
+    name: "android_onboarding.utils.persistable.annotations.annotations_lib",
+    visibility: [
+        "//visibility:private",
+    ],
+    srcs: [
+        "annotations.kt",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
+}
+
+java_plugin {
+    name: "android_onboarding.utils.persistable.annotations.plugin",
+    visibility: [
+        "//visibility:private",
+    ],
+    static_libs: [
+        "android_onboarding.utils.persistable.annotations.processor_lib",
+    ],
+    processor_class: "com.android.onboarding.utils.persistable.annotations.PersistableAnnotationProcessor",
+    generates_api: true,
+}

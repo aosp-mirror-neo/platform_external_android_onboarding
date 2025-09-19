@@ -1,16 +1,15 @@
 package com.android.onboarding.nodes
 
-import com.android.onboarding.OnboardingProtos
+import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.OnboardingNode
+import com.android.onboarding.metadata.EncodedMetadata
+import com.android.onboarding.tasks.utils.TaskResult
 import com.google.common.io.BaseEncoding
 import java.time.Instant
 
 /** Possible Events. */
+@OptIn(InternalOnboardingApi::class)
 sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
-  override val nodeName: String
-  override val nodeComponent: String
-  override val nodeId: Long
-  override val timestamp: Instant
 
   // LINT.IfChange
   override val source: OnboardingEvent
@@ -35,6 +34,12 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
     val result: Any?
   }
 
+  /** Interface for events containing metadata. */
+  interface WithMetadata {
+    /** The [List] of metadata encoded */
+    val metadata: List<EncodedMetadata>
+  }
+
   /** Marker interface for events containing an argument. */
   interface WithArgument {
     /** The argument supplied for launching target node with. */
@@ -48,7 +53,182 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
   }
 
   /** An [OnboardingEvent] spawned only from contracts implemented by activities. */
-  sealed interface OnboardingActivityEvent : OnboardingEvent
+  sealed class OnboardingActivityEvent : OnboardingEvent {
+    protected abstract val nodeRef: NodeRef.Stable
+    final override val nodeComponent: String
+      get() = nodeRef.nodeComponent
+
+    final override val nodeName: String
+      get() = nodeRef.nodeName
+  }
+
+  /**
+   * At [timestamp], a node with id [nodeId] has prepared a PendingContract for target
+   * [nodeComponent]/[nodeName] launch with supplied [argument] without actually launching it.
+   *
+   * Spawned at [nodeId].
+   *
+   * @property nodeId the id of the node that prepared the PendingContract.
+   * @property nodeRef the reference to the node being prepared.
+   */
+  data class PendingContractPreparedForActivity(
+    override val nodeRef: NodeRef.Stable,
+    override val nodeId: NodeId,
+    override val argument: Any?,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithArgument {
+    constructor(
+      nodeRef: NodeRef,
+      nodeId: NodeId,
+      argument: Any?,
+      timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.PendingContractPreparedForActivityProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      nodeId = proto.nodeId,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+      argument = null,
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setPendingContractPreparedForActivity(
+          OnboardingProtos.PendingContractPreparedForActivityProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            // .setArgument(argument)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  /**
+   * At [timestamp], a node with id [nodeId] has prepared a PendingContract for target
+   * [nodeComponent]/[nodeName] launch with supplied [argument] without actually launching it.
+   *
+   * Spawned at [nodeId].
+   *
+   * @property nodeId the id of the node that prepared the PendingContract.
+   * @property nodeName target node name.
+   * @property nodeComponent target node component.
+   */
+  data class PendingContractPreparedForTask(
+    override val nodeRef: NodeRef.Stable,
+    override val nodeId: NodeId,
+    override val argument: Any?,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithArgument {
+    constructor(
+      nodeRef: NodeRef,
+      nodeId: NodeId,
+      argument: Any?,
+      timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.PendingContractPreparedForTaskProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      nodeId = proto.nodeId,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+      argument = null,
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setPendingContractPreparedForTask(
+          OnboardingProtos.PendingContractPreparedForTaskProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            // .setArgument(argument)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  /**
+   * At [timestamp], a node with id [sourceNodeId] has prepared a PendingContract for target
+   * [nodeComponent]/[nodeName] launch with supplied [argument] without actually launching it. The
+   * launch was assigned the id of [launchId] which can be looked up by in other events to follow
+   * the lifecycle of this PendingContract.
+   *
+   * Spawned at [sourceNodeId].
+   *
+   * @property nodeId target node id.
+   * @property nodeName target node name.
+   * @property nodeComponent target node component.
+   * @property launchId unique id assigned to track the lifecycle of the PendingContract.
+   * @property creatorNodeId the id of the node that prepared the PendingContract.
+   * @property sourceNodeId the id of the node launching the PendingContract.
+   */
+  data class PendingContractLaunchedForActivity(
+    override val nodeId: Long,
+    override val nodeRef: NodeRef.Stable,
+    override val sourceNodeId: Long,
+    val creatorNodeId: Long,
+    val launchId: Long,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithSource {
+    constructor(
+      nodeId: Long,
+      nodeRef: NodeRef,
+      sourceNodeId: Long,
+      creatorNodeId: Long,
+      launchId: Long,
+      timestamp: Instant = Instant.now(),
+    ) : this(nodeId, nodeRef.asNodeRef(), sourceNodeId, creatorNodeId, launchId, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.PendingContractLaunchedForActivityProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      sourceNodeId = proto.sourceNodeId,
+      creatorNodeId = proto.creatorNodeId,
+      launchId = proto.launchId,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setPendingContractLaunchedForActivity(
+          OnboardingProtos.PendingContractLaunchedForActivityProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            .setSourceNodeId(sourceNodeId)
+            .setCreatorNodeId(creatorNodeId)
+            .setLaunchId(launchId)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
 
   /**
    * At [timestamp], a target [android.app.Activity] with id [nodeId] has been launched from
@@ -64,27 +244,34 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property sourceNodeId source node id.
    */
   data class ActivityNodeExecutedDirectly(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val sourceNodeId: Long,
     override val nodeId: Long,
     override val argument: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithArgument, WithSource {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithArgument, WithSource {
     constructor(
+      nodeRef: NodeRef,
       sourceNodeId: Long,
       nodeId: Long,
-      nodeClass: Class<*>,
-      argument: Any? = null,
+      argument: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), sourceNodeId, nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeExecutedDirectlyProto,
+      timestamp: Instant?,
     ) : this(
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      sourceNodeId = sourceNodeId,
-      nodeId = nodeId,
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      argument = argument,
-      timestamp = timestamp,
+      sourceNodeId = proto.sourceNodeId,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+      argument = null,
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -100,21 +287,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeExecutedDirectlyProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeExecutedDirectly(
-          sourceNodeId = proto.sourceNodeId,
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-          argument = null,
-        )
-    }
   }
 
   /**
@@ -124,24 +296,30 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeValidating(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
-    override val intent: IntentData? = null,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithIntent {
+    override val intent: IntentData?,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithIntent {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       intent: IntentData? = null,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, intent, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeValidatingProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      intent = intent,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -156,16 +334,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeValidatingProto, timestamp: Instant?) =
-        ActivityNodeValidating(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -175,27 +343,32 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeFailedValidation(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
-    val exception: Throwable = IllegalArgumentException("Failed validation"),
-    override val intent: IntentData? = null,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithIntent {
+    val exception: Throwable,
+    override val intent: IntentData?,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithIntent {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       exception: Throwable = IllegalArgumentException("Failed validation"),
       intent: IntentData? = null,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, exception, intent, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeFailedValidationProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      exception = exception,
-      intent = intent,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -206,23 +379,11 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
             .setNodeComponent(nodeComponent)
             // .setException(exception)
             // .setIntent(IntentData(intent?.action ?: "", mapOf()))
+
             .setTimestamp(timestamp.toEpochMilli())
             .build()
         )
         .build()
-    }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeFailedValidationProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeFailedValidation(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
     }
   }
 
@@ -233,24 +394,35 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeExtractArgument(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
     override val intent: IntentData,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithIntent {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithIntent {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       intent: IntentData,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, intent, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeExtractArgumentProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      intent = intent,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      intent =
+        IntentData(
+          if (proto.hasIntent()) proto.intent.action else "",
+          mapOf(),
+        ),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -267,21 +439,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeExtractArgumentProto, timestamp: Instant?) =
-        ActivityNodeExtractArgument(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          intent =
-            IntentData(
-              if (proto.hasIntent()) proto.intent.action else "",
-              mapOf(),
-            ),
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -291,24 +448,31 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeArgumentExtracted(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
     override val argument: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithArgument {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithArgument {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
-      argument: Any? = null,
+      argument: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeArgumentExtractedProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      argument = argument,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      argument = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -323,20 +487,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeArgumentExtractedProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeArgumentExtracted(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          argument = null,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -346,24 +496,31 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeSetResult(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
     override val result: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithResult {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithResult {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       result: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, result, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeSetResultProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      result = result,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      result = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -378,17 +535,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeSetResultProto, timestamp: Instant?) =
-        ActivityNodeSetResult(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          result = null,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -401,9 +547,21 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
     override val nodeId: Long,
     val reason: String?,
     override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent {
-    override val nodeName: String = IOnboardingGraphNode.unknown(nodeId)
-    override val nodeComponent: String = IOnboardingGraphNode.unknownComponent(nodeId)
+  ) : OnboardingActivityEvent() {
+    constructor(
+      proto: OnboardingProtos.ActivityNodeFailProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeId = proto.nodeId,
+      reason = proto.reason,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    override val nodeRef = NodeRef(ComponentRef(unknownComponent(nodeId)), unknown(nodeId))
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -415,15 +573,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
             .build()
         )
         .build()
-    }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeFailProto, timestamp: Instant?) =
-        ActivityNodeFail(
-          nodeId = proto.nodeId,
-          reason = proto.reason,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
     }
   }
 
@@ -441,27 +590,33 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property argument the argument supplied for launching target node with.
    */
   data class ActivityNodeExecutedForResult(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val sourceNodeId: Long,
     override val nodeId: Long,
-    override val argument: Any? = null,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithSource, WithArgument {
+    override val argument: Any?,
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithSource, WithArgument {
     constructor(
+      nodeRef: NodeRef,
       sourceNodeId: Long,
       nodeId: Long,
-      nodeClass: Class<*>,
       argument: Any? = null,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), sourceNodeId, nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeExecutedForResultProto,
+      timestamp: Instant?,
     ) : this(
-      sourceNodeId = sourceNodeId,
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      argument = argument,
-      timestamp = timestamp,
+      sourceNodeId = proto.sourceNodeId,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -476,20 +631,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
             .build()
         )
         .build()
-    }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeExecutedForResultProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeExecutedForResult(
-          sourceNodeId = proto.sourceNodeId,
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
     }
   }
 
@@ -507,24 +648,31 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property result a result produced by the target node.
    */
   data class ActivityNodeResultReceived(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
     override val result: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithResult {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithResult {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       result: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, result, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeResultReceivedProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      result = result,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      result = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -539,17 +687,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeResultReceivedProto, timestamp: Instant?) =
-        ActivityNodeResultReceived(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          result = null,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -558,21 +695,28 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeFinished(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent() {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeFinishedProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -585,16 +729,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
             .build()
         )
         .build()
-    }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeFinishedProto, timestamp: Instant?) =
-        ActivityNodeFinished(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
     }
   }
 
@@ -611,24 +745,31 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property nodeComponent the component of the node spawning this event.
    */
   data class ActivityNodeResumedAfterLaunch(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val sourceNodeId: Long,
     override val nodeId: Long,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent, WithSource {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent(), WithSource {
     constructor(
+      nodeRef: NodeRef,
       sourceNodeId: Long,
       nodeId: Long,
-      nodeClass: Class<*>,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), sourceNodeId, nodeId, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeResumedAfterLaunchProto,
+      timestamp: Instant?,
     ) : this(
-      sourceNodeId = sourceNodeId,
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      timestamp = timestamp,
+      sourceNodeId = proto.sourceNodeId,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -643,20 +784,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeResumedAfterLaunchProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeResumedAfterLaunch(
-          sourceNodeId = proto.sourceNodeId,
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /**
@@ -665,21 +792,28 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * Spawned at [nodeId].
    */
   data class ActivityNodeResumed(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingActivityEvent {
+    override val timestamp: Instant,
+  ) : OnboardingActivityEvent() {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeResumedProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -693,20 +827,10 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(proto: OnboardingProtos.ActivityNodeResumedProto, timestamp: Instant?) =
-        ActivityNodeResumed(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   /** An [OnboardingActivityEvent] spawned only from synchronous executions of contracts. */
-  sealed interface OnboardingSynchronousActivityEvent : OnboardingActivityEvent
+  sealed class OnboardingSynchronousActivityEvent : OnboardingActivityEvent()
 
   /**
    * At [timestamp], the node with id [sourceNodeId] began synchronous execution of the node with id
@@ -723,27 +847,34 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property argument the argument supplied for launching target node with.
    */
   data class ActivityNodeStartExecuteSynchronously(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val sourceNodeId: Long,
     override val nodeId: Long,
     override val argument: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingSynchronousActivityEvent, WithSource, WithArgument {
+    override val timestamp: Instant,
+  ) : OnboardingSynchronousActivityEvent(), WithSource, WithArgument {
     constructor(
+      nodeRef: NodeRef,
       sourceNodeId: Long,
       nodeId: Long,
-      nodeClass: Class<*>,
-      argument: Any? = null,
+      argument: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), sourceNodeId, nodeId, argument, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeStartExecuteSynchronouslyProto,
+      timestamp: Instant?,
     ) : this(
-      sourceNodeId = sourceNodeId,
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      argument = argument,
-      timestamp = timestamp,
+      sourceNodeId = proto.sourceNodeId,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      argument = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -758,21 +889,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
             .build()
         )
         .build()
-    }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeStartExecuteSynchronouslyProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeStartExecuteSynchronously(
-          sourceNodeId = proto.sourceNodeId,
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          argument = null,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
     }
   }
 
@@ -789,24 +905,31 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    * @property nodeId id of the target node.
    */
   data class ActivityNodeExecutedSynchronously(
-    override val nodeName: String,
-    override val nodeComponent: String,
+    override val nodeRef: NodeRef.Stable,
     override val nodeId: Long,
     override val result: Any?,
-    override val timestamp: Instant = Instant.now(),
-  ) : OnboardingSynchronousActivityEvent, WithResult {
+    override val timestamp: Instant,
+  ) : OnboardingSynchronousActivityEvent(), WithResult {
     constructor(
+      nodeRef: NodeRef,
       nodeId: Long,
-      nodeClass: Class<*>,
       result: Any?,
       timestamp: Instant = Instant.now(),
+    ) : this(nodeRef.asNodeRef(), nodeId, result, timestamp)
+
+    constructor(
+      proto: OnboardingProtos.ActivityNodeExecutedSynchronouslyProto,
+      timestamp: Instant?,
     ) : this(
-      nodeId = nodeId,
-      nodeName = OnboardingNode.extractNodeNameFromClass(nodeClass),
-      nodeComponent = OnboardingNode.extractComponentNameFromClass(nodeClass),
-      result = result,
-      timestamp = timestamp,
+      nodeId = proto.nodeId,
+      nodeRef = NodeRef(ComponentRef(proto.nodeComponent), proto.nodeName),
+      result = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
     )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
 
     override fun serialize(): OnboardingProtos.LogProto {
       return OnboardingProtos.LogProto.newBuilder()
@@ -821,20 +944,6 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
         )
         .build()
     }
-
-    companion object {
-      fun fromProto(
-        proto: OnboardingProtos.ActivityNodeExecutedSynchronouslyProto,
-        timestamp: Instant?,
-      ) =
-        ActivityNodeExecutedSynchronously(
-          nodeId = proto.nodeId,
-          nodeName = proto.nodeName,
-          nodeComponent = proto.nodeComponent,
-          result = null,
-          timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
-        )
-    }
   }
 
   // LINT.ThenChange(//depot/google3/logs/proto/android_onboarding/node_interaction_metadata.proto)
@@ -845,44 +954,293 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
    */
   data class IntentData(val action: String?, val extras: Map<String, Any?>)
 
+  /** Marker interface for task events. */
+  sealed interface OnboardingTaskEvent : OnboardingEvent
+
+  /**
+   * At [timestamp], the task started executing with id [nodeId] and [argument].
+   *
+   * @property nodeName name of the target node.
+   * @property nodeComponent name of the target node.
+   * @property nodeId id of the target node.
+   */
+  data class OnboardingTaskStartedEvent(
+    override val sourceNodeId: Long = -1,
+    override val nodeName: String,
+    override val nodeComponent: String,
+    override val nodeId: Long,
+    override val argument: Any?,
+    override val timestamp: Instant = Instant.now(),
+  ) : OnboardingTaskEvent, WithArgument, WithSource {
+
+    constructor(
+      proto: OnboardingProtos.OnboardingTaskStartProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeName = proto.nodeName,
+      nodeComponent = proto.nodeComponent,
+      nodeId = proto.nodeId,
+      argument = null,
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setOnboardingTaskStartProto(
+          OnboardingProtos.OnboardingTaskStartProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            // setArgument(argument)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  /**
+   * At [timestamp], the task with id [nodeId] had a status update [metadata].
+   *
+   * @property nodeName name of the target node.
+   * @property nodeComponent name of the target node.
+   * @property nodeId id of the target node.
+   */
+  data class OnboardingTaskStatusUpdateEvent(
+    override val nodeName: String,
+    override val nodeComponent: String,
+    override val nodeId: Long,
+    override val metadata: List<EncodedMetadata> = listOf(),
+    override val timestamp: Instant = Instant.now(),
+  ) : OnboardingTaskEvent, WithMetadata {
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setOnboardingTaskStatusUpdateProto(
+          OnboardingProtos.OnboardingTaskStatusUpdateProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  /**
+   * At [timestamp], the task with id [nodeId] completed execution with [result] and
+   * [encodedMetadatas].
+   *
+   * @property nodeName name of the target node.
+   * @property nodeComponent name of the target node.
+   * @property nodeId id of the target node.
+   */
+  data class OnboardingTaskCompleteEvent(
+    override val nodeName: String,
+    override val nodeComponent: String,
+    override val nodeId: Long,
+    override val result: TaskResult<*>,
+    override val metadata: List<EncodedMetadata> = listOf(),
+    override val timestamp: Instant = Instant.now(),
+  ) : OnboardingTaskEvent, WithMetadata, WithResult {
+
+    constructor(
+      proto: OnboardingProtos.OnboardingTaskCompleteProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeName = proto.nodeName,
+      nodeComponent = proto.nodeComponent,
+      nodeId = proto.nodeId,
+      result = if (proto.result) TaskResult.Success(Unit) else TaskResult.Failure(),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setOnboardingTaskCompleteProto(
+          OnboardingProtos.OnboardingTaskCompleteProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            .setResult(result is TaskResult.Success)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  data class OnboardingTaskCacheWriteEvent(
+    override val nodeName: String,
+    override val nodeComponent: String,
+    override val nodeId: Long,
+    override val result: Any?,
+    override val metadata: List<EncodedMetadata> = listOf(),
+    override val timestamp: Instant = Instant.now(),
+  ) : OnboardingTaskEvent, WithResult, WithMetadata {
+    constructor(
+      proto: OnboardingProtos.OnboardingTaskCacheWriteProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeName = proto.nodeName,
+      nodeComponent = proto.nodeComponent,
+      nodeId = proto.nodeId,
+      result = null,
+      metadata = listOf(),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setOnboardingTaskCacheWriteProto(
+          OnboardingProtos.OnboardingTaskCacheWriteProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
+  data class OnboardingTaskCacheReadEvent(
+    override val nodeName: String,
+    override val nodeComponent: String,
+    override val nodeId: Long,
+    val hit: Boolean,
+    override val result: Any?,
+    override val metadata: List<EncodedMetadata> = listOf(),
+    override val timestamp: Instant = Instant.now(),
+  ) : OnboardingTaskEvent, WithResult, WithMetadata {
+    constructor(
+      proto: OnboardingProtos.OnboardingTaskCacheReadProto,
+      timestamp: Instant?,
+    ) : this(
+      nodeName = proto.nodeName,
+      nodeComponent = proto.nodeComponent,
+      nodeId = proto.nodeId,
+      hit = proto.hit,
+      result = null,
+      metadata = listOf(),
+      timestamp = timestamp ?: Instant.ofEpochMilli(proto.timestamp),
+    )
+
+    init {
+      OnboardingNode.validateNodeName(nodeName)
+    }
+
+    override fun serialize(): OnboardingProtos.LogProto {
+      return OnboardingProtos.LogProto.newBuilder()
+        .setOnboardingTaskCacheReadProto(
+          OnboardingProtos.OnboardingTaskCacheReadProto.newBuilder()
+            .setNodeId(nodeId)
+            .setNodeName(nodeName)
+            .setNodeComponent(nodeComponent)
+            .setHit(hit)
+            .setTimestamp(timestamp.toEpochMilli())
+            .build()
+        )
+        .build()
+    }
+  }
+
   companion object {
+    /**
+     * Argument value representing arguments which had their type data erased due to preemptive
+     * transformation to transfer layer types.
+     */
+    const val ERASED_ARGUMENT = "<ERASED>"
+
+    /** Generate standard name for node with [id] and no name. */
+    fun unknown(id: Long) = "Unknown(id=$id)"
+
+    /** Generate standard name for node with [id] and no [component]. */
+    fun unknownComponent(id: Long) = "UnknownComponent(nodeId=$id)"
+
     fun deserialize(str: String, timestamp: Instant? = null): OnboardingEvent {
       val proto = OnboardingProtos.LogProto.parseFrom(BaseEncoding.base64().decode(str))
 
+
       return when {
+        proto.hasPendingContractPreparedForActivity() ->
+          PendingContractPreparedForActivity(proto.pendingContractPreparedForActivity, timestamp)
+
+        proto.hasPendingContractLaunchedForActivity() ->
+          PendingContractLaunchedForActivity(proto.pendingContractLaunchedForActivity, timestamp)
+
+        proto.hasPendingContractPreparedForTask() ->
+          PendingContractPreparedForTask(proto.pendingContractPreparedForTask, timestamp)
+
         proto.hasActivityNodeExecutedDirectly() ->
-          ActivityNodeExecutedDirectly.fromProto(proto.activityNodeExecutedDirectly, timestamp)
+          ActivityNodeExecutedDirectly(proto.activityNodeExecutedDirectly, timestamp)
+
         proto.hasActivityNodeExecutedForResult() ->
-          ActivityNodeExecutedForResult.fromProto(proto.activityNodeExecutedForResult, timestamp)
+          ActivityNodeExecutedForResult(proto.activityNodeExecutedForResult, timestamp)
+
         proto.hasActivityNodeValidating() ->
-          ActivityNodeValidating.fromProto(proto.activityNodeValidating, timestamp)
+          ActivityNodeValidating(proto.activityNodeValidating, timestamp)
+
         proto.hasActivityNodeFailedValidation() ->
-          ActivityNodeFailedValidation.fromProto(proto.activityNodeFailedValidation, timestamp)
+          ActivityNodeFailedValidation(proto.activityNodeFailedValidation, timestamp)
+
         proto.hasActivityNodeExtractArgument() ->
-          ActivityNodeExtractArgument.fromProto(proto.activityNodeExtractArgument, timestamp)
+          ActivityNodeExtractArgument(proto.activityNodeExtractArgument, timestamp)
+
         proto.hasActivityNodeArgumentExtracted() ->
-          ActivityNodeArgumentExtracted.fromProto(proto.activityNodeArgumentExtracted, timestamp)
+          ActivityNodeArgumentExtracted(proto.activityNodeArgumentExtracted, timestamp)
+
         proto.hasActivityNodeSetResult() ->
-          ActivityNodeSetResult.fromProto(proto.activityNodeSetResult, timestamp)
-        proto.hasActivityNodeFail() -> ActivityNodeFail.fromProto(proto.activityNodeFail, timestamp)
+          ActivityNodeSetResult(proto.activityNodeSetResult, timestamp)
+
+        proto.hasActivityNodeFail() -> ActivityNodeFail(proto.activityNodeFail, timestamp)
         proto.hasActivityNodeResultReceived() ->
-          ActivityNodeResultReceived.fromProto(proto.activityNodeResultReceived, timestamp)
+          ActivityNodeResultReceived(proto.activityNodeResultReceived, timestamp)
+
         proto.hasActivityNodeStartExecuteSynchronously() ->
-          ActivityNodeStartExecuteSynchronously.fromProto(
+          ActivityNodeStartExecuteSynchronously(
             proto.activityNodeStartExecuteSynchronously,
             timestamp,
           )
+
         proto.hasActivityNodeExecutedSynchronously() ->
-          ActivityNodeExecutedSynchronously.fromProto(
-            proto.activityNodeExecutedSynchronously,
-            timestamp,
-          )
+          ActivityNodeExecutedSynchronously(proto.activityNodeExecutedSynchronously, timestamp)
+
         proto.hasActivityNodeFinished() ->
-          ActivityNodeFinished.fromProto(proto.activityNodeFinished, timestamp)
+          ActivityNodeFinished(proto.activityNodeFinished, timestamp)
+
         proto.hasActivityNodeResumedAfterLaunch() ->
-          ActivityNodeResumedAfterLaunch.fromProto(proto.activityNodeResumedAfterLaunch, timestamp)
-        proto.hasActivityNodeResumed() ->
-          ActivityNodeResumed.fromProto(proto.activityNodeResumed, timestamp)
+          ActivityNodeResumedAfterLaunch(proto.activityNodeResumedAfterLaunch, timestamp)
+
+        proto.hasActivityNodeResumed() -> ActivityNodeResumed(proto.activityNodeResumed, timestamp)
+
+        proto.hasOnboardingTaskStartProto() ->
+          OnboardingTaskStartedEvent(proto.onboardingTaskStartProto, timestamp)
+        proto.hasOnboardingTaskCompleteProto() ->
+          OnboardingTaskCompleteEvent(proto.onboardingTaskCompleteProto, timestamp)
+
+        proto.hasOnboardingTaskCacheReadProto() ->
+          OnboardingTaskCacheReadEvent(proto.onboardingTaskCacheReadProto, timestamp)
+        proto.hasOnboardingTaskCacheWriteProto() ->
+          OnboardingTaskCacheWriteEvent(proto.onboardingTaskCacheWriteProto, timestamp)
+
         else -> throw IllegalStateException("Could not parse $proto")
       }
     }

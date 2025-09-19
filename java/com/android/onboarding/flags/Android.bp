@@ -1,42 +1,37 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_library {
     name: "android_onboarding.flags",
-    manifest: ":android_onboarding.AndroidManifest",
+    visibility: [
+        "//visibility:public",
+    ],
     srcs: [
         "DefaultOnboardingFlagsProvider.kt",
         "OnboardingFlagsProvider.kt",
+        "OnboardingFlagsUpdater.kt",
     ],
+    sdk_version: "system_current",
     dont_merge_manifests: true,
-    static_libs: [
-    ],
+    manifest: ":android_onboarding.AndroidManifest",
 }
 
 android_library {
-    name: "android_onboarding.flags_dagger",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "OnboardingFlagsModule.kt",
+    name: "android_onboarding.flags.flags_hilt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
-    static_libs: [
-        "android_onboarding.flags",
-        "dagger2",
-    ],
-}
-
-android_library {
-    name: "android_onboarding.flags_hilt",
-    manifest: ":android_onboarding.AndroidManifest",
     srcs: [
         "OnboardingFlagsHiltModule.kt",
     ],
-    dont_merge_manifests: true,
     static_libs: [
         "android_onboarding.flags",
         "dagger2",
         "hilt_android",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
 }

@@ -1,14 +1,34 @@
-java_plugin {
-    name: "android_onboarding.versions.change_collector",
-    processor_class: "com.android.onboarding.versions.change_collector.ChangeCollector",
-    static_libs: [
-        "android_onboarding.versions.annotations_host",
-        "auto_service_annotations",
-        "kotlinpoet",
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+java_library_host {
+    name: "android_onboarding.versions.change_collector.change_collector_lib",
+    visibility: [
+        "//visibility:private",
     ],
     srcs: [
         "ChangeCollector.kt",
     ],
-    plugins: ["auto_service_plugin"],
+    static_libs: [
+        "android_onboarding.versions.annotations",
+        "auto_service_annotations",
+        "kotlinpoet",
+    ],
+    plugins: [
+        "auto_service_plugin",
+    ],
+}
+
+java_plugin {
+    name: "android_onboarding.versions.change_collector",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    static_libs: [
+        "android_onboarding.versions.change_collector.change_collector_lib",
+    ],
+    processor_class: "com.android.onboarding.versions.change_collector.ChangeCollector",
     generates_api: true,
 }

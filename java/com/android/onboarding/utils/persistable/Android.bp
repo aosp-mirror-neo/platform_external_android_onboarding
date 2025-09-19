@@ -1,0 +1,73 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.utils.persistable",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "Account.kt",
+        "ActivityResultPersistableDelegate.kt",
+        "Bundle.kt",
+        "Collections.kt",
+        "Intent.kt",
+        "Persistable.kt",
+        "PersistableAccount.kt",
+        "PersistableActivityResult.kt",
+        "PersistableBitmap.kt",
+        "PersistableBoolean.kt",
+        "PersistableBundle.kt",
+        "PersistableEnum.kt",
+        "PersistableInt.kt",
+        "PersistableIntent.kt",
+        "PersistableLong.kt",
+        "PersistablePair.kt",
+        "PersistablePersistableBundle.kt",
+        "PersistableString.kt",
+        "PersistableUnit.kt",
+        "SavedStateHandle.kt",
+    ],
+    static_libs: [
+        "android_onboarding.compatibility",
+        "android_onboarding.encoding",
+        "android_onboarding.utils",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.logging",
+        "androidx.activity_activity-ktx",
+        "androidx.annotation_annotation",
+        "androidx.core_core",
+        "androidx.lifecycle_lifecycle-livedata",
+        "androidx.lifecycle_lifecycle-viewmodel-savedstate",
+        "error_prone_annotations",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+}
+
+java_library_host {
+    name: "android_onboarding.utils.persistable.persistable-jvm",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "Collections.kt",
+        "PersistableEnum.kt",
+        "PersistableInt.kt",
+        "PersistableLong.kt",
+        "PersistablePersistableBundle.kt",
+        "PersistableString.kt",
+        "host/BundleCompat.kt",
+        "host/Persistable.kt",
+        "host/PersistableBundle.kt",
+        "host/utils.kt",
+    ],
+    static_libs: [
+        "android_onboarding.encoding.encoding-jvm",
+        "android_onboarding.shim",
+        "android_onboarding.utils.equality",
+    ],
+}

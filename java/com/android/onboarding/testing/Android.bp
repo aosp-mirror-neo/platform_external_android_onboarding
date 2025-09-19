@@ -1,25 +1,33 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-filegroup {
-    name: "android_onboarding.testing.AndroidManifest",
-    srcs: [
-        "AndroidManifest.xml",
-    ],
-}
-
 android_library {
     name: "android_onboarding.testing",
-    manifest: ":android_onboarding.testing.AndroidManifest",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "ComponentRefSubject.kt",
+        "ErrorSubject.kt",
+        "SuccessSubject.kt",
+        "Truth.kt",
+        "Utils.kt",
+        "encoding.kt",
+    ],
     static_libs: [
-        "Robolectric_all-target",
+        "android_onboarding.nodes",
+        "android_onboarding.utils.persistable",
         "androidx.test.core",
+        "apache-commons-lang3",
         "error_prone_annotations",
+        "kotlin-reflect",
+        "kotlinx-coroutines-core",
+        "kotlinx_coroutines_test",
         "truth",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
 }

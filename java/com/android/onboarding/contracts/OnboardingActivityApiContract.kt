@@ -1,18 +1,25 @@
 package com.android.onboarding.contracts
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.android.onboarding.contracts.annotations.ForegroundOnboardingNode
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.OnboardingNode
-import com.android.onboarding.nodes.AndroidOnboardingGraphLog
+import com.android.onboarding.encoding.Encoder
+import com.android.onboarding.encoding.ResultHandler
+import com.android.onboarding.nodes.EXTRA_ONBOARDING_NODE_ID
+import com.android.onboarding.nodes.NodeId
 import com.android.onboarding.nodes.NodeRef
 import com.android.onboarding.nodes.OnboardingEvent
 import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeArgumentExtracted
@@ -21,16 +28,45 @@ import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeFail
 import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeFailedValidation
 import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeSetResult
 import com.android.onboarding.nodes.OnboardingEvent.ActivityNodeValidating
+import com.android.onboarding.nodes.OnboardingEvent.PendingContractPreparedForActivity
+import com.android.onboarding.nodes.OnboardingGraphLog
+import com.android.onboarding.nodes.UNKNOWN_NODE_ID
+import com.android.onboarding.nodes.activityNodeId
+import com.android.onboarding.nodes.nodeId
+import com.android.onboarding.pending.ActivityLauncherForResult
+import com.android.onboarding.pending.Launchable
+import com.android.onboarding.pending.LaunchableActivityForResult
+import com.android.onboarding.pending.PendingActivityContract
+import com.android.onboarding.pending.PendingContract
+import com.android.onboarding.utils.logging.OnboardingLog as Log
+import com.android.onboarding.utils.persistable.getPersistableExtra
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.errorprone.annotations.CanIgnoreReturnValue
+import java.util.concurrent.Executor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.guava.future
 
 /**
  * A Contract used for launching an activity as part of the Onboarding flow.
  *
- * <p>It is required that all Activity starts in the Android Onboarding flow go via contracts. This
- * is to allow for better central tracking of onboarding sessions.
+ * It is required that all Activity starts in the Android Onboarding flow go via contracts. This is
+ * to allow for better central tracking of onboarding sessions.
+ *
+ * Note that as a [NodeRef], this class represents the owner of the contract, not the package
+ * executing the contract. For example, it is possible to have a contract owned by APP_1, but have
+ * that contract produce an intent which launches an activity in APP_2.
  */
+@OptIn(InternalOnboardingApi::class)
+@Suppress(
+  // This is the alternative that the lint suggests using.
+  "UseContractsNotStartActivity"
+)
 abstract class OnboardingActivityApiContract<I, O> :
-  ActivityResultContract<I, O>(), LaunchableForResult<I, O>, NodeRef {
+  ActivityResultContract<I, O>(),
+  LaunchableActivityForResult<I, O>,
+  NodeRef,
+  ResultHandler<ActivityResult, O> {
   /**
    * Extracted [OnboardingNode] metadata for this contract.
    *
@@ -42,13 +78,23 @@ abstract class OnboardingActivityApiContract<I, O> :
       ?: error("${this::class.qualifiedName} is missing OnboardingNode annotation")
   }
 
-  @OptIn(InternalOnboardingApi::class)
   final override val nodeComponent: String by lazy(metadata::component)
 
-  @OptIn(InternalOnboardingApi::class) final override val nodeName by lazy(metadata::name)
+  final override val nodeName by lazy(metadata::name)
 
-  override val launcher =
-    object : LauncherForResult<I, O>(TAG) {
+  final override fun toActivityResultContract() = this
+
+  final override val resultDecoder: Encoder<ActivityResult, O> = Encoder { performParseResult(it) }
+
+  final override val resultEncoder: Encoder<O, ActivityResult> = Encoder { performSetResult(it) }
+
+  // Set to a non-null value when parsing arguments and a [ResultRedirectionConfig.EXTRA_KEY] key
+  // is present
+  private var resultRedirectionConfig: ResultRedirectionConfig? = null
+
+  @InternalOnboardingApi
+  private val launcher =
+    object : ActivityLauncherForResult<I, O>(TAG) {
       override val nodeComponent: String
         get() = this@OnboardingActivityApiContract.nodeComponent
 
@@ -60,36 +106,51 @@ abstract class OnboardingActivityApiContract<I, O> :
       override fun provideSynchronousResult(context: Context, args: I): SynchronousResult<O>? =
         performGetSynchronousResult(context, args)
 
-      override fun extractNodeId(context: Context): NodeId =
-        this@OnboardingActivityApiContract.extractNodeId(context)
-
       override fun provideIntent(context: Context, input: I): Intent =
         performCreateIntent(context, input)
 
-      override fun toActivityResultContract() = this@OnboardingActivityApiContract
-
-      override fun onPrepareIntent(nodeId: NodeId, outgoingId: NodeId) {
-        // Track for resume event for activity node id.
-        waitingForResumeActivity[nodeId] = outgoingId
+      override fun onPrepareIntent(expectsResult: Boolean, nodeId: NodeId, outgoingId: NodeId) {
+        super.onPrepareIntent(expectsResult, nodeId, outgoingId)
+        if (!expectsResult) {
+          // Track for resume event for activity node id.
+          waitingForResumeActivity[nodeId] = outgoingId
+        }
       }
     }
 
-  /*
-   * This is true in all known cases - but we need to accept Context because that's the
-   * AndroidX
-   * API surface
-   */
-  private fun extractNodeId(context: Context): NodeId = context.activityNodeId()
+  override fun launcher(input: I): ActivityLauncherForResult<I, O> = launcher
 
-  /** Creates an {@link Intent} for this contract containing the given argument. */
+  /**
+   * Prepares a launch of this contract with supplied [input] without actually launching. Returned
+   * [PendingContract] can safely be passed around between processes and invoked later.
+   */
+  fun prepare(context: Context, input: I): PendingContract.ErasedActivity {
+    val intent = performCreateIntent(context, input)
+    val launch =
+      PendingActivityContract(intent).apply {
+        nodeComponent = this@OnboardingActivityApiContract.nodeComponent
+        nodeName = this@OnboardingActivityApiContract.nodeName
+        creatorNodeId = context.activityNodeId()
+        targetUserId = getTargetUserId(input)
+      }
+    OnboardingGraphLog.log(
+      PendingContractPreparedForActivity(
+        nodeRef = this,
+        nodeId = launch.creatorNodeId,
+        argument = input,
+      )
+    )
+    return launch
+  }
+
   final override fun createIntent(context: Context, input: I): Intent =
-    launcher.createIntent(context, input)
+    launcher(input).createIntent(context, input)
 
   final override fun parseResult(resultCode: Int, intent: Intent?): O =
     launcher.parseResult(resultCode, intent)
 
   final override fun getSynchronousResult(context: Context, input: I): SynchronousResult<O>? =
-    launcher.getSynchronousResult(context, input)
+    launcher(input).getSynchronousResult(context, input)
 
   /**
    * Creates an [Intent] for this contract containing the given argument.
@@ -101,7 +162,7 @@ abstract class OnboardingActivityApiContract<I, O> :
   /**
    * Extracts the argument from the given [Intent].
    *
-   * <p>This should be symmetric with [performCreateIntent].
+   * This should be symmetric with [performCreateIntent].
    */
   protected abstract fun performExtractArgument(intent: Intent): I
 
@@ -110,14 +171,18 @@ abstract class OnboardingActivityApiContract<I, O> :
    *
    * This should be symmetric with [performParseResult].
    */
-  protected abstract fun performSetResult(result: O): ActivityResult
+  @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+  abstract fun performSetResult(result: O): ActivityResult
+
+  /** Internal-only API for directly fetching the [ActivityResult] for this contract. */
+  @InternalOnboardingApi fun executePerformSetResult(result: O) = performSetResult(result)
 
   /**
    * Extracts the result from the low-level representation [ActivityResult].
    *
    * This should be symmetric with [performSetResult].
    */
-  protected abstract fun performParseResult(result: ActivityResult): O
+  abstract fun performParseResult(result: ActivityResult): O
 
   /**
    * Fetches the result without starting the activity.
@@ -129,16 +194,25 @@ abstract class OnboardingActivityApiContract<I, O> :
     null
 
   /** Extracts an argument passed into the current activity using the contract. */
+
   fun extractArgument(intent: Intent): I {
     // Injection point when we are receiving control in an activity
-    AndroidOnboardingGraphLog.log(
-      ActivityNodeExtractArgument(intent.nodeId, this.javaClass, intentToIntentData(intent))
+    OnboardingGraphLog.log(
+      ActivityNodeExtractArgument(
+        nodeId = intent.nodeId,
+        nodeRef = this,
+        intent = intentToIntentData(intent),
+      )
     )
+
+
+    resultRedirectionConfig =
+      intent.getPersistableExtra(ResultRedirectionConfig.EXTRA_KEY, ResultRedirectionConfig)
 
     val argument = performExtractArgument(intent)
 
-    AndroidOnboardingGraphLog.log(
-      ActivityNodeArgumentExtracted(intent.nodeId, this.javaClass, argument)
+    OnboardingGraphLog.log(
+      ActivityNodeArgumentExtracted(nodeId = intent.nodeId, nodeRef = this, argument = argument)
     )
 
     return argument
@@ -154,36 +228,145 @@ abstract class OnboardingActivityApiContract<I, O> :
   }
 
   /** Sets a result for this contract. */
-  fun setResult(activity: Activity, result: O) {
+  @VisibleForTesting
+  internal fun setResult(activity: Activity, result: O) =
+    setResult(activity.nodeId, activity::setResult, result)
+
+  /** Sets a result for this contract. */
+  @VisibleForTesting
+  internal fun setResult(nodeId: NodeId, setResult: (Int, Intent?) -> Unit, result: O) {
     // Injection point when we are returning a result from the current activity
 
-    AndroidOnboardingGraphLog.log(ActivityNodeSetResult(activity.nodeId, this.javaClass, result))
+    OnboardingGraphLog.log(ActivityNodeSetResult(nodeId = nodeId, nodeRef = this, result = result))
     if (result is NodeResult.Failure) {
-      AndroidOnboardingGraphLog.log(ActivityNodeFail(activity.nodeId, result.toString()))
+      OnboardingGraphLog.log(ActivityNodeFail(nodeId, result.toString()))
     }
 
     val activityResult = performSetResult(result)
 
     val intent = activityResult.data ?: Intent()
-    intent.putExtra(EXTRA_ONBOARDING_NODE_ID, activity.nodeId)
+    intent.putExtra(EXTRA_ONBOARDING_NODE_ID, nodeId)
 
-    activity.setResult(activityResult.resultCode, intent)
+    setResult(activityResult.resultCode, intent)
   }
 
+  /**
+   * Object returned by [prepareResult] which contains data required to return a result.
+   *
+   * Multiple [PreparedResultReturner] can be stored at a time but only one which includes the
+   * intended result should have [commit] called.
+   */
+  class PreparedResultReturner<in O, in A>(
+    private val result: O,
+    private val contract: OnboardingActivityApiContract<*, O>,
+    private val getNodeId: A.() -> NodeId,
+    private val setResult: A.(Int, Intent?) -> Unit,
+    private val finish: A.() -> Unit,
+    private val registerForActivityLaunch: A.(c: Launchable<Unit>) -> ActivityLauncher<Unit>,
+    private val resultRedirectionConfig: ResultRedirectionConfig?,
+  ) {
+
+    /**
+     * Commit the prepared result.
+     *
+     * By default this will finish the activity.
+     */
+    suspend fun commit(activity: A) {
+      commitSync(activity)
+    }
+
+    /** See [commit]. */
+    fun commitAsync(executor: Executor, activity: A): ListenableFuture<Void?> =
+      CoroutineScope(executor.asCoroutineDispatcher()).future {
+        commit(activity)
+        null // We can't return Unit to a method expecting Void
+      }
+
+    /**
+     * Commit the prepared result synchronously.
+     *
+     * Executing this synchronously significantly limits the amount of optimisations which can be
+     * performed. [commit] or [commitAsync] should be preferred where the UX allows for it.
+     */
+    fun commitSync(activity: A) {
+      contract.setResult(
+        nodeId = activity.getNodeId(),
+        setResult = { resultCode, data -> launchNext(activity, resultCode, data) },
+        result = result,
+      )
+    }
+
+    private fun launchNext(activity: A, resultCode: Int, data: Intent?) {
+      val nextActivity = resultRedirectionConfig?.nextActivity
+      if (nextActivity != null) {
+        val preparedContract = nextActivity.onResult(ActivityResult(resultCode, data))
+        activity.registerForActivityLaunch(preparedContract).launch()
+      } else {
+        activity.setResult(resultCode, data)
+      }
+
+      activity.finish()
+    }
+  }
+
+  /**
+   * Stores [result] ready for returning as the result of this contract.
+   *
+   * This returns a [PreparedResultReturner] which must then have the
+   * [PreparedResultReturner.commit], [PreparedResultReturner.commitSync], or
+   * [PreparedResultReturner.commitAsync] methods called to pass the result and end the contract
+   * execution.
+   *
+   * It is recommended that callers prepare results as early as possible - even if the result is not
+   * yet confirmed. This allows for optimisations
+   */
+  fun prepareResult(result: O): PreparedResultReturner<O, Activity> =
+    prepareResult(
+      getNodeId = Activity::nodeId,
+      setResult = Activity::setResult,
+      finish = Activity::finish,
+      result = result,
+      registerForActivityLaunch = Activity::registerForActivityLaunch,
+    )
+
+  @InternalOnboardingApi
+  fun <A> prepareResult(
+    getNodeId: A.() -> NodeId,
+    setResult: A.(Int, Intent?) -> Unit,
+    finish: A.() -> Unit,
+    result: O,
+    registerForActivityLaunch: A.(c: Launchable<Unit>) -> ActivityLauncher<Unit>,
+    resultRedirectionConfig: ResultRedirectionConfig? = this.resultRedirectionConfig,
+  ): PreparedResultReturner<O, A> =
+    PreparedResultReturner(
+      result = result,
+      contract = this,
+      getNodeId = getNodeId,
+      setResult = setResult,
+      finish = finish,
+      registerForActivityLaunch = registerForActivityLaunch,
+      resultRedirectionConfig = resultRedirectionConfig,
+    )
+
   class OnboardingLifecycleObserver<I, O>(
-    private var activity: Activity?,
+    private val componentName: () -> ComponentName,
+    private val intent: Intent,
+    private val isFinishing: () -> Boolean,
     private val contract: OnboardingActivityApiContract<I, O>,
   ) : LifecycleEventObserver {
+    constructor(
+      activity: Activity,
+      contract: OnboardingActivityApiContract<I, O>,
+      intent: Intent = activity.intent,
+    ) : this(activity::getComponentName, intent, activity::isFinishing, contract)
+
     private var isFinishLogged = false
 
     private fun maybeLogFinish() {
-      if (!isFinishLogged && activity?.isFinishing == true) {
+      if (!isFinishLogged && isFinishing() == true) {
         isFinishLogged = true
-        AndroidOnboardingGraphLog.log(
-          OnboardingEvent.ActivityNodeFinished(
-            activity?.nodeId ?: UNKNOWN_NODE_ID,
-            contract.javaClass,
-          )
+        OnboardingGraphLog.log(
+          OnboardingEvent.ActivityNodeFinished(nodeId = intent.nodeId, nodeRef = contract)
         )
       }
     }
@@ -192,34 +375,34 @@ abstract class OnboardingActivityApiContract<I, O> :
       when (event) {
         Lifecycle.Event.ON_STOP,
         Lifecycle.Event.ON_PAUSE -> maybeLogFinish()
+
         Lifecycle.Event.ON_DESTROY -> {
           maybeLogFinish()
-          activity?.nodeId?.let { waitingForResumeActivity.remove(it) }
-          // Clear the activity reference to avoid memory leak.
-          activity = null
+          waitingForResumeActivity.remove(intent.nodeId)
         }
+
         Lifecycle.Event.ON_RESUME -> {
-          val nodeId = activity?.nodeId ?: UNKNOWN_NODE_ID
+          val nodeId = intent.nodeId
           if (nodeId == UNKNOWN_NODE_ID) {
-            Log.w(TAG, "${activity?.componentName} does not contain node id.")
+            Log.w(TAG, "$componentName does not contain node id.")
           }
-          AndroidOnboardingGraphLog.log(
-            OnboardingEvent.ActivityNodeResumed(nodeId, contract.javaClass)
+          OnboardingGraphLog.log(
+            OnboardingEvent.ActivityNodeResumed(nodeId = nodeId, nodeRef = contract)
           )
-          val waitingForResume =
-            nodeId != UNKNOWN_NODE_ID && waitingForResumeActivity.contains(nodeId)
+          val waitingForResume = nodeId != UNKNOWN_NODE_ID && nodeId in waitingForResumeActivity
           if (waitingForResume) {
             val sourceNodeId = waitingForResumeActivity[nodeId] ?: UNKNOWN_NODE_ID
-            AndroidOnboardingGraphLog.log(
+            OnboardingGraphLog.log(
               OnboardingEvent.ActivityNodeResumedAfterLaunch(
-                sourceNodeId,
-                nodeId,
-                contract.javaClass,
+                sourceNodeId = sourceNodeId,
+                nodeId = nodeId,
+                nodeRef = contract,
               )
             )
             waitingForResumeActivity.remove(nodeId)
           }
         }
+
         Lifecycle.Event.ON_CREATE,
         Lifecycle.Event.ON_START,
         Lifecycle.Event.ON_ANY -> {}
@@ -237,9 +420,14 @@ abstract class OnboardingActivityApiContract<I, O> :
    *   validation result.
    */
   @CanIgnoreReturnValue
-  fun attach(activity: ComponentActivity, intent: Intent = activity.intent): AttachedResult {
-    return attach(activity, activity.lifecycle, intent)
-  }
+  fun attach(activity: ComponentActivity, intent: Intent = activity.intent): AttachedResult =
+    attach(
+      componentName = activity::getComponentName,
+      isFinishing = activity::isFinishing,
+      lifecycleOwner = activity,
+      intent = intent,
+      onBackPressedDispatcher = activity.onBackPressedDispatcher,
+    )
 
   /**
    * Attaches to the specified Activity in onCreate. This validates the intent can be parsed into an
@@ -259,16 +447,59 @@ abstract class OnboardingActivityApiContract<I, O> :
     activity: Activity,
     lifecycle: Lifecycle?,
     intent: Intent = activity.intent,
+  ): AttachedResult =
+    attach(
+      componentName = activity::getComponentName,
+      isFinishing = activity::isFinishing,
+      lifecycleOwner =
+        lifecycle?.let {
+          object : LifecycleOwner {
+            override val lifecycle: Lifecycle = lifecycle
+          }
+        },
+      intent = intent,
+      onBackPressedDispatcher = null,
+    )
+
+  @InternalOnboardingApi
+  fun attach(
+    componentName: () -> ComponentName,
+    isFinishing: () -> Boolean,
+    lifecycleOwner: LifecycleOwner?,
+    intent: Intent,
+    onBackPressedDispatcher: OnBackPressedDispatcher?,
   ): AttachedResult {
-    val validated = validateInternal(activity, intent)
-    lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
+    if (
+      lifecycleOwner != null &&
+        onBackPressedDispatcher != null &&
+        metadata.foreground.backButtonBehavior ==
+          ForegroundOnboardingNode.BackButtonBehavior.DISABLED
+    ) {
+      Log.d(TAG, "Automatically disabling back button due to backButtonBehavior metadata")
+      onBackPressedDispatcher.addCallback(
+        lifecycleOwner,
+        object : OnBackPressedCallback(true) {
+          override fun handleOnBackPressed() {
+            // Do nothing
+            Log.w(
+              TAG,
+              "Back button pressed but automatically disabled by OnboardingActivityApiContract",
+            )
+          }
+        },
+      )
+    }
+    val validated = validateInternal(intent)
+    lifecycleOwner
+      ?.lifecycle
+      ?.addObserver(OnboardingLifecycleObserver(componentName, intent, isFinishing, this))
     return AttachedResult(validated)
   }
 
   /**
    * Validate that the intent can be parsed into an argument.
    *
-   * <p>When parsing fails, the failure will be recorded so that it can be fixed.
+   * When parsing fails, the failure will be recorded so that it can be fixed.
    *
    * @param activity the current activity context
    * @param intent the [Intent] to validate (defaults to the activity's current intent)
@@ -278,13 +509,14 @@ abstract class OnboardingActivityApiContract<I, O> :
   @CanIgnoreReturnValue
   @Deprecated("Use attach instead", ReplaceWith("attach(activity, intent)"))
   fun validate(activity: ComponentActivity, intent: Intent = activity.intent): Boolean {
+    @Suppress("DEPRECATION")
     return validate(activity, activity.lifecycle, intent)
   }
 
   /**
    * Validate that the intent can be parsed into an argument.
    *
-   * <p>When parsing fails, the failure will be recorded so that it can be fixed.
+   * When parsing fails, the failure will be recorded so that it can be fixed.
    *
    * @param activity the current activity context
    * @param lifecycle the lifecycle of the activity, used for logging purposes
@@ -298,21 +530,28 @@ abstract class OnboardingActivityApiContract<I, O> :
     lifecycle: Lifecycle?,
     intent: Intent = activity.intent,
   ): Boolean {
-    val validated = validateInternal(activity, intent)
-    lifecycle?.addObserver(OnboardingLifecycleObserver(activity, this))
+    val validated = validateInternal(intent)
+    lifecycle?.addObserver(
+      OnboardingLifecycleObserver(activity = activity, contract = this, intent = intent)
+    )
     return validated
   }
 
-  private fun validateInternal(activity: Activity, intent: Intent): Boolean {
-    AndroidOnboardingGraphLog.log(
-      ActivityNodeValidating(activity.nodeId, this.javaClass, intentToIntentData(intent))
+  private fun validateInternal(intent: Intent): Boolean {
+    OnboardingGraphLog.log(
+      ActivityNodeValidating(
+        nodeId = intent.nodeId,
+        nodeRef = this,
+        intent = intentToIntentData(intent),
+      )
     )
+
     return runCatching { extractArgument(intent) }
       .onFailure {
-        AndroidOnboardingGraphLog.log(
+        OnboardingGraphLog.log(
           ActivityNodeFailedValidation(
-            nodeId = activity.nodeId,
-            nodeClass = this.javaClass,
+            nodeId = intent.nodeId,
+            nodeRef = this,
             exception = it,
             intent = intentToIntentData(intent),
           )
@@ -333,46 +572,22 @@ abstract class OnboardingActivityApiContract<I, O> :
     )
     const val UNKNOWN_NODE: NodeId = UNKNOWN_NODE_ID
 
-    const val TAG = "OnboardingApiContract"
+    private const val TAG = "OnboardingApiContract"
 
-    // nodeId to outgoingId
+    /** nodeId to outgoingId */
     private val waitingForResumeActivity: MutableMap<NodeId, NodeId> = mutableMapOf()
   }
 }
 
-/** Equivalent to [OnboardingActivityApiContract] for contracts which do not return a result. */
-abstract class VoidOnboardingActivityApiContract<I> : OnboardingActivityApiContract<I, Unit>() {
-  final override fun performSetResult(result: Unit): ActivityResult {
-    // Does nothing - no result
-    return ActivityResult(resultCode = 0, data = null)
-  }
-
-  final override fun performParseResult(result: ActivityResult) {
-    // Does nothing - no result
-  }
-}
-
-/** Equivalent to [OnboardingActivityApiContract] for contracts which do not take arguments. */
-abstract class ArgumentFreeOnboardingActivityApiContract<O> :
-  OnboardingActivityApiContract<Unit, O>() {
-  final override fun performExtractArgument(intent: Intent) {
-    // Does nothing - no argument
-  }
-}
-
-/** Equivalent to [VoidOnboardingActivityApiContract] for contracts which do not take arguments. */
-abstract class ArgumentFreeVoidOnboardingActivityApiContract :
-  VoidOnboardingActivityApiContract<Unit>() {
-  final override fun performExtractArgument(intent: Intent) {
-    // Does nothing - no argument
-  }
-
-  final override fun performCreateIntent(context: Context, arg: Unit) = performCreateIntent(context)
-
-  abstract fun performCreateIntent(context: Context): Intent
-}
-
-/** Returns [true] if the activity is launched using onboarding contract, [false] otherwise. */
+/** Returns [true] if the activity was launched using onboarding contract, [false] otherwise. */
 fun Activity.isLaunchedByOnboardingContract(): Boolean {
   return intent.hasExtra(EXTRA_ONBOARDING_NODE_ID)
 }
+
+fun OnboardingActivityApiContract<Unit, *>.createIntent(context: Context) =
+  createIntent(context, Unit)
+
+/** See [OnboardingActivityApiContract.prepare]. */
+fun OnboardingActivityApiContract<Unit, *>.prepare(
+  context: Context
+): PendingContract.ErasedActivity = prepare(context, Unit)

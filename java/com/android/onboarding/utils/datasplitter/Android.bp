@@ -1,0 +1,24 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.utils.datasplitter",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "BundleSplitter.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils",
+        "android_onboarding.utils.persistable",
+        "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "kotlinx-coroutines-core",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+}

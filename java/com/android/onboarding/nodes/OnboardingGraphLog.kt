@@ -24,16 +24,13 @@ interface OnboardingGraphLog {
   fun log(event: OnboardingEvent)
 
   /** Interface to implement to observe [OnboardingEvent] instances. */
-  interface Observer {
+  fun interface Observer {
     /** Called when an [OnboardingEvent] occurs. */
     fun onEvent(event: OnboardingEvent)
   }
 
   /** Common data applicable to all onboarding events. */
-  interface OnboardingEventData : Comparable<Instant> {
-    val nodeName: String?
-    val nodeComponent: String?
-    val nodeId: Long
+  interface OnboardingEventData : Comparable<Instant>, UniqueNodeRef {
     val timestamp: Instant
 
     override fun compareTo(other: Instant): Int = timestamp.compareTo(other)
@@ -49,10 +46,10 @@ interface OnboardingGraphLog {
     /** Compares this delegate with [other] delegate for [source] property equality. */
     infix fun eq(other: OnboardingEventDelegate): Boolean = source == other.source
 
-    override val nodeName: String?
+    override val nodeName: String
       get() = source.nodeName
 
-    override val nodeComponent: String?
+    override val nodeComponent: String
       get() = source.nodeComponent
 
     override val nodeId: Long
@@ -60,5 +57,20 @@ interface OnboardingGraphLog {
 
     override val timestamp: Instant
       get() = source.timestamp
+  }
+
+  /**
+   * Default onboarding graph log.
+   *
+   * @see AndroidOnboardingGraphLog
+   */
+  companion object : OnboardingGraphLog {
+    private val delegate: OnboardingGraphLog = PlatformOnboardingGraphLog
+
+    override fun addObserver(observer: Observer) = delegate.addObserver(observer)
+
+    override fun removeObserver(observer: Observer) = delegate.removeObserver(observer)
+
+    override fun log(event: OnboardingEvent) = delegate.log(event)
   }
 }

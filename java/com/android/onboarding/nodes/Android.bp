@@ -1,74 +1,83 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_library {
     name: "android_onboarding.nodes",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "AndroidNodeId.kt",
+        "AndroidOnboardingGraphLog.kt",
+        "DefaultOnboardingGraphLog.kt",
+        "LogcatObserver.kt",
+        "OnboardingEvent.kt",
+        "OnboardingGraphLog.kt",
+        "OnboardingGraphNodeTransitionObserver.kt",
+        "OnboardingNode.kt",
+        "PersistableRefs.kt",
+    ],
     static_libs: [
         "android_onboarding.contracts.annotations",
         "android_onboarding.flags",
-        "android_onboarding.nodes_proto_lite",
+        "android_onboarding.metadata",
+        "android_onboarding.nodes.onboarding_nodes_java_proto_lite",
+        "android_onboarding.nodes.ref",
+        "android_onboarding.tasks.utils",
+        "android_onboarding.utils.persistable",
         "androidx.activity_activity-ktx",
-        "error_prone_annotations",
         "guava",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
 }
 
-java_library_host {
-    name: "android_onboarding.nodes_host",
-    installable: false,
+android_library {
+    name: "android_onboarding.nodes.ref",
+    visibility: [
+        "//visibility:public",
+    ],
     srcs: [
-        "DefaultOnboardingGraphLog.kt",
-        "OnboardingEvent.kt",
-        "OnboardingGraph.kt",
-        "OnboardingGraphBuilder.kt",
-        "OnboardingGraphEdge.kt",
-        "OnboardingGraphLog.kt",
-        "OnboardingGraphNode.kt",
+        "ComponentRef.kt",
+        "NodeId.kt",
+        "NodeRef.kt",
+        "UniqueNodeRef.kt",
     ],
     static_libs: [
-        "android_onboarding.contracts.annotations_host",
-        "android_onboarding.nodes_proto_full",
-        "error_prone_annotations",
-        "guava",
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "jsr330",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
 }
 
 filegroup {
-    name: "android_onboarding.nodes_proto_src",
+    name: "android_onboarding.nodes.onboarding_nodes_proto_lib",
+    visibility: [
+        "//visibility:private",
+    ],
     srcs: [
         "onboarding_nodes.proto",
     ],
 }
 
-java_library_host {
-    name: "android_onboarding.nodes_proto_full",
-    installable: false,
-    srcs: [
-        ":android_onboarding.nodes_proto_src",
-    ],
-    proto: {
-        type: "full",
-    },
-    static_libs: [
-        "libprotobuf-java-full",
-    ],
-}
-
 java_library {
-    name: "android_onboarding.nodes_proto_lite",
+    name: "android_onboarding.nodes.onboarding_nodes_java_proto_lite",
+    static_libs: [
+        "libprotobuf-java-lite",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
     srcs: [
-        ":android_onboarding.nodes_proto_src",
+        ":android_onboarding.nodes.onboarding_nodes_proto_lib",
     ],
     proto: {
         type: "lite",
     },
-    static_libs: [
-        "libprotobuf-java-lite",
-    ],
 }

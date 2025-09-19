@@ -30,7 +30,7 @@ sealed interface CommonActivityNodeResult : ActivityNodeResult {
   /**
    * The process hosting the activity has crashed.
    *
-   * Marked as Success until all nodes rollout go/aoj-arch-dd-back-press to avoid misleading people.
+   * Marked as Success until all nodes rollout *** to avoid misleading people.
    */
   data object Crash : CommonActivityNodeResult, NodeResult.Success {
     override fun toActivityResult() = ActivityResult(Activity.RESULT_CANCELED, data = null)

@@ -7,6 +7,9 @@ import java.lang.UnsupportedOperationException
 /** Entry point to checking if processes support particular change ids. */
 interface OnboardingChanges {
 
+  /** Get the compliance date of a component. Defaults to [ComplianceDate.EARLIEST]. */
+  fun getComplianceDate(component: String): ComplianceDate
+
   /** True if the current executing process supports the given change ID. */
   fun currentProcessSupportsChange(@ValidChangeId changeId: Long): Boolean
 

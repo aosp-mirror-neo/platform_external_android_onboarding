@@ -9,6 +9,7 @@ package com.android.onboarding.contracts.annotations
   message =
     "Marked API is only meant as a temporary workaround for legacy consumers " +
       "that cannot immediately use the recommended onboarding APIs " +
-      "and as such demands an explicit opt-in"
+      "and as such demands an explicit opt-in",
+  level = RequiresOptIn.Level.WARNING,
 )
 annotation class DiscouragedOnboardingApi(val recommendation: String)

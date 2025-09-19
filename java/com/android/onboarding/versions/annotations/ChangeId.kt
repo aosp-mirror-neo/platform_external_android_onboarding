@@ -20,9 +20,12 @@ package com.android.onboarding.versions.annotations
  *   apps.
  * @param released The date (in format YYYY-MM-DD) that this change was released (meaning that it is
  *   present in all active versions of apps and no longer needs to be checked).
+ * @param tags A list of tags which can be used to enable or disable this change. Tags can be shared
+ *   between changes which allows us to test features that are made up of multiple changes without
+ *   making those changes available.
  */
 @Target(AnnotationTarget.FIELD)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class ChangeId(
   val bugId: Long,
   val owner: String,
@@ -30,8 +33,10 @@ annotation class ChangeId(
   val changeRadius: ChangeRadius,
   val dependsOn: Long = DEFAULT,
   val expedited: ExpeditedReason = ExpeditedReason.NOT_EXPEDITED,
+
   val available: String = NOT_AVAILABLE,
   val released: String = NOT_RELEASED,
+  val tags: Array<String> = [],
 ) {
   companion object {
     private const val DEFAULT = -1L
@@ -41,7 +46,7 @@ annotation class ChangeId(
 
     /** Generate the code to represent this change ID in Kotlin. */
     fun generateChangeIdCode(changeId: ChangeId): String {
-      return "ChangeId(bugId=${changeId.bugId}, owner=\"${changeId.owner}\", breaking=arrayOf(${changeId.breaking.joinToString(", ")}), changeRadius=${changeId.changeRadius}, dependsOn=${changeId.dependsOn}, expedited=${changeId.expedited}, available=\"${changeId.available}\", released=\"${changeId.released}\")"
+      return "ChangeId(bugId=${changeId.bugId}, owner=\"${changeId.owner}\", breaking=arrayOf(${changeId.breaking.joinToString(", ")}), changeRadius=${changeId.changeRadius}, dependsOn=${changeId.dependsOn}, expedited=${changeId.expedited}, available=\"${changeId.available}\", released=\"${changeId.released}\", tags=arrayOf(${changeId.tags.map { "\"$it\"" }.joinToString(", ")}))"
     }
   }
 }

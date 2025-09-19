@@ -1,18 +1,19 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
+java_library {
     name: "android_onboarding.common",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "OnboardingComponents.kt",
+    ],
     static_libs: [
         "android_onboarding.common.annotations",
-        "dagger2",
-        "jsr330",
     ],
-    plugins: ["dagger2-compiler"],
+    sdk_version: "system_current",
+    host_supported: true,
 }
