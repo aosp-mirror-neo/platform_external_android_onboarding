@@ -21,7 +21,7 @@ android_library {
         "*.kt",
     ],
     static_libs: [
-        "Harrier",
+        "bedstead",
         "android_onboarding.bedsteadonboarding.activities",
         "android_onboarding.bedsteadonboarding.annotations",
         "android_onboarding.bedsteadonboarding.contract_eligibility_checker",
