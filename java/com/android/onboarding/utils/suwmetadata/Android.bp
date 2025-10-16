@@ -1,0 +1,24 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.utils.suwmetadata",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "DefaultSuwMetadataProvider.kt",
+        "SuwMetadataProvider.kt",
+    ],
+    static_libs: [
+        "PartnerConfig",
+        "android_onboarding.utils.logging",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}

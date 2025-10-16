@@ -25,7 +25,7 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
    * It is expected that implementing component will have registered an intent filter for such
    * action linking to the onboarding task manager service.
    *
-   * Special rules apply to GMS components. See *** for more details.
+   * Special rules apply to GMS components. See ___ for more details.
    */
   val taskServiceIntent: PersistableIntent
 
@@ -50,7 +50,7 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
      * `action={action}/{category}` action-only routing. Due to historic reasons, "auth" gms
      * subcomponent is the only one not special-cased.
      *
-     * See *** for more details.
+     * See ___ for more details.
      */
     @InternalOnboardingApi
     fun prepareBindingIntent(component: ComponentRef): PersistableIntent {
