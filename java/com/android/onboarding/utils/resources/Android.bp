@@ -22,4 +22,6 @@ android_library {
     sdk_version: "system_current",
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
 }

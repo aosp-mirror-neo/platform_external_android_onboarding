@@ -17,6 +17,8 @@ android_library {
     sdk_version: "system_current",
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
 }
 
 android_library {
@@ -34,6 +36,8 @@ android_library {
     sdk_version: "system_current",
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
 }
 
 java_library_host {
