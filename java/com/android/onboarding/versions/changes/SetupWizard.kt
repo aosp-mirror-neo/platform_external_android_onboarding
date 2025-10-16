@@ -579,3 +579,12 @@ const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val SUPPORT_NEXT_ACTION_IN_SCRIPT = 448547273L
+
+@ChangeId(
+  bugId = 450443090L,
+  owner = "tmfang",
+  breaking = [],
+  tags = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+)
+const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
