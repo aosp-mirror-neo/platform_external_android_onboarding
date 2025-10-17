@@ -7,6 +7,7 @@ android_onboarding.contracts.annotations.opt_in
 android_onboarding.contracts.contract_result
 android_onboarding.contracts.provisioning
 android_onboarding.contracts.setupwizard
+android_onboarding.contracts.setupwizard.orchestrator
 android_onboarding.contracts.testing
 android_onboarding.control.chained
 android_onboarding.encoding
@@ -46,3 +47,5 @@ android_onboarding.versions.annotations
 android_onboarding.versions.change_collector
 android_onboarding.versions.change_collector.change_collector_lib
 android_onboarding.versions.changes
+android_onboarding.wizardmanager.actions
+wizard_manager.WizardManagerExtras
