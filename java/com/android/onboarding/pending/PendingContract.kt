@@ -32,6 +32,9 @@ sealed interface PendingContract<R> : Parcelable, NodeRef, Persistable, StableEq
   /** Clone this pending contract for new launches. */
   fun clone(): PendingContract<R>
 
+  /** Erase this [PendingContract] and make it serializable. */
+  fun erase(): Erased<*>
+
   /** Convert this to a desired onboarding event argument representation. */
   fun toEventArgument(): Any? = ERASED_ARGUMENT
 
@@ -39,10 +42,26 @@ sealed interface PendingContract<R> : Parcelable, NodeRef, Persistable, StableEq
 
 
   interface Activity<R> : PendingContract<R>, LaunchableActivityForResult<Unit, R> {
+    override fun erase(): ErasedActivity = PendingActivityContract(toIntent())
+
     override fun clone(): Activity<R>
 
     /**
-     * Creates an intent representing this [PendingContract.Activity].
+     * Creates an [Intent] representing this [PendingContract.Activity].
+     *
+     * Unlike [createIntent] this method has no side effects.
+     */
+    fun toIntent(): Intent
+
+    /**
+     * Creates a [PersistableIntent] representing this [PendingContract.Activity].
+     *
+     * Unlike [createIntent] this method has no side effects.
+     */
+    fun toPersistableIntent(): PersistableIntent
+
+    /**
+     * Creates an [Intent] representing this [PendingContract.Activity].
      *
      * Results in launch onboarding events being logged and as such should be invoked as close to
      * the launch site as possible.
@@ -68,8 +87,7 @@ sealed interface PendingContract<R> : Parcelable, NodeRef, Persistable, StableEq
 
   interface Task<R> : PendingContract<R>, BackgroundLaunchableForResult<Unit, R>, StableEquality {
     /** Erase this [PendingContract] and make it serializable. */
-    @OptIn(InternalOnboardingApi::class)
-    fun erase(): ErasedTask = PendingTaskContract(toPersistableBundle())
+    override fun erase(): ErasedTask = PendingTaskContract(toPersistableBundle())
 
     companion object : PersistableDeserializer<ErasedTask> by ErasedTask {
       internal const val TYPE = "TASK"

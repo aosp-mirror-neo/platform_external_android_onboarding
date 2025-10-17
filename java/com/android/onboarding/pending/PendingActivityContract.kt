@@ -48,10 +48,16 @@ data class PendingActivityContract(private val intent: PersistableIntent) :
     this.targetUserId = targetUserId
   }
 
+  override fun toIntent(): Intent = intent.toIntent()
+
+  override fun toPersistableIntent(): PersistableIntent = PersistableIntent(intent)
+
   override fun toPersistableBundle() =
     intent.toPersistableBundle().apply { putString(EXTRA_TYPE, PendingContract.Activity.TYPE) }
 
   override fun clone() = PendingActivityContract(PersistableIntent(intent.toIntent()))
+
+  override fun erase(): PendingContract.ErasedActivity = this
 
   override fun toString() = "PendingContract.Activity(${identity()})"
 
@@ -180,6 +186,10 @@ data class PendingActivityContract(private val intent: PersistableIntent) :
       Resolved(raw = raw.clone(), handler = handler)
 
     override fun toPersistableBundle(): PersistableBundle = raw.toPersistableBundle()
+
+    override fun toIntent(): Intent = raw.toIntent()
+
+    override fun toPersistableIntent(): PersistableIntent = raw.toPersistableIntent()
 
     override fun toString() = raw.toString()
 

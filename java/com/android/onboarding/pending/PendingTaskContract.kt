@@ -150,6 +150,8 @@ class PendingTaskContract(
     return Resolved(raw = this, handler = handler)
   }
 
+  override fun erase(): PendingContract.ErasedTask = this
+
   /**
    * A wrapper over a [raw] [PendingTaskContract] delegating most functionality to it while
    * injecting [handler] to convert the result to a typesafe [R] type.
