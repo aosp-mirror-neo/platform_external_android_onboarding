@@ -1,7 +1,21 @@
+@file:OptIn(InternalOnboardingApi::class)
+
 package com.android.onboarding.contracts.annotations
+
+import com.android.onboarding.metadata.OnboardingMetadata
+import com.android.onboarding.nodes.ComponentRef
+import com.android.onboarding.nodes.NodeRef
+import com.android.onboarding.utils.persistable.PersistableDeserializer
+import com.android.onboarding.utils.persistable.PersistableEnum
+import com.android.onboarding.utils.persistable.annotations.PersistableAnnotation
+import com.android.onboarding.utils.persistable.annotations.PersistableAnnotation.ExtractMetadata
+import com.android.onboarding.utils.persistable.annotations.PersistableAnnotationCompanionDelegate
+import java.time.Duration
+import kotlin.reflect.KClass
 
 /** Container of metadata about a node definition in the onboarding graph */
 @Retention(AnnotationRetention.RUNTIME)
+@PersistableAnnotation(lossy = true)
 annotation class OnboardingNode(
   /** Identifier of the component who owns the node. */
   val component: String,
@@ -13,8 +27,24 @@ annotation class OnboardingNode(
    */
   val name: String,
 
-  /** The type of UI shown as part of this node. */
-  val uiType: UiType,
+  /**
+   * Node data specific to foreground nodes.
+   *
+   * This is mandatory for foreground nodes and must NOT be provided for background nodes.
+   */
+  // All values here except "empty" are arbitrary as this just marks that the data hasn't been
+  // provided
+  val foreground: ForegroundOnboardingNode =
+    ForegroundOnboardingNode(uiType = ForegroundOnboardingNode.UiType.INVISIBLE, empty = true),
+
+  /**
+   * Node data specific to background nodes.
+   *
+   * This is mandatory for background nodes and must NOT be provided for foreground nodes.
+   */
+  // All values here except "empty" are arbitrary as this just marks that the data hasn't been
+  // provided
+  val background: BackgroundOnboardingNode = BackgroundOnboardingNode(empty = true),
 
   /** The type of specification given for this node. */
   val specificationType: SpecificationType = SpecificationType.LIGHT,
@@ -36,65 +66,18 @@ annotation class OnboardingNode(
   // or at least we should enforce it in the linter
   val isTerminalNode: Boolean = false,
 
+  /** The time in seconds, after which, this node should be considered to have failed. */
+  val timeoutInSeconds: Long = DEFAULT_TIMEOUT_IN_SECONDS,
+
   /**
-   * How the back button behaves when this node is active.
+   * Metadata which is supported by this node.
    *
-   * This is only applicable to UI Nodes.
+   * Nodes of this type may only expose metadata listed here. It is not guaranteed that they will
+   * expose all listed metadata.
    */
-  // We should refactor this into the UiType option somehow so it can't be specified on non-UI nodes
-  // or at least we should enforce it in the linter
-  val backButtonBehavior: BackButtonBehavior = BackButtonBehavior.UNKNOWN,
+  @get:ExtractMetadata val metadata: Array<KClass<out OnboardingMetadata>> = [],
 ) {
-
-  enum class BackButtonBehavior {
-    UNKNOWN,
-
-    /** Disabled via some screen-specific logic. */
-    CUSTOM_DISABLED,
-  }
-
-  enum class UiType {
-    /** This node shows no UI. */
-    NONE,
-
-    /** This node shows UI which does not fit any other type. */
-    OTHER,
-
-    /**
-     * This node does not actually show UI but makes use of UI controls as a way of passing control.
-     * This will be replaced by some other mechanism in future.
-     */
-    INVISIBLE,
-
-    /**
-     * This node shows a loading screen. The primary purpose is to control the screen while some
-     * background work executes.
-     */
-    LOADING,
-
-    /**
-     * This node shows an education screen. The primary purpose is to educate the user about their
-     * device, privacy, etc.
-     */
-    EDUCATION,
-
-    /** This node's primary purpose is to input a decision or some data from the user. */
-    INPUT,
-
-    /**
-     * This node's primary purpose is to host some other UI node. This node must not show UI itself
-     * independently of another node.
-     *
-     * For example, an Activity which hosts fragments, where those fragments themselves are nodes,
-     * could be marked as [HOST].
-     */
-    HOST,
-
-    /** This node's primary purpose is to show error screen to the user. */
-    ERROR,
-  }
-
-  enum class SpecificationType {
+  enum class SpecificationType : PersistableEnum {
     /**
      * No requirements.
      *
@@ -113,36 +96,67 @@ annotation class OnboardingNode(
      * Same as [BASELINE] except that we have confidence in our contract completeness so can enforce
      * strict validation
      */
-    V1,
+    V1;
+
+    override val id = name
+
+    companion object :
+      PersistableDeserializer<SpecificationType> by PersistableEnum.deserializer(entries, LIGHT)
   }
 
-  companion object {
+  companion object :
+    PersistableAnnotationCompanionDelegate<OnboardingNode, POnboardingNode>(POnboardingNode) {
+    /** Validates a given node [name]. */
+    fun validateNodeName(name: String) {
+      require(name.length <= MAX_NODE_NAME_LENGTH) {
+        "Node name length (${name.length}) exceeds maximum length of $MAX_NODE_NAME_LENGTH characters"
+      }
+    }
+
+    /** Validates a given node [timeoutInSeconds]. */
+    fun validateNodeTimeout(timeoutInSeconds: Long) {
+      require(timeoutInSeconds > 0) { "Node timeout ($timeoutInSeconds) must be a positive Long" }
+    }
+
+    /** Returns the node [OnboardingNode] metadata for given node's contract class. */
+    fun extractNodeMetadata(nodeClass: Class<*>): OnboardingNode =
+      extractNodeMetadataOrNull(nodeClass)
+        ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
+
+    /** Returns the node [OnboardingNode] metadata for given node's contract class. */
+    fun extractNodeMetadataOrNull(nodeClass: Class<*>): OnboardingNode? =
+      nodeClass.getAnnotation(OnboardingNode::class.java)
+
     /** Returns the node [component] for given node's contract class. */
     fun extractComponentNameFromClass(nodeClass: Class<*>): String =
-      nodeClass.getAnnotation(OnboardingNode::class.java)?.component
-        ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
+      extractNodeMetadata(nodeClass).component
 
     /** Returns the node [name] for given node's contract class. */
     fun extractNodeNameFromClass(nodeClass: Class<*>): String =
-      nodeClass.getAnnotation(OnboardingNode::class.java)?.name?.also {
-        require(it.length <= MAX_NODE_NAME_LENGTH) {
-          "Node name length (${it.length}) exceeds maximum length of $MAX_NODE_NAME_LENGTH characters"
-        }
-      } ?: throw IllegalArgumentException("All nodes must be annotated @OnboardingNode")
+      extractNodeMetadata(nodeClass).name.also(::validateNodeName)
+
+    /** Returns the node [timeoutInSeconds] for given node's contract class. */
+    fun extractTimeoutDurationFromClass(nodeClass: Class<*>): Duration =
+      extractNodeMetadata(nodeClass).timeoutInSeconds.also(::validateNodeTimeout).let {
+        Duration.ofSeconds(it)
+      }
 
     /** Returns the node [OnboardingNodeMetadata] for given node's component name. */
     fun getOnboardingNodeMetadata(nodeClass: Class<*>): OnboardingNodeMetadata {
-      val component =
-        nodeClass.getAnnotation(OnboardingNode::class.java)?.component
-          ?: error("OnboardingNode annotation or component is missing for class ${nodeClass.name}")
+      val component = extractNodeMetadata(nodeClass).component
       val nodeMetadata = component.split("/")
       return when (nodeMetadata.size) {
         1 -> OnboardingNodeMetadata(nodeMetadata[0], nodeMetadata[0])
         2 -> OnboardingNodeMetadata(nodeMetadata[0], nodeMetadata[1])
-        else -> error("OnboardingNode component ${component} is invalid")
+        else -> error("OnboardingNode component $component is invalid")
       }
     }
   }
 }
 
+/** Extract [NodeRef] from this [OnboardingNode]. */
+fun OnboardingNode.asNodeRef(): NodeRef.Stable = NodeRef(ComponentRef(component), name)
+
 const val MAX_NODE_NAME_LENGTH: Int = 40
+
+const val DEFAULT_TIMEOUT_IN_SECONDS: Long = 300L

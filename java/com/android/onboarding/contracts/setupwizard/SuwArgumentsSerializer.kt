@@ -2,7 +2,7 @@ package com.android.onboarding.contracts.setupwizard
 
 import com.android.onboarding.contracts.NodeAwareIntentScope
 import com.android.onboarding.contracts.NodeAwareIntentSerializer
-import com.android.onboarding.contracts.OnboardingNodeId
+import com.android.onboarding.nodes.OnboardingNodeId
 import com.google.android.setupcompat.util.WizardManagerHelper
 import javax.inject.Inject
 

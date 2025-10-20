@@ -1,0 +1,67 @@
+package com.google.android.wizardmanager
+
+import android.os.PersistableBundle
+import com.android.onboarding.utils.persistable.PersistableDeserializer
+import com.android.onboarding.utils.persistable.getPersistable
+import com.google.android.wizardmanager.WizardAction.BRANCHES_KEY
+import com.google.android.wizardmanager.WizardAction.FLOW_KEY
+import com.google.android.wizardmanager.WizardAction.ID_KEY
+import com.google.android.wizardmanager.WizardAction.IF_FLOW_KEY
+import com.google.android.wizardmanager.WizardAction.IF_LIFECYCLE_KEY
+import com.google.android.wizardmanager.WizardAction.INDEX_KEY
+import com.google.android.wizardmanager.WizardAction.NODE_KEY
+import com.google.android.wizardmanager.WizardAction.SCRIPT_URI_KEY
+import com.google.android.wizardmanager.WizardAction.URI_KEY
+import com.google.android.wizardmanager.WizardBranchArray.DEFAULT_ACTION_ID_KEY
+import com.google.android.wizardmanager.WizardBranchArray.MAP_KEY
+import com.google.android.wizardmanager.WizardStack.SIZE_KEY
+
+// Ideally the objects in this file should be companion objects to the classes themselves, but
+// we can't do that until they are converted to Kotlin
+
+object Deserializers {
+  object WizardAction : PersistableDeserializer<com.google.android.wizardmanager.WizardAction> {
+    override fun fromPersistableBundle(
+      persistableBundle: PersistableBundle
+    ): com.google.android.wizardmanager.WizardAction =
+      WizardAction(
+        persistableBundle.getString(SCRIPT_URI_KEY) ?: error("Missing SCRIPT_URI"),
+        persistableBundle.getInt(INDEX_KEY),
+        persistableBundle.getString(ID_KEY),
+        persistableBundle.getString(URI_KEY),
+        persistableBundle.getString(NODE_KEY),
+        persistableBundle.getString(IF_LIFECYCLE_KEY),
+        persistableBundle.getString(FLOW_KEY),
+        persistableBundle.getString(IF_FLOW_KEY),
+        persistableBundle.getPersistable(BRANCHES_KEY, WizardBranchArray)
+          ?: error("Missing BRANCHES"),
+      )
+  }
+
+  object WizardBranchArray :
+    PersistableDeserializer<com.google.android.wizardmanager.WizardBranchArray> {
+    override fun fromPersistableBundle(
+      persistableBundle: PersistableBundle
+    ): com.google.android.wizardmanager.WizardBranchArray =
+      WizardBranchArray().also {
+        it.defaultActionId = persistableBundle.getString(DEFAULT_ACTION_ID_KEY)
+        val map = persistableBundle.getPersistableBundle(MAP_KEY) ?: error("Missing map")
+        for (k in map.keySet()) {
+          it.put(Integer.valueOf(k), map.getString(k))
+        }
+      }
+  }
+
+  object WizardStack : PersistableDeserializer<com.google.android.wizardmanager.WizardStack> {
+    override fun fromPersistableBundle(
+      persistableBundle: PersistableBundle
+    ): com.google.android.wizardmanager.WizardStack =
+      WizardStack().also {
+        val size = persistableBundle.getInt(SIZE_KEY)
+
+        for (i in 0..<size) {
+          it.push(persistableBundle.getPersistable(i.toString(), WizardAction))
+        }
+      }
+  }
+}

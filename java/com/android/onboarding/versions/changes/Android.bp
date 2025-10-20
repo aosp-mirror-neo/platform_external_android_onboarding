@@ -1,16 +1,26 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
+java_library {
     name: "android_onboarding.versions.changes",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "OnboardingBackgroundTasks.kt",
+        "Orchestration.kt",
+        "SetupWizard.kt",
+        "Tags.kt",
+        "TestChanges.kt",
+    ],
     static_libs: [
         "android_onboarding.versions.annotations",
     ],
-    plugins: ["android_onboarding.versions.change_collector"],
+    plugins: [
+        "android_onboarding.versions.change_collector",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
 }

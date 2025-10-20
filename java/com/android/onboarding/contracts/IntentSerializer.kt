@@ -1,6 +1,7 @@
 package com.android.onboarding.contracts
 
 import android.content.Intent
+import com.android.onboarding.nodes.NodeAware
 
 /** Marks functions that read or write intent data */
 @DslMarker internal annotation class IntentManipulationDsl
@@ -49,10 +50,8 @@ interface IntentSerializer<V> {
 /**
  * A serializer that does not expose [Intent] directly and instead works via [NodeAwareIntentScope]
  * abstraction that can be observed
- *
- * TODO This is living as a separate opt-in interface for now, but we should look into incorporating
- * it inside the contract class to make methods enforceable and protected
  */
+
 interface NodeAwareIntentSerializer<V> : IntentSerializer<V>, NodeAware {
   fun NodeAwareIntentScope.write(value: V)
 

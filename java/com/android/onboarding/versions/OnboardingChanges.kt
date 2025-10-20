@@ -4,8 +4,11 @@ import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.annotations.ValidChangeId
 import java.lang.UnsupportedOperationException
 
-/** Entry point to checking if processes support particular change ids. */
+/** Entry point to checking if processes support particular change IDs. */
 interface OnboardingChanges {
+
+  /** Get the compliance date of a component. Defaults to [ComplianceDate.EARLIEST]. */
+  fun getComplianceDate(component: String): ComplianceDate
 
   /** True if the current executing process supports the given change ID. */
   fun currentProcessSupportsChange(@ValidChangeId changeId: Long): Boolean

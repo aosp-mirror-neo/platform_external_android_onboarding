@@ -1,0 +1,36 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.pending",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "BackgroundLaunchable.kt",
+        "Launchable.kt",
+        "PendingActivityContract.kt",
+        "PendingContract.kt",
+        "PendingTaskContract.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "android_onboarding.contracts.contract_result",
+        "android_onboarding.encoding",
+        "android_onboarding.nodes",
+        "android_onboarding.utils",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.logging",
+        "android_onboarding.utils.persistable",
+        "androidx.activity_activity-ktx",
+        "androidx.annotation_annotation",
+        "error_prone_annotations",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}

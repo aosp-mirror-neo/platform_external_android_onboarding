@@ -1,10 +1,54 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
+android_library {
     name: "android_onboarding.utils",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
+    srcs: [
+        "Bundle.kt",
+        "Flow.kt",
+        "Intent.kt",
+        "ServiceConnection.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils.logging",
+        "error_prone_annotations",
+        "kotlinx-coroutines-core",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
+
+java_library {
+    name: "android_onboarding.utils.equality",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "Equality.kt",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
+}
+
+java_library {
+    name: "android_onboarding.utils.hash",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "hash.kt",
+    ],
+    static_libs: [
+        "guava",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
 }

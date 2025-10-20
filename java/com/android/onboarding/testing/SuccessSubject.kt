@@ -1,11 +1,8 @@
 package com.android.onboarding.testing
 
-import com.google.common.truth.Fact.fact
-import com.google.common.truth.Fact.simpleFact
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.StandardSubjectBuilder
 import com.google.common.truth.Subject
-import com.google.common.truth.ThrowableSubject
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertAbout
 import com.google.common.truth.Truth.assertThat
@@ -52,7 +49,8 @@ fun StandardSubjectBuilder.doesNotFail(action: () -> Any?) {
  * assertions to continue.
  *
  * Unfortunately @[CanIgnoreReturnValue] is not supported on inline library functions and as such
- * this utility function is not returning [ThrowableSubject] for further assertions. If you need
+ * this utility function is not returning
+ * [ThrowableSubject][com.google.common.truth.ThrowableSubject] for further assertions. If you need
  * further assertions consider using one of the more verbose forms:
  * ```
  * @get:Rule val expect: Expect = Expect.create()

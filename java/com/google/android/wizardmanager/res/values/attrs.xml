@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <declare-styleable name="WizardScript">
+        <attr name="firstAction" format="string" />
+        <attr name="version" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="WizardAction">
+        <attr name="uri" format="string" />
+        <attr name="script" format="string" />
+        <attr name="flow" format="string" />
+        <attr name="ifFlow" format="string" />
+        <attr name="ifLifecycle" format="string" />
+        <attr name="node" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="result">
+        <attr name="resultCode" format="integer" />
+        <attr name="action" format="string" />
+        <!-- name explains what the result code stands for. Does not affect execution. -->
+        <attr name="name" format="string" />
+    </declare-styleable>
+</resources>

@@ -1,27 +1,86 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_library {
-    name: "android_onboarding.tasks",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "**/*.kt",
-        "aidl/**/*.aidl",
+    name: "android_onboarding.tasks.OnboardingTaskManager",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
-    aidl: {
-        include_dirs: [
-            "frameworks/native/aidl/binder",
-        ],
-        export_include_dirs: ["aidl"],
-    },
+    srcs: [
+        "OnboardingTaskManager.kt",
+    ],
     static_libs: [
         "android_onboarding.contracts.annotations",
-        "androidx.activity_activity-ktx",
+        "android_onboarding.metadata",
+        "android_onboarding.nodes.ref",
+        "android_onboarding.pending",
+        "android_onboarding.tasks.OnboardingTaskState",
+        "android_onboarding.tasks.OnboardingTaskToken",
         "androidx.annotation_annotation",
         "error_prone_annotations",
-        "kotlinx_coroutines",
-        "kotlinx_coroutines_guava",
+        "guava-listenablefuture-prebuilt-jar",
+        "kotlinx-coroutines-core",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
+
+android_library {
+    name: "android_onboarding.tasks.OnboardingTaskState",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "DescriptiveTaskMetadata.kt",
+        "OnboardingTaskState.kt",
+    ],
+    static_libs: [
+        "android_onboarding.common.annotations",
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.encoding",
+        "android_onboarding.metadata",
+        "android_onboarding.nodes",
+        "android_onboarding.tasks.OnboardingTaskToken",
+        "android_onboarding.utils",
+        "android_onboarding.utils.datasplitter",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "android_onboarding.utils.resources",
+        "androidx.annotation_annotation",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
+
+android_library {
+    name: "android_onboarding.tasks.OnboardingTaskToken",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "OnboardingTaskToken.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.encoding",
+        "android_onboarding.nodes",
+        "android_onboarding.pending",
+        "android_onboarding.utils",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "androidx.annotation_annotation",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
 }

@@ -2,6 +2,7 @@ package com.android.onboarding.versions
 
 import com.android.onboarding.versions.annotations.ChangeId
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * A class representing a specific compliance date which can be compared to other compliance dates.
@@ -9,8 +10,7 @@ import java.time.LocalDate
  * <p>If not specified, or is earlier than {@link EARLIEST_COMPLIANCE_DATE}, this will default to
  * the {@link EARLIEST_COMPLIANCE_DATE}.
  */
-@JvmInline
-value class ComplianceDate(private val complianceDate: LocalDate) {
+data class ComplianceDate(private val complianceDate: LocalDate) {
   constructor(
     version: String? = null
   ) : this(
@@ -41,6 +41,9 @@ value class ComplianceDate(private val complianceDate: LocalDate) {
 
   /** True if the package's version is less than {@code version} */
   fun isLessThan(version: ComplianceDate): Boolean = version.complianceDate.isAfter(complianceDate)
+
+  /** Format the compliance date in the format YYYY-MM-DD. */
+  fun toFormattedString(): String = complianceDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
   /**
    * True if the [complianceDate] is greater than or equal to the available date of the [changeId].

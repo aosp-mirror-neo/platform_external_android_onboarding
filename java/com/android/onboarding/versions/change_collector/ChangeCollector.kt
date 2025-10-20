@@ -18,23 +18,30 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
 import javax.tools.StandardLocation
 
-@SupportedAnnotationTypes("com.android.onboarding.versions.annotations.ChangeId")
-@AutoService(javax.annotation.processing.Processor::class)
 /**
  * Annotation processor which collects all @ChangeId annotations and indexes them in a fixed map.
  *
  * The map is called [com.android.onboarding.versions.changes.ALL_CHANGE_IDS], as has a (Long) key
  * of the bugId, with the value being the [ChangeId] itself.
  */
+@SupportedAnnotationTypes("com.android.onboarding.versions.annotations.ChangeId")
+@AutoService(javax.annotation.processing.Processor::class)
 class ChangeCollector : AbstractProcessor() {
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
 
-  private val changeIds = mutableListOf<ChangeId>()
+  private val changeIds = mutableListOf<ChangeIdInfo>()
+
+  data class ChangeIdInfo(val name: String, val changeId: ChangeId)
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     val annotatedIds = roundEnv.getElementsAnnotatedWith(ChangeId::class.java)
     for (annotatedId in annotatedIds) {
-      changeIds.add(annotatedId.getAnnotation(ChangeId::class.java))
+      changeIds.add(
+        ChangeIdInfo(
+          annotatedId.getSimpleName().toString(),
+          annotatedId.getAnnotation(ChangeId::class.java),
+        )
+      )
     }
 
     if (roundEnv.processingOver()) {
@@ -64,11 +71,16 @@ class ChangeCollector : AbstractProcessor() {
         fileBuilder
           .addCode(
             CodeBlock.builder()
-              .add(
+              .addStatement(
                 "val ALL_CHANGE_IDS = mapOf(" +
                   changeIds
-                    .map { "${it.bugId}L to ${generateChangeIdCode(it)}" }
+                    .map { "${it.changeId.bugId}L to ${generateChangeIdCode(it.changeId)}" }
                     .joinToString(",\n") +
+                  ")"
+              )
+              .addStatement(
+                "val CHANGE_NAME = mapOf(" +
+                  changeIds.map { "${it.changeId.bugId}L to \"${it.name}\"" }.joinToString(",\n") +
                   ")"
               )
               .build()

@@ -6,10 +6,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
+import com.android.onboarding.compatibility.compatGetBoolean
+import com.android.onboarding.compatibility.compatPutBoolean
 import com.android.onboarding.contracts.NodeAwareIntentScope.IntentExtra.Invalid
 import com.android.onboarding.contracts.NodeAwareIntentScope.IntentExtra.Present
-import com.android.onboarding.nodes.AndroidOnboardingGraphLog
+import com.android.onboarding.nodes.NodeAware
+import com.android.onboarding.nodes.NodeId
 import com.android.onboarding.nodes.OnboardingEvent
+import com.android.onboarding.nodes.OnboardingGraphLog
+import com.android.onboarding.nodes.OnboardingNodeId
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -148,7 +153,7 @@ class NodeAwareIntentScope(
     if (errors.isNotEmpty()) {
       val reason =
         errors.joinToString(prefix = "Detected invalid extras:\n\t", separator = "\n\t - ")
-      AndroidOnboardingGraphLog.log(OnboardingEvent.ActivityNodeFail(nodeId, reason))
+      OnboardingGraphLog.log(OnboardingEvent.ActivityNodeFail(nodeId, reason))
       if (strict) error(reason)
     }
   }
@@ -222,7 +227,10 @@ class NodeAwareIntentScope(
   @IntentManipulationDsl
   fun boolean(name: String): OptionalIntentExtraDelegate<Boolean> =
     OptionalIntentExtraDelegate(
-      IntentExtra(name, name.takeIf(::contains)?.let { androidIntent.getBooleanExtra(it, false) })
+      IntentExtra(
+        name,
+        name.takeIf(::contains)?.let { androidIntent.extras?.compatGetBoolean(it, false) == true },
+      )
     )
 
   @IntentManipulationDsl
@@ -232,12 +240,18 @@ class NodeAwareIntentScope(
   @PublishedApi
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   @IntentManipulationDsl
+  @Suppress("DEPRECATION")
   internal fun <T : Any> parcelable(
     name: String,
     kClass: KClass<T>,
   ): OptionalIntentExtraDelegate<T> =
     OptionalIntentExtraDelegate(
-      IntentExtra(name, kClass, androidIntent.getParcelableExtra(name, kClass.java))
+      IntentExtra(
+        name,
+        kClass,
+        if (Build.VERSION.SDK_INT >= 33) androidIntent.getParcelableExtra(name, kClass.java)
+        else androidIntent.getParcelableExtra(name),
+      )
     )
 
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -329,7 +343,10 @@ class NodeAwareIntentScope(
   @JvmName("setBoolean")
   @IntentManipulationDsl
   operator fun set(key: String, value: () -> Boolean) {
-    value.extract(key).onSuccess { androidIntent.putExtra(key, it) }
+    value.extract(key).onSuccess {
+      androidIntent.putExtra(key, it)
+      androidIntent.extras?.compatPutBoolean(key, it)
+    }
   }
 
   @JvmName("setBooleanOrNull")

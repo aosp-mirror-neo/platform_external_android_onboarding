@@ -1,0 +1,29 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.contracts.setupwizard.orchestrator",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "SetupWizardOrchestratorContract.kt",
+    ],
+    static_libs: [
+        "android_onboarding.common",
+        "android_onboarding.contracts",
+        "android_onboarding.contracts.annotations",
+        "android_onboarding.pending",
+        "android_onboarding.utils.persistable",
+        "android_onboarding.wizardmanager.actions",
+        "setupcompat",
+        "wizard_manager.WizardManagerExtras",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}

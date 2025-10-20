@@ -1,23 +1,20 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
-    name: "android_onboarding.versions.annotations",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "*.kt",
-    ],
-    dont_merge_manifests: true,
-    static_libs: [
-
-    ],
-}
-
 java_library {
-    name: "android_onboarding.versions.annotations_host",
-    srcs: [
-        "*.kt",
+    name: "android_onboarding.versions.annotations",
+    visibility: [
+        "//visibility:public",
     ],
+    srcs: [
+        "BreakingReason.kt",
+        "ChangeId.kt",
+        "ChangeRadius.kt",
+        "ExpeditedReason.kt",
+        "ValidChangeId.kt",
+    ],
+    sdk_version: "system_current",
     host_supported: true,
 }

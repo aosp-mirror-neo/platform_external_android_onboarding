@@ -3,7 +3,7 @@ syntax = "proto2";
 package com.android.onboarding.protos;
 
 option java_outer_classname = "OnboardingProtos";
-option java_package = "com.android.onboarding";
+option java_package = "com.android.onboarding.nodes";
 
 message LogProto {
   optional ActivityNodeExecutedDirectlyProto activity_node_executed_directly =
@@ -27,6 +27,18 @@ message LogProto {
   optional ActivityNodeResumedAfterLaunchProto
       activity_node_resumed_after_launch = 13;
   optional ActivityNodeResumedProto activity_node_resumed = 14;
+  optional PendingContractPreparedForActivityProto
+      pending_contract_prepared_for_activity = 15;
+  optional PendingContractLaunchedForActivityProto
+      pending_contract_launched_for_activity = 16;
+  optional OnboardingTaskStartProto onboarding_task_start_proto = 17;
+  optional OnboardingTaskCompleteProto onboarding_task_complete_proto = 18;
+  optional PendingContractPreparedForTaskProto
+      pending_contract_prepared_for_task = 19;
+  optional OnboardingTaskStatusUpdateProto onboarding_task_status_update_proto =
+      20;
+  optional OnboardingTaskCacheWriteProto onboarding_task_cache_write_proto = 21;
+  optional OnboardingTaskCacheReadProto onboarding_task_cache_read_proto = 22;
 }
 
 message ActivityNodeExecutedDirectlyProto {
@@ -130,8 +142,79 @@ message ActivityNodeResumedAfterLaunchProto {
 message ActivityNodeResumedProto {
   optional int64 node_id = 1;
   optional string node_name = 2;
-  optional int64 timestamp = 3;
   optional string node_component = 4;
+  optional int64 timestamp = 3;
+}
+
+message PendingContractPreparedForActivityProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  reserved 4, 5;
+  optional int64 timestamp = 6;
+}
+
+message PendingContractPreparedForTaskProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 timestamp = 6;
+}
+
+message PendingContractLaunchedForActivityProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 creator_node_id = 4;
+  optional int64 source_node_id = 5;
+  optional int64 launch_id = 6;
+  optional int64 timestamp = 7;
+}
+
+message OnboardingTaskStartProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 creator_node_id = 4;
+  optional int64 source_node_id = 5;
+  optional int64 launch_id = 6;
+  optional int64 timestamp = 7;
+}
+
+message OnboardingTaskStatusUpdateProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 creator_node_id = 4;
+  optional int64 source_node_id = 5;
+  map<string, string> metadata = 6;
+  optional int64 timestamp = 7;
+}
+
+message OnboardingTaskCompleteProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 creator_node_id = 4;
+  optional int64 source_node_id = 5;
+  optional bool result = 6;
+  map<string, string> metadata = 7;
+  optional int64 timestamp = 8;
+}
+
+message OnboardingTaskCacheWriteProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional int64 timestamp = 4;
+}
+
+message OnboardingTaskCacheReadProto {
+  optional int64 node_id = 1;
+  optional string node_name = 2;
+  optional string node_component = 3;
+  optional bool hit = 4;
+  optional int64 timestamp = 5;
 }
 
 message IntentDataProto {

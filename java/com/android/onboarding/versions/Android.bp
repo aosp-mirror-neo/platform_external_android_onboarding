@@ -1,20 +1,65 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-// For now we exclude dagger + hilt as those dependencies aren't available
 android_library {
     name: "android_onboarding.versions",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "ComplianceDate.kt",
-        "DefaultOnboardingChanges.kt",
-        "OnboardingChanges.kt",
-        "Versions.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "DefaultMutableOnboardingChanges.kt",
+        "DefaultOnboardingChanges.kt",
+    ],
     static_libs: [
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.utils.logging",
+        "android_onboarding.versions.ComplianceDate",
+        "android_onboarding.versions.OnboardingChanges",
         "android_onboarding.versions.annotations",
         "android_onboarding.versions.changes",
+        "androidx.annotation_annotation",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
+
+android_library {
+    name: "android_onboarding.versions.OnboardingChanges",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "MutableOnboardingChanges.kt",
+        "OnboardingChanges.kt",
+    ],
+    static_libs: [
+        "android_onboarding.versions.ComplianceDate",
+        "android_onboarding.versions.annotations",
+        "androidx.annotation_annotation",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
+
+java_library {
+    name: "android_onboarding.versions.ComplianceDate",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "ComplianceDate.kt",
+    ],
+    static_libs: [
+        "android_onboarding.versions.annotations",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
 }

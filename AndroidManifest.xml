@@ -3,11 +3,15 @@
     package="com.android.onboarding"
     android:versionCode="1">
 
+  <!-- LINT.IfChange -->
   <uses-sdk
-      android:minSdkVersion="26"
+      android:minSdkVersion="23"
       android:targetSdkVersion="34" />
+  <!-- LINT.ThenChange(//external/android_onboarding/build_defs/onboarding_test.bzl) -->
 
   <application>
-    <meta-data android:name="onboarding_compliance_date" android:value="2024-02-02" />
+    <meta-data
+        android:name="onboarding-compliance-date"
+        android:value="2024-02-02" />
   </application>
 </manifest>

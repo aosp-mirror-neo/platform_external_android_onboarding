@@ -1,23 +1,54 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
+android_library {
     name: "android_onboarding.contracts.annotations",
+    visibility: [
+        "//visibility:public",
+    ],
     srcs: [
-        "*.kt",
+        "BackgroundOnboardingNode.kt",
+        "ForegroundOnboardingNode.kt",
+        "InterruptReason.kt",
+        "OnboardingNode.kt",
+        "OnboardingNodeMetadata.kt",
+        "PureContract.kt",
     ],
     static_libs: [
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.metadata",
+        "android_onboarding.nodes.ref",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "android_onboarding.utils.persistable.annotations",
         "androidx.annotation_annotation",
     ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+    optimize: {
+        proguard_flags_files: [
+            "base.pgcfg",
+        ],
+    },
 }
 
-java_library_host {
-    name: "android_onboarding.contracts.annotations_host",
+java_library {
+    name: "android_onboarding.contracts.annotations.opt_in",
+    visibility: [
+        "//visibility:public",
+    ],
     srcs: [
-        "*.kt",
+        "DiscouragedOnboardingApi.kt",
+        "InternalOnboardingApi.kt",
     ],
     static_libs: [
         "androidx.annotation_annotation",
     ],
+    sdk_version: "system_current",
+    host_supported: true,
 }

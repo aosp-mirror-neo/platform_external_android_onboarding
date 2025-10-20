@@ -1,17 +1,28 @@
+// Generated file - DO NOT EDIT!
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_library {
     name: "android_onboarding.contracts.provisioning",
-    manifest: ":android_onboarding.AndroidManifest",
-    srcs: [
-        "*.kt",
+    visibility: [
+        "//visibility:public",
     ],
-    dont_merge_manifests: true,
+    srcs: [
+        "ACTIONS.kt",
+        "EXTRAS.kt",
+        "FLAGS.kt",
+        "ProvisioningMode.kt",
+        "ProvisioningTrigger.kt",
+        "RESULTS.kt",
+    ],
     static_libs: [
         "androidx.annotation_annotation",
         "setupcompat",
     ],
-    platform_apis: true,
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
 }

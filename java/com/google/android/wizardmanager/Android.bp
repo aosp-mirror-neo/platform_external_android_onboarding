@@ -1,0 +1,39 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "wizard_manager.WizardManagerExtras",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "Deserializers.kt",
+        "WizardAction.java",
+        "WizardBranchArray.java",
+        "WizardBundle.kt",
+        "WizardManagerConstants.kt",
+        "WizardManagerExtras.kt",
+        "WizardStack.java",
+        "WzmLog.java",
+    ],
+    static_libs: [
+        "android_onboarding.metadata",
+        "android_onboarding.utils",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
+        "error_prone_annotations",
+        "setupcompat_wizard_manager_constants",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: "AndroidManifest.xml",
+    min_sdk_version: "23",
+    target_sdk_version: "36",
+    resource_dirs: [
+        "res",
+    ],
+}

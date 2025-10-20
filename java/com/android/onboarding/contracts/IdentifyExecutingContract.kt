@@ -28,9 +28,7 @@ interface IdentifyExecutingContract {
 fun <I : IdentifyExecutingContract> Intent.findExecutingContract(vararg contracts: I) =
   contracts.firstOrNull { it.isExecuting(this) }
 
-/**
- * More lightweight version of [IdentifyExecutingContract] working with intent actions only.
- */
+/** More lightweight version of [IdentifyExecutingContract] working with intent actions only. */
 interface IdentifyExecutingContractByAction : IdentifyExecutingContract {
   /** Returns true if this [OnboardingActivityApiContract] is currently executing. */
   fun isExecuting(action: String?): Boolean
