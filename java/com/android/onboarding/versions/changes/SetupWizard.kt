@@ -588,3 +588,17 @@ const val SUPPORT_NEXT_ACTION_IN_SCRIPT = 448547273L
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
+
+/**
+ * When enabled, this change allows [WizardManagerNextActionController] to manage multiple
+ * background workers concurrently. Such as: Returns a next node given an idle worker id. If
+ * disabled, [WizardManagerNextActionController] will do what it does now.
+ */
+@ChangeId(
+  bugId = 450443584L,
+  owner = "tmfang",
+  breaking = [],
+  tags = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+)
+const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
