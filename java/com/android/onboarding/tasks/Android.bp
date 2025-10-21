@@ -34,7 +34,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -87,7 +87,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -127,7 +127,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -154,7 +154,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -181,7 +181,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -211,7 +211,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -236,7 +236,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -265,7 +265,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -291,7 +291,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 android_library {
@@ -324,5 +324,5 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }

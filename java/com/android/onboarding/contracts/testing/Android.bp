@@ -33,5 +33,5 @@ android_library {
     dont_merge_manifests: true,
     manifest: "AndroidManifest.xml",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
