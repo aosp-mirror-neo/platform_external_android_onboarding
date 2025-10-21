@@ -52,7 +52,7 @@ annotation class ForegroundOnboardingNode(
      * This will be replaced by some other mechanism in future.
      */
     @Deprecated(
-      "Do not create new invisible UIs. Use http://*** to discuss alternative options"
+      "Do not create new invisible UIs. Use http://___ to discuss alternative options"
     )
     INVISIBLE,
 
@@ -61,7 +61,7 @@ annotation class ForegroundOnboardingNode(
      * background work executes.
      */
     @Deprecated(
-      "Do not create new loading screens. Use http://*** to discuss alternative options"
+      "Do not create new loading screens. Use http://___ to discuss alternative options"
     )
     LOADING,
 
