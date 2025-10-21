@@ -52,3 +52,15 @@ java_library {
     sdk_version: "system_current",
     host_supported: true,
 }
+
+java_library {
+    name: "android_onboarding.utils.time",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "time.kt",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
+}

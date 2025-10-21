@@ -1,0 +1,27 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.tasks.precalculation.annotations",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "Precalculation.kt",
+        "UsesPrecalculatedResult.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "android_onboarding.tasks.precalculation.PrecalculationTaskContract",
+        "android_onboarding.tasks.precalculation.PrecalculationTrigger",
+        "android_onboarding.utils.persistable",
+        "android_onboarding.utils.persistable.annotations",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "34",
+}
