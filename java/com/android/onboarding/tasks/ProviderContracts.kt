@@ -235,7 +235,8 @@ class PendingContractProviderContract(component: ComponentRef) :
    * @property node the node to prepare the launch for.
    * @property input raw input to be passed to the contract for [PendingContract] preparation.
    */
-  class Request(val node: NodeRef, val input: PersistableBundle) : Persistable, NodeRef by node {
+  data class Request(val node: NodeRef, val input: PersistableBundle) :
+    Persistable, NodeRef by node {
     /**
      * @param node the node to prepare the launch for.
      * @param input raw input to be passed to the contract for [PendingContract] preparation.
