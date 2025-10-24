@@ -1,5 +1,6 @@
 android_onboarding.common
 android_onboarding.common.annotations
+android_onboarding.common.refs
 android_onboarding.compatibility
 android_onboarding.contracts
 android_onboarding.contracts.annotations
