@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.onboarding"
     android:versionCode="1">
@@ -6,7 +7,7 @@
   <!-- LINT.IfChange -->
   <uses-sdk
       android:minSdkVersion="23"
-      android:targetSdkVersion="34" />
+      android:targetSdkVersion="35" />
   <!-- LINT.ThenChange(//external/android_onboarding/build_defs/onboarding_test.bzl) -->
 
   <application>

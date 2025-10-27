@@ -1,0 +1,38 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.tasks.aidl",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "com/android/onboarding/tasks/ErasedOnboardingTaskState.aidl",
+        "com/android/onboarding/tasks/ErasedOnboardingTaskToken.aidl",
+        "com/android/onboarding/tasks/IGetTaskStateListener.aidl",
+        "com/android/onboarding/tasks/IOnboardingTaskManagerService.aidl",
+        "com/android/onboarding/tasks/IOnboardingTaskManagerServiceListener.aidl",
+        "com/android/onboarding/tasks/service/IObserver.aidl",
+        "com/android/onboarding/tasks/service/IObserverHandle.aidl",
+        "com/android/onboarding/tasks/service/IPersistableBundleStream.aidl",
+        "com/android/onboarding/tasks/service/IResultCallback.aidl",
+        "com/android/onboarding/tasks/service/IUnitCallback.aidl",
+    ],
+    static_libs: [
+        "android_onboarding.tasks.OnboardingTaskState",
+        "android_onboarding.tasks.OnboardingTaskToken",
+        "error_prone_annotations",
+    ],
+    sdk_version: "system_current",
+    aidl: {
+        local_include_dirs: [
+            ".",
+        ],
+    },
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "35",
+}

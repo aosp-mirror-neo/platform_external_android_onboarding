@@ -122,8 +122,10 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
   }
 
   /** Represents the completed state of an onboarding task. */
+  @OptIn(InternalOnboardingApi::class)
   data class Success<out O>
-  internal constructor(
+  @InternalOnboardingApi
+  constructor(
     override val parser: Encoder<PersistableBundle, O>,
     override val nodeRef: NodeRef,
     override val nodeId: NodeId,
@@ -180,8 +182,10 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
    * @param errorMessage The error message describing the failure.
    * @param result The result associated with the failed task, if available.
    */
+  @OptIn(InternalOnboardingApi::class)
   data class Failure<out O>
-  internal constructor(
+  @InternalOnboardingApi
+  constructor(
     override val parser: Encoder<PersistableBundle, O>,
     override val nodeRef: NodeRef,
     override val nodeId: NodeId,

@@ -1,0 +1,29 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.control.OrchestratedResult",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "OrchestratedResult.kt",
+    ],
+    static_libs: [
+        "android_onboarding.compatibility",
+        "android_onboarding.control.chained",
+        "android_onboarding.pending",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.logging",
+        "android_onboarding.utils.persistable",
+        "androidx.activity_activity-ktx",
+        "androidx.annotation_annotation",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "35",
+}

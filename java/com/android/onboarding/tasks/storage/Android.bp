@@ -1,0 +1,26 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.tasks.storage",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "TaskDataStore.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations.opt_in",
+        "androidx.datastore_datastore",
+        "androidx.datastore_datastore-core",
+        "androidx.datastore_datastore-preferences",
+        "androidx.datastore_datastore-preferences-core",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "35",
+}

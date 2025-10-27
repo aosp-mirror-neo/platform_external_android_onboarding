@@ -23,7 +23,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "34",
+    target_sdk_version: "35",
 }
 
 java_library {
@@ -48,6 +48,18 @@ java_library {
     ],
     static_libs: [
         "guava",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
+}
+
+java_library {
+    name: "android_onboarding.utils.time",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "time.kt",
     ],
     sdk_version: "system_current",
     host_supported: true,
