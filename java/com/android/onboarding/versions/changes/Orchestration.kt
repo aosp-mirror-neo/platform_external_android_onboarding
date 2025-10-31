@@ -2,6 +2,8 @@ package com.android.onboarding.versions.changes
 
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.changes.Tags.P10_DVT
+import com.android.onboarding.versions.changes.Tags.P10_PVT
 
 @ChangeId(
   bugId = 383718037L,
