@@ -528,7 +528,7 @@ const val PERSIST_ACCOUNTS_SNAPSHOT = 401476658L
   breaking = [],
   tags = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  available = "2025-12-05",
+  available = ChangeId.NOT_AVAILABLE,
 )
 const val WIZARD_SCRIPT_SUPPORTS_TASK_ACTION = 436772442L
 
