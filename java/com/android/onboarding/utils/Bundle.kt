@@ -173,21 +173,21 @@ private fun BaseBundle.forceUnparcel() {
  * Note that, as this depends on the framework [toString] method, it has significantly more useful
  * output on SDK 29+.
  */
-fun BaseBundle.forceToString(): String = buildString {
-  append("${this@forceToString::class.simpleName}{")
-  for (key in keySet()) {
+fun BaseBundle.forceToString(): String =
+  keySet().joinToString(
+    prefix = "${this@forceToString::class.simpleName}{",
+    separator = ", ",
+    postfix = "}",
+  ) { key ->
     @Suppress("DEPRECATION") // Needed for generic access
     val strVal = transformToBundleString(get(key))
-    append("$key=$strVal, ")
+    "$key=$strVal"
   }
-  deleteRange(length - 2, length)
-  append("}")
-}
 
 private fun transformToBundleString(value: Any?): String =
   when (value) {
     is BaseBundle -> value.forceToString()
-    is ByteArray -> "ByteArray"
+    is ByteArray -> "ByteArray(hash=${value.contentHashCode()})"
     is IntArray ->
       value.joinToString(
         separator = ", ",
