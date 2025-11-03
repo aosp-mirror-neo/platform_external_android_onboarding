@@ -50,7 +50,7 @@ private constructor(metadata: FailureMetadata, private val actual: ComponentRef?
     ): ComponentRefSubject = ComponentRefSubject(metadata, actual)
 
     @JvmStatic
-    fun assertThat(actual: ComponentRef): ComponentRefSubject =
+    fun assertThat(actual: ComponentRef?): ComponentRefSubject =
       Truth.assertAbout(ComponentRefSubject).that(actual)
   }
 }
