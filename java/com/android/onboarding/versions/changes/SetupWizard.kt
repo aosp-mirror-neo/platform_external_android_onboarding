@@ -2,14 +2,13 @@ package com.android.onboarding.versions.changes
 
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.changes.Tags.NEXT
+import com.android.onboarding.versions.changes.Tags.P10_DVT
+import com.android.onboarding.versions.changes.Tags.P11_EVT
 
 const val USE_FRAGMENT_LOGIC = "use_fragment_logic"
 const val MOVE_TO_BACKGROUND = "move_to_background"
 const val ELIMINATE_LOADING = "eliminate_loading"
-const val P10_PVT = "p10_pvt"
-const val P10_DVT = "p10_dvt"
-const val P11_EVT = "p11_evt"
-const val P11_DVT = "p11_dvt"
 const val ENABLE_AUTOMATIC_NODE_DETECTION_FOR_OEMS =
   "com.google.android.setupwizard.enable_automatic_node_detection_for_oems"
 
@@ -507,7 +506,7 @@ const val SUW_TASK_FAILURE_CALLBACK_FOR_AUTH_HACK_CHANGE_ID = 415074459L
   owner = "scottjonathan",
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   available = "2025-06-06",
 )
 const val RECORD_ACTION_RESULTS = 422924706L
@@ -516,7 +515,7 @@ const val RECORD_ACTION_RESULTS = 422924706L
   bugId = 401476658L,
   owner = "iancheng",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   available = "2025-08-05",
 )
@@ -528,7 +527,7 @@ const val PERSIST_ACCOUNTS_SNAPSHOT = 401476658L
   breaking = [],
   tags = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  available = "2025-12-05",
+  available = ChangeId.NOT_AVAILABLE,
 )
 const val WIZARD_SCRIPT_SUPPORTS_TASK_ACTION = 436772442L
 
@@ -556,7 +555,7 @@ const val DSE_FLOW_CONTROL_PRECALC_TASK_DEFAULT = 438609409L
   bugId = 434904270L,
   owner = "scottjonathan",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val EARLY_SIM_INFO = 434904270L

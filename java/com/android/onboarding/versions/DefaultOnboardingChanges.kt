@@ -212,7 +212,9 @@ class DefaultOnboardingChanges(context: Context) : OnboardingChanges {
     }
 
     val tagOverrides =
-      changeData.tags.map { getSettingOrPropertyBoolean(context, "$packageName.$it") }
+      (changeData.tags + CHANGE_TAG_ALL).map {
+        getSettingOrPropertyBoolean(context, "$packageName.$it")
+      }
     if (tagOverrides.contains(true)) {
       return true
     }
@@ -258,5 +260,11 @@ class DefaultOnboardingChanges(context: Context) : OnboardingChanges {
 
   companion object {
     private const val TAG = "DefaultOnboardingChanges"
+
+    /**
+     * Implicit [ChangeId.tags] value that is assumed for all change IDs. Enabling this tag will
+     * enable all change IDs for a given package.
+     */
+    private const val CHANGE_TAG_ALL = "all"
   }
 }

@@ -2,7 +2,10 @@ package com.android.onboarding.versions.changes
 
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.changes.Tags.NEXT
 import com.android.onboarding.versions.changes.Tags.P10_DVT
+import com.android.onboarding.versions.changes.Tags.P11_DVT
+import com.android.onboarding.versions.changes.Tags.P11_EVT
 
 @ChangeId(
   bugId = 354143470L,
@@ -39,7 +42,7 @@ const val SEND_LARGE_DATA_IN_CHUNKS_CHANGE_ID = 394763768L
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   available = "2025-08-02",
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
 )
 const val SETUP_SESSION_BASED_STORAGE_CHANGE_ID = 409902959L
 
@@ -58,7 +61,7 @@ const val SETUP_SESSION_BASED_STORAGE_CHANGE_ID = 409902959L
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   available = "2025-08-03",
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
 )
 const val STORE_TASK_STATES_CHANGE_ID = 416177493L
 
@@ -74,7 +77,7 @@ const val STORE_TASK_STATES_CHANGE_ID = 416177493L
   owner = "iancheng",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   available = "2025-06-27",
 )
 const val GET_TASK_STATE_WITH_CALLBACK_ID = 427841662L
@@ -96,7 +99,7 @@ const val GET_TASK_STATE_WITH_CALLBACK_ID = 427841662L
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   available = "2025-08-04",
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
 )
 const val CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID = 428071871L
 
@@ -120,7 +123,7 @@ const val CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID = 428071871L
   owner = "petuska",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   available = "2025-08-18",
 )
 const val CHANGE_ID_ASYNC_TASK_SERVER = 429537734L
@@ -142,7 +145,7 @@ const val CHANGE_ID_ASYNC_TASK_SERVER = 429537734L
   owner = "petuska",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [P11_DVT],
+  tags = [P11_DVT, NEXT],
   available = "2025-09-09",
 )
 const val CHANGE_ID_ASYNC_TASK_CLIENT = 428685469L
@@ -156,7 +159,7 @@ const val CHANGE_ID_ASYNC_TASK_CLIENT = 428685469L
   owner = "petuska",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   available = "2025-09-18",
 )
 const val CHANGE_ID_FULL_LOCAL_BINDER = 441696383L

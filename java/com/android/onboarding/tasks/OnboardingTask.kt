@@ -697,7 +697,7 @@ abstract class ContextAwareOnboardingTask<I, O, C : OnboardingTaskContract<I, O>
    */
   protected abstract suspend fun runTask(input: I): O
 
-  override suspend fun runTask(context: Context, input: I): O {
+  public override suspend fun runTask(context: Context, input: I): O {
     contextRef = WeakReference(context)
     return runTask(input)
   }

@@ -2,6 +2,8 @@ package com.android.onboarding.versions.changes
 
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.changes.Tags.P10_DVT
+import com.android.onboarding.versions.changes.Tags.P10_PVT
 
 @ChangeId(
   bugId = 383718037L,
@@ -30,11 +32,3 @@ const val ORCHESTRATED_VISIBILITY_CHANGE_ID = 408958992L
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val USE_ORCHESTRATOR_CHANGE_ID = 404239383L
-
-@ChangeId(
-  bugId = 398780019L,
-  owner = "scottjonathan",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-)
-const val ORCHESTRATOR_SURVIVES_DEATH = 398780019L
