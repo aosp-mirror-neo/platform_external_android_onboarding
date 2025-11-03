@@ -136,12 +136,12 @@ interface OnboardingTaskManager : ComponentRef, AutoCloseable {
   ): ListenableFuture<OnboardingTaskToken<O>>
 
   /** @see runTaskAsync */
-  fun <I, O> runTaskAsync(
+  fun <O> runTaskAsync(
     contract: BackgroundLaunchableForResult<Unit, O>
   ): ListenableFuture<OnboardingTaskToken<O>> = runTaskAsync(contract, Unit)
 
   /** @see runOrResumeTaskAsync */
-  fun <I, O> runOrResumeTaskAsync(
+  fun <O> runOrResumeTaskAsync(
     contract: BackgroundLaunchableForResult<Unit, O>
   ): ListenableFuture<OnboardingTaskToken<O>> = runOrResumeTaskAsync(contract, Unit)
 

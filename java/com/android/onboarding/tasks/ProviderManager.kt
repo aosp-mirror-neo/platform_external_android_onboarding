@@ -1,28 +1,35 @@
 package com.android.onboarding.tasks
 
 import com.android.onboarding.contracts.OnboardingActivityApiContract
+import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.nodes.ComponentRef
+import com.android.onboarding.nodes.NodeRef
+import java.util.function.Supplier
 
-/** A container class to construct ond manage all relevant providers based on passed in data. */
-class ProviderManager
-private constructor(component: ComponentRef, providers: Set<ProviderTask<*, *>>) :
-  Set<ProviderTask<*, *>> by providers, ComponentRef by component {
+/**
+ * A container class to construct ond manage all relevant providers based on passed in data.
+ *
+ * A "provider" in onboarding context is anything that is exposing data through [ProviderContract]
+ * without relying on specific classpath states.
+ */
+@OptIn(InternalOnboardingApi::class)
+object ProviderManager {
   /**
    * @param component The [ComponentRef] this manager is operating under.
    * @param activities All [OnboardingActivityApiContracts][OnboardingActivityApiContract] exposed
    *   via providers.
    * @param tasks All [OnboardingTaskContracts][OnboardingTaskContract] exposed via providers.
    */
-  constructor(
+  fun buildProviders(
     component: ComponentRef,
     activities: Set<OnboardingActivityApiContract<*, *>>,
     tasks: Set<OnboardingTaskContract<*, *>>,
-  ) : this(
-    component = component,
-    providers =
-      setOf(
-        ContractMetadataProviderTask(component, activities, tasks),
-        PendingContractProviderTask(component, activities, tasks),
-      ),
-  )
+  ): Map<NodeRef.Stable, Supplier<out ProviderTask<*, *>>> =
+    mapOf(
+        ContractMetadataProviderContract to
+          Supplier { ContractMetadataProviderTask(component, activities, tasks) },
+        PendingContractProviderContract to
+          Supplier { PendingContractProviderTask(component, activities, tasks) },
+      )
+      .mapKeys { (k, _) -> k.build(component).asNodeRef() }
 }
