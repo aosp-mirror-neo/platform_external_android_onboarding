@@ -161,6 +161,8 @@ data class SetupWizardExtras(
   override fun toPersistableBundle(): PersistableBundle =
     PersistableBundle().also { writeToBaseBundle(it) }
 
+  fun builder() = Builder(this)
+
   /** Writes data common between the [PersistableBundle] and [Bundle] representations. */
   internal fun writeToBaseBundle(bundle: BaseBundle) {
     bundle.putBoolean(EXTRA_IS_FIRST_RUN, isFirstRun)
@@ -171,6 +173,22 @@ data class SetupWizardExtras(
     bundle.putBoolean(EXTRA_IS_SUW_SUGGESTED_ACTION_FLOW, isSuwSuggestedActionFlow)
     bundle.putInt(EXTRA_SUW_LIFECYCLE, suwLifecycle.value)
     bundle.putString(EXTRA_THEME, theme)
+  }
+
+  /**
+   * A builder used for Java clients.
+   *
+   * Kotlin clients should use [SetupWizardExtras.copy] instead.
+   */
+  class Builder internal constructor(original: SetupWizardExtras) {
+    private var copy = original.copy()
+
+    fun theme(theme: String?): Builder {
+      copy = copy.copy(theme = theme)
+      return this
+    }
+
+    fun build() = copy
   }
 
   companion object : PersistableDeserializer<SetupWizardExtras> {
