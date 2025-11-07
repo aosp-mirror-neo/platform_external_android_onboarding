@@ -140,6 +140,10 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
       _lifecycleScope = newScope
     }
     onboardingLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    Log.v(
+      tag,
+      "Task initialised. contract=${contract.identity()}, implementation=${this::class.java.name}",
+    )
   }
 
   /**
@@ -664,8 +668,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
    *
    * @property nodeRef A [UniqueNodeRef] assigned to this task.
    */
-  class OnboardingTaskContext
-  constructor(
+  class OnboardingTaskContext(
     val nodeRef: UniqueNodeRef,
     val taskStateManager: OnboardingTaskStateManager,
     val coroutineContext: CoroutineContext,
