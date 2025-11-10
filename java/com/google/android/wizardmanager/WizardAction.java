@@ -12,6 +12,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -168,6 +169,10 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
   public String getNextActionId(int resultCode) {
     return branches.getActionId(resultCode);
+  }
+
+  List<String> getNextActionIds(int resultCode) {
+    return branches.getActionIds(resultCode);
   }
 
   /** Returns the unique identifier prefixed with the {@link #scriptUri}. */
