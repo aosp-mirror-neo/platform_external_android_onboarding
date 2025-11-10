@@ -258,6 +258,7 @@ android_library {
         "android_onboarding.pending",
         "android_onboarding.tasks.OnboardingTaskContract",
         "android_onboarding.tasks.precalculation.annotations",
+        "android_onboarding.utils",
         "android_onboarding.utils.equality",
         "android_onboarding.utils.persistable",
     ],
@@ -279,6 +280,7 @@ android_library {
     ],
     static_libs: [
         "android_onboarding.contracts",
+        "android_onboarding.contracts.annotations",
         "android_onboarding.nodes.ref",
         "android_onboarding.pending",
         "android_onboarding.tasks.OnboardingTask",

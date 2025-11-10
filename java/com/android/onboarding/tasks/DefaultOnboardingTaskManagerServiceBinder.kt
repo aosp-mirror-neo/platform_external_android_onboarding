@@ -129,12 +129,11 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
    */
   private val taskRegistry: Map<NodeRef.Stable, Supplier<out OnboardingTask<*, *, *>>> by lazy {
     val providers =
-      ProviderManager(
-          component = asComponentRef(),
-          tasks = providedTasks,
-          activities = providedActivities,
-        )
-        .associate { it.asNodeRef() to Supplier { it } }
+      ProviderManager.buildProviders(
+        component = asComponentRef(),
+        tasks = providedTasks,
+        activities = providedActivities,
+      )
     ConcurrentHashMap(tasks.associateBy { it.get().contract.asNodeRef() } + providers)
   }
 

@@ -51,7 +51,7 @@ fun ServiceConnection.safeUnbindService(context: Context) {
   try {
     context.unbindService(this)
   } catch (e: Exception) {
-    Log.w(TAG, "Ignoring failure to unbind service.")
+    Log.w(TAG, "Ignoring failure to unbind service.", e)
   }
 }
 

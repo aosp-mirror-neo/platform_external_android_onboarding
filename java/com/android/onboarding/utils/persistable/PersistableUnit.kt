@@ -10,6 +10,9 @@ data object PersistableUnit :
   PersistableDeserializer<PersistableUnit>,
   PersistableSerializer<KUnit> by Unit,
   StableEquality {
+  inline val value
+    get() = KUnit
+
   override fun toPersistableBundle(): PersistableBundle = PersistableBundle()
 
   override fun fromPersistableBundle(persistableBundle: PersistableBundle) = PersistableUnit

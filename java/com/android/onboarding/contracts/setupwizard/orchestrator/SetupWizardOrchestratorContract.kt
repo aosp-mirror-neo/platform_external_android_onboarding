@@ -55,6 +55,7 @@ object SetupWizardOrchestratorContract :
      * If the orchestration infrastructure fails, then it will be disabled and the [onFailure]
      * contract launched. This should allow continuing the flow without using orchestration.
      */
+    @Deprecated("Not supported - NextActionController is entirely responsible for task execution")
     data class TaskAction(
       val task: PendingContract.ErasedTask,
       val onFailure: PendingContract.ErasedActivity?,

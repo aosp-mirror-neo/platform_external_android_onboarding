@@ -25,6 +25,7 @@ import com.android.onboarding.tasks.precalculation.annotations.PUsesPrecalculate
 import com.android.onboarding.tasks.precalculation.annotations.Precalculation
 import com.android.onboarding.tasks.precalculation.annotations.UsesPrecalculatedResult
 import com.android.onboarding.utils.StableEquality
+import com.android.onboarding.utils.forceToString
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableBundle
 import com.android.onboarding.utils.persistable.PersistableDeserializer
@@ -61,6 +62,9 @@ private constructor(final override val nodeComponent: String, final override val
 
   final override val taskServiceIntent: PersistableIntent by lazy { prepareBindingIntent(this) }
 
+  /** Clean sensitive data from [input] for logging. */
+  abstract fun cleanInput(input: I): String
+
   /**
    * A builder interface for [ProviderContract] linked to a specific [ComponentRef].
    * *
@@ -86,6 +90,8 @@ class ContractMetadataProviderContract(component: ComponentRef) :
   override val resultEncoder = Encoder(PersistableMapSerializer.Companion::toPersistableBundle)
   override val resultDecoder =
     Encoder(PersistableMapDeserializer(NodeRef, ContractMetadata)::fromPersistableBundle)
+
+  override fun cleanInput(input: Unit): String = nodeComponent
 
   companion object :
     Builder<Unit, Map<NodeRef.Stable, ContractMetadata>> by Builder(
@@ -228,6 +234,9 @@ class PendingContractProviderContract(component: ComponentRef) :
 
   override val resultEncoder = Encoder(Persistable::toPersistableBundle)
   override val resultDecoder = PendingContract.Erased
+
+  override fun cleanInput(input: Request): String =
+    "${input.node.identity()}(hash=${generateHash(input)}, input=${input.input.forceToString()})"
 
   /**
    * A request for [PendingContract] for a given [node] launch via IPC.
