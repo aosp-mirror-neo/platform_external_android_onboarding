@@ -487,7 +487,7 @@ const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
   bugId = 408134087L,
   owner = "scottjonathan",
   breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
 )
 const val UNIFIED_LOADING_EVERYWHERE = 408134087L
 
