@@ -32,6 +32,18 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   static final String IF_FLOW_KEY = "if_flow";
   static final String BRANCHES_KEY = "branches";
 
+  /** Special action id indicating that the script should be yielded. */
+  public static final String YIELD_ACTION_ID = "#YIELD";
+
+  /** The yield action that is used to yield the script. */
+  public static final WizardAction YIELD_ACTION =
+      new WizardAction(
+          /* scriptUri= */ YIELD_ACTION_ID,
+          /* index= */ 0,
+          /* id= */ YIELD_ACTION_ID,
+          /* uri= */ null,
+          new WizardBranchArray());
+
   /** URI to be invoked for this action, generated using "adb shell am to-intent-uri" */
   @Nullable private final String uri;
 
