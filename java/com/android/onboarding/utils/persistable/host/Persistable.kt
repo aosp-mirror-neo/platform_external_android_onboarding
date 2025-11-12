@@ -5,7 +5,7 @@ import android.os.PersistableBundle
 import com.android.onboarding.encoding.Encoder
 import unsupported
 
-// LINT.IfChange
+
 /** Interface used to indicate an object can be represented as a [PersistableBundle]. */
 fun interface Persistable {
   /** Returns a [PersistableBundle] representing this object. */
@@ -91,4 +91,4 @@ fun Bundle.putPersistable(key: String, data: Persistable?) = putBundle(key, data
 /** Writes a [Persistable] to the [PersistableBundle]. */
 fun PersistableBundle.putPersistable(key: String, data: Persistable?) =
   putPersistableBundle(key, data?.toPersistableBundle())
-// LINT.ThenChange(//external/android_onboarding/java/com/android/onboarding/utils/persistable/Persistable.kt)
+

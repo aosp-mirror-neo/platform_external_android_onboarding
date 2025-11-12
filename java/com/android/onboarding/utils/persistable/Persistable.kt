@@ -1,6 +1,6 @@
 package com.android.onboarding.utils.persistable
 
-// LINT.IfChange
+
 
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -85,4 +85,4 @@ fun interface PersistableSerializer<in Type> : NullablePersistableSerializer<Typ
  * directly.
  */
 interface PersistableDelegate<Type> : PersistableSerializer<Type>, PersistableDeserializer<Type>
-// LINT.ThenChange(//external/android_onboarding/java/com/android/onboarding/utils/persistable/host/Persistable.kt)
+

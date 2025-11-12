@@ -9,9 +9,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 
 // Note: This must not collide with other DataStore file names within an app.
-// LINT.IfChange
+
 private const val DATA_STORE_NAME = "OnboardingTaskDataStore"
-// LINT.ThenChange(../../datastore/DefaultOnboardingDataStore.kt:datastore_filename_kdoc)
+
 
 /**
  * A singleton [DataStore] that stores data related to the onboarding task manager infrastructure.
