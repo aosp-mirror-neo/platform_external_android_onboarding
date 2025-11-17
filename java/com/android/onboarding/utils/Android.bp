@@ -26,6 +26,21 @@ android_library {
     target_sdk_version: "35",
 }
 
+android_library {
+    name: "android_onboarding.utils.LazyBuilder",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "LazyBuilder.kt",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "35",
+}
+
 java_library {
     name: "android_onboarding.utils.equality",
     visibility: [

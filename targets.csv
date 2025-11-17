@@ -54,6 +54,7 @@ android_onboarding.tasks.storage
 android_onboarding.tasks.utils
 android_onboarding.testing
 android_onboarding.utils
+android_onboarding.utils.LazyBuilder
 android_onboarding.utils.datasplitter
 android_onboarding.utils.equality
 android_onboarding.utils.hash
