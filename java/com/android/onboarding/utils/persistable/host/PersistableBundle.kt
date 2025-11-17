@@ -3,7 +3,7 @@ package com.android.onboarding.utils.persistable
 import android.os.PersistableBundle
 import unsupported
 
-// LINT.IfChange
+
 inline fun PersistableBundle(init: PersistableBundle.() -> Unit) = PersistableBundle().apply(init)
 
 fun PersistableBundle.putPersistable(key: String?, data: Persistable?) =
@@ -40,4 +40,4 @@ fun <P> PersistableBundle.getStrictPersistableList(
   key: String?,
   deserializer: PersistableDeserializer<P>,
 ): List<P & Any>? = unsupported
-// LINT.ThenChange(//external/android_onboarding/java/com/android/onboarding/utils/persistable/PersistableBundle.kt)
+

@@ -17,7 +17,7 @@ import com.android.onboarding.compatibility.compatPutBooleanArray
 import java.util.Base64
 import java.util.Locale
 
-// LINT.IfChange
+
 /** A shorthand for creating and initialising the [PersistableBundle]. */
 inline fun PersistableBundle(init: PersistableBundle.() -> Unit) = PersistableBundle().apply(init)
 
@@ -98,7 +98,7 @@ fun <P> PersistableBundle.getStrictPersistableList(
   deserializer: PersistableDeserializer<P>,
 ): List<P & Any>? = getPersistableList(key, deserializer)?.map(::checkNotNull)
 
-// LINT.ThenChange(//external/android_onboarding/java/com/android/onboarding/utils/persistable/host/PersistableBundle.kt)
+
 
 /**
  * Returns a new [Bundle] containing all values in the [PersistableBundle].

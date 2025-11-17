@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.withContext
 
-// LINT.IfChange(datastore_filename_kdoc)
+
 /**
  * A default implementation of [OnboardingDataStore] that stores data in a [DataStore] for the
  * current SUW session.
@@ -56,7 +56,7 @@ import kotlinx.coroutines.withContext
  * @param keyPrefix A key prefix to reduce the chance of key name collision, especially when the
  *   default datastore is being used.
  */
-// LINT.ThenChange()
+
 class DefaultOnboardingDataStore(
   context: Context,
   private val suwMetadataProvider: SuwMetadataProvider = DefaultSuwMetadataProvider(context),
@@ -163,9 +163,9 @@ class DefaultOnboardingDataStore(
 
   private companion object {
     const val TAG = "OnboardingDataStore"
-    // LINT.IfChange
+
     const val DATA_STORE_NAME = "OnboardingDataStore"
-    // LINT.ThenChange(:datastore_filename_kdoc)
+
     const val KEY_LAST_ACCESSED_SUW_SESSION_ID = "last_accessed_suw_session_id"
 
     /**

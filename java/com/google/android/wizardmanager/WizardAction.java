@@ -12,6 +12,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -30,6 +31,18 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   static final String FLOW_KEY = "flow";
   static final String IF_FLOW_KEY = "if_flow";
   static final String BRANCHES_KEY = "branches";
+
+  /** Special action id indicating that the script should be yielded. */
+  public static final String YIELD_ACTION_ID = "#YIELD";
+
+  /** The yield action that is used to yield the script. */
+  public static final WizardAction YIELD_ACTION =
+      new WizardAction(
+          /* scriptUri= */ YIELD_ACTION_ID,
+          /* index= */ 0,
+          /* id= */ YIELD_ACTION_ID,
+          /* uri= */ null,
+          new WizardBranchArray());
 
   /** URI to be invoked for this action, generated using "adb shell am to-intent-uri" */
   @Nullable private final String uri;
@@ -168,6 +181,10 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
   public String getNextActionId(int resultCode) {
     return branches.getActionId(resultCode);
+  }
+
+  List<String> getNextActionIds(int resultCode) {
+    return branches.getActionIds(resultCode);
   }
 
   /** Returns the unique identifier prefixed with the {@link #scriptUri}. */

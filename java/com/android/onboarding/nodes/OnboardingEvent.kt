@@ -11,7 +11,7 @@ import java.time.Instant
 @OptIn(InternalOnboardingApi::class)
 sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
 
-  // LINT.IfChange
+
   override val source: OnboardingEvent
     get() = this
 
@@ -946,7 +946,7 @@ sealed interface OnboardingEvent : OnboardingGraphLog.OnboardingEventDelegate {
     }
   }
 
-  // LINT.ThenChange(//depot/google3/logs/proto/android_onboarding/node_interaction_metadata.proto)
+
 
   /**
    * Wrapper around the same information as [android.content.Intent] but can be used without

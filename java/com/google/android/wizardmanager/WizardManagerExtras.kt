@@ -25,7 +25,7 @@ import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_THEME
 import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_WIZARD_BUNDLE
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 
-// LINT.IfChange
+
 /**
  * Contains contextual information used by Wizard Manager and by screens shown during Onboarding.
  *
@@ -213,7 +213,7 @@ data class SetupWizardExtras(
   }
 }
 
-// LINT.ThenChange(//depot/google3/third_party/java_src/android_libs/setupcompat/main/java/com/google/android/setupcompat/util/WizardManagerHelper.java)
+
 
 /**
  * Fetches [WizardManagerExtras] from the [Bundle].
