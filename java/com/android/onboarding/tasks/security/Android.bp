@@ -6,7 +6,7 @@ package {
 android_library {
     name: "android_onboarding.tasks.security",
     visibility: [
-        "//external/android_onboarding:__subpackages__",
+        "//visibility:public",
     ],
     srcs: [
         "NoOpTaskPermissionManager.kt",
