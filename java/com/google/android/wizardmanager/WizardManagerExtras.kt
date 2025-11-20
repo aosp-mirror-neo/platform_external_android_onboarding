@@ -57,6 +57,11 @@ data class WizardManagerExtras(
       return this
     }
 
+    fun setupWizardExtras(setupWizardExtras: SetupWizardExtras): Builder {
+      copy = copy.copy(setupWizardExtras = setupWizardExtras)
+      return this
+    }
+
     fun build() = copy
   }
 

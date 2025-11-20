@@ -29,6 +29,6 @@ const val ORCHESTRATED_VISIBILITY_CHANGE_ID = 408958992L
   bugId = 404239383,
   owner = "eliselliott",
   breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
 )
 const val USE_ORCHESTRATOR_CHANGE_ID = 404239383L
