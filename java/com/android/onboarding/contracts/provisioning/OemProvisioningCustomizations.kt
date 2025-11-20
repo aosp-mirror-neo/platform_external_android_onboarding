@@ -4,9 +4,9 @@ import android.os.PersistableBundle
 import com.android.onboarding.metadata.EncodedMetadata
 import com.android.onboarding.metadata.MetadataWriter
 import com.android.onboarding.utils.StableEquality
-import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getPersistableOrThrow
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
+import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistable
 
 /**
@@ -14,8 +14,10 @@ import com.android.onboarding.utils.persistable.putPersistable
  *
  * @property customUserConsentDetails details about the custom user consent screen.
  */
-data class OemProvisioningCustomizations(val customUserConsentDetails: CustomUserConsentDetails) :
-  Persistable, StableEquality, MetadataWriter {
+data class OemProvisioningCustomizations(
+  val customUserConsentDetails: CustomUserConsentDetails =
+    CustomUserConsentDetails.CustomUserConsentNotRequired
+) : Persistable, StableEquality, MetadataWriter {
   override fun toPersistableBundle() =
     PersistableBundle().apply {
       putPersistable(KEY_CUSTOM_USER_CONSENT_DETAILS, customUserConsentDetails)
@@ -29,10 +31,8 @@ data class OemProvisioningCustomizations(val customUserConsentDetails: CustomUse
 
     override fun fromPersistableBundle(persistableBundle: PersistableBundle) =
       OemProvisioningCustomizations(
-        persistableBundle.getPersistableOrThrow(
-          KEY_CUSTOM_USER_CONSENT_DETAILS,
-          CustomUserConsentDetails,
-        )
+        persistableBundle.getPersistable(KEY_CUSTOM_USER_CONSENT_DETAILS, CustomUserConsentDetails)
+          ?: CustomUserConsentDetails.CustomUserConsentNotRequired
       )
   }
 }
