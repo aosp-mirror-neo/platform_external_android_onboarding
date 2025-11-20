@@ -1,6 +1,7 @@
 package com.android.onboarding.datastore
 
 import android.content.Context
+import android.os.Build
 import android.os.PersistableBundle
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
@@ -65,7 +66,14 @@ class DefaultOnboardingDataStore(
   private val dataStore: DataStore<Preferences> = context.defaultDataStore,
   private val keyPrefix: String,
 ) : OnboardingDataStore {
-  private val context = context.applicationContext
+  private val context =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      Log.e("tmmmm", "Creating device protected storage context")
+      context.applicationContext.createDeviceProtectedStorageContext()
+    } else {
+      Log.e("tmmmm", "Creating normal storage context")
+      context.applicationContext
+    }
   private var cachedLastAccessedSuwSessionId: Long = 0L
 
   override suspend fun <T> write(key: String, value: T, serializer: PersistableSerializer<T>) {
@@ -105,14 +113,25 @@ class DefaultOnboardingDataStore(
 
   private suspend fun writePersistableBundle(key: String, value: PersistableBundle) {
     val keyWithPrefix = appendPrefixIfNecessary(key)
-    getDataStore().edit { it[byteArrayPreferencesKey(keyWithPrefix)] = value.toByteArray() }
+    try {
+      getDataStore().edit { it[byteArrayPreferencesKey(keyWithPrefix)] = value.toByteArray() }
+    } catch (e: Exception) {
+      Log.e(TAG, "Ignoring error", e)
+    }
   }
 
   private suspend fun readPersistableBundle(key: String): PersistableBundle? {
     val keyWithPrefix = appendPrefixIfNecessary(key)
-    return getDataStore().data.firstOrNull()?.get(byteArrayPreferencesKey(keyWithPrefix))?.let {
-      persistableBundleOfChunks(listOf(it))
+    var bundle: PersistableBundle? = null
+    try {
+      bundle =
+        getDataStore().data.firstOrNull()?.get(byteArrayPreferencesKey(keyWithPrefix))?.let {
+          persistableBundleOfChunks(listOf(it))
+        }
+    } catch (e: Exception) {
+      Log.e(TAG, "Ignoring error", e)
     }
+    return bundle
   }
 
   private fun appendPrefixIfNecessary(key: String): String =
@@ -132,10 +151,15 @@ class DefaultOnboardingDataStore(
 
     // Accessing a new SUW session means the previous one is concluded. Clear it.
     if (suwSessionId != getLastAccessedSuwSessionId()) {
-      context.defaultDataStore.edit { it.clear() }
-      dataStore.edit { it.clear() }
-      persistSuwSessionId(suwSessionId)
-      Log.d(TAG, "Cleared DataStore for SUW session $suwSessionId")
+      try {
+        Log.d(TAG, "Preparing dataStore")
+        context.defaultDataStore.edit { it.clear() }
+        dataStore.edit { it.clear() }
+        persistSuwSessionId(suwSessionId)
+        Log.d(TAG, "Cleared DataStore for SUW session $suwSessionId")
+      } catch (e: Exception) {
+        Log.e(TAG, "Ignoring error", e)
+      }
     }
 
     return dataStore
