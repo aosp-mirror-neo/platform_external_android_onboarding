@@ -11,6 +11,11 @@ import com.android.onboarding.utils.persistable.putPersistable
 /** A result used for tasks which are compatible with WizardManager. */
 data class PersistableWizardResult(val resultCode: Int, val intent: PersistableIntent? = null) :
   Persistable, StableEquality {
+
+  override fun toString(): String {
+    return "PWR{$resultCode}"
+  }
+
   override fun toPersistableBundle() =
     PersistableBundle().apply {
       putInt(RESULT_CODE_KEY, resultCode)

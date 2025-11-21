@@ -42,6 +42,16 @@ data class WizardManagerExtras(
   val pendingActivityMetadata: Map<Long, OnboardingMetadataStore> = mapOf(),
 ) : Persistable, StableEquality {
 
+  override fun equals(other: Any?): Boolean {
+
+    if (other !is WizardManagerExtras) return false
+    return other.wizardBundle.action.id == wizardBundle.action.id
+  }
+
+  override fun toString(): String {
+    return "WME(${wizardBundle.action.id})"
+  }
+
   /**
    * A builder used for Java clients.
    *
