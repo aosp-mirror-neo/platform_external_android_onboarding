@@ -104,7 +104,7 @@ constructor(
     extras =
       intent.extras?.toPersistableBundle { key, error ->
         if (strict) Log.wtf(LOG_TAG, "Found non-persistable extra with key $key: $error")
-        else Log.e(LOG_TAG, "Found non-persistable extra with key $key: $error")
+        else Log.w(LOG_TAG, "Found non-persistable extra with key $key: $error")
       } ?: PersistableBundle(),
   )
 

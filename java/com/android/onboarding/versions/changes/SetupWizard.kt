@@ -570,6 +570,11 @@ const val EARLY_SIM_INFO = 434904270L
 )
 const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
 
+/**
+ * When enabled, this change allows [WizardResultParser] to parse *multiple* <NextAction> and
+ * <YIELD> control tag in a script. If disabled, [WizardResultParser] will only parse the first
+ * wizard:action or <NextAction> and ignore the yield control.
+ */
 @ChangeId(
   bugId = 448547273L,
   owner = "tmfang",
@@ -577,7 +582,7 @@ const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
   tags = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
-const val SUPPORT_NEXT_ACTION_IN_SCRIPT = 448547273L
+const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
 
 @ChangeId(
   bugId = 450443090L,
