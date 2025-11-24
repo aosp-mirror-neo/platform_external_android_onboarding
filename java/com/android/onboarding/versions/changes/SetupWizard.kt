@@ -487,7 +487,6 @@ const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
   bugId = 408134087L,
   owner = "scottjonathan",
   breaking = [],
-  tags = [P11_EVT],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   tags = [P11_EVT, NEXT],
 )
