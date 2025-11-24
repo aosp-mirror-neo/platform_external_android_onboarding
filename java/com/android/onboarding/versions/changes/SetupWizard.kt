@@ -488,6 +488,7 @@ const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
   owner = "scottjonathan",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
+  tags = [P11_EVT, NEXT],
 )
 const val UNIFIED_LOADING_EVERYWHERE = 408134087L
 
