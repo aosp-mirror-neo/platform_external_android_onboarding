@@ -26,6 +26,9 @@ android_library {
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
     target_sdk_version: "35",
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }
 
 android_library {
