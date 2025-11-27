@@ -503,16 +503,6 @@ const val UNIFIED_LOADING_EVERYWHERE = 408134087L
 const val SUW_TASK_FAILURE_CALLBACK_FOR_AUTH_HACK_CHANGE_ID = 415074459L
 
 @ChangeId(
-  bugId = 422924706L,
-  owner = "scottjonathan",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = [P11_EVT, NEXT],
-  available = "2025-06-06",
-)
-const val RECORD_ACTION_RESULTS = 422924706L
-
-@ChangeId(
   bugId = 401476658L,
   owner = "iancheng",
   breaking = [],
