@@ -488,7 +488,7 @@ const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
   bugId = 448547273L,
   owner = "tmfang",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
@@ -497,7 +497,7 @@ const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
   bugId = 450443090L,
   owner = "tmfang",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
@@ -511,7 +511,7 @@ const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
   bugId = 450443584L,
   owner = "tmfang",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
