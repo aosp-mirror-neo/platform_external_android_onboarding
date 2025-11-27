@@ -23,16 +23,6 @@ const val ENABLE_AUTOMATIC_NODE_DETECTION_FOR_OEMS =
 const val UX_DVT_IMPROVEMENTS_AND_BUG_FIXES = 392794832L
 
 @ChangeId(
-  bugId = 390450821L,
-  owner = "scottjonathan",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = [ELIMINATE_LOADING],
-  available = "2025-01-01",
-)
-const val CARRIER_SETUP_WRAPPER_TASK_SUPPORT_SIM = 390450821L
-
-@ChangeId(
   bugId = 390215035L,
   owner = "scottjonathan",
   breaking = [],
@@ -135,16 +125,6 @@ const val CHECKIN_AND_UPDATE_USES_FRAGMENT_LOGIC = 343135237L
   available = "2024-09-16",
 )
 const val CHECKIN_AND_UPDATE_RUNS_WITHOUT_UI_DEPENDENCY = 343135258L
-
-@ChangeId(
-  bugId = 344004820L,
-  owner = "scottjonathan",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = [ELIMINATE_LOADING],
-  available = "2024-09-16",
-)
-const val WIZARD_MANAGER_USE_BACKGROUND_NEXT_ACTION = 344004820L
 
 @ChangeId(
   bugId = 344004346L,
@@ -301,17 +281,6 @@ const val LOAD_ADD_ACCOUNT_INTENT_RUNS_WITHOUT_UI_DEPENDENCY = 355188991L
 const val ACCOUNT_SETUP_USES_FRAGMENT_LOGIC = 355409716L
 
 @ChangeId(
-  bugId = 355409717L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  dependsOn = ACCOUNT_SETUP_USES_FRAGMENT_LOGIC,
-  tags = [MOVE_TO_BACKGROUND],
-  available = "2024-09-16",
-)
-const val ACCOUNT_SETUP_RUNS_WITHOUT_UI_DEPENDENCY = 355409717L
-
-@ChangeId(
   bugId = 355424870L,
   owner = "kholoudm",
   breaking = [],
@@ -382,56 +351,6 @@ const val ACCOUNT_SETUP_WRAPPER_RUNS_WITHOUT_UI_DEPENDENCY = 368378446L
   available = "2024-09-16",
 )
 const val TWEEN_SETUP_SELECTION_USES_FRAGMENT_LOGIC = 377286779L
-
-@ChangeId(
-  bugId = 373618078L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = ["use_fragment_logic"],
-  available = "2024-09-16",
-)
-const val CURRENT_SUW_INIT_ACTIVITY_USES_ACTIVITY_LOGIC = 373618078L
-
-@ChangeId(
-  bugId = 373618740L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = ["use_fragment_logic"],
-  available = "2024-09-16",
-)
-const val SUW_FLOW_CONTROLLER_ACTIVITY_USES_BASE_ACTIVITY_LOGIC = 373618740L
-
-@ChangeId(
-  bugId = 376829067L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = ["use_fragment_logic"],
-  available = "2024-09-16",
-)
-const val PHENOPTYPE_SYNC_SIDECAR_USES_BASE_ACTIVITY_LOGIC = 376829067L
-
-@ChangeId(
-  bugId = 377494190L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = ["use_fragment_logic"],
-  available = "2024-09-16",
-)
-const val ENABLE_ESIM_SIDECAR_USES_BASE_ACTIVITY_LOGIC = 377494190L
-
-@ChangeId(
-  bugId = 377863154L,
-  owner = "kholoudm",
-  breaking = [],
-  changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = ["use_fragment_logic"],
-  available = "2024-09-16",
-)
-const val GET_SLOTS_STATUS_SIDECAR_USES_BASE_ACTIVITY_LOGIC = 377863154L
 
 @ChangeId(
   bugId = 382425611L,
@@ -516,7 +435,7 @@ const val PERSIST_ACCOUNTS_SNAPSHOT = 401476658L
   bugId = 436772442L,
   owner = "tmfang",
   breaking = [],
-  tags = [],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   available = ChangeId.NOT_AVAILABLE,
 )
@@ -546,7 +465,6 @@ const val DSE_FLOW_CONTROL_PRECALC_TASK_DEFAULT = 438609409L
   bugId = 434904270L,
   owner = "scottjonathan",
   breaking = [],
-  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val EARLY_SIM_INFO = 434904270L
@@ -556,7 +474,7 @@ const val EARLY_SIM_INFO = 434904270L
   owner = "atpugnayra",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [],
+  tags = [P11_EVT, NEXT],
   available = ChangeId.NOT_AVAILABLE,
 )
 const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
@@ -570,7 +488,7 @@ const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
   bugId = 448547273L,
   owner = "tmfang",
   breaking = [],
-  tags = [],
+  tags = [P11_EVT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
@@ -579,7 +497,7 @@ const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
   bugId = 450443090L,
   owner = "tmfang",
   breaking = [],
-  tags = [],
+  tags = [P11_EVT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
@@ -593,7 +511,7 @@ const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
   bugId = 450443584L,
   owner = "tmfang",
   breaking = [],
-  tags = [],
+  tags = [P11_EVT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
 )
 const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
