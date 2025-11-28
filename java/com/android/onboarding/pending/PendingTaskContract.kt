@@ -59,7 +59,12 @@ class PendingTaskContract(
 
   override fun hashCode() = bundle.generateHash()
 
-  override fun toString() = "PendingContract.Task(${identity()})"
+  override fun toString() =
+    "PendingContract.Task(" +
+      "contract=${identity()}," +
+      "package=${targetPackageName}," +
+      "targetUserId=${targetUserId}," +
+      ")"
 
   override fun clone(): PendingTaskContract = PendingTaskContract(PersistableBundle(bundle))
 

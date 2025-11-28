@@ -12,6 +12,7 @@ import com.android.onboarding.nodes.NodeId
 import com.android.onboarding.pending.ActivityLauncherForResult
 import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.utils.hashStringToHex
+import com.android.onboarding.utils.logging.OnboardingLog as Log
 import com.android.onboarding.utils.persistable.PersistableIntent
 
 /**
@@ -47,9 +48,16 @@ object ExternalOnboardingActivityContract :
 
   @InternalOnboardingApi
   override fun launcher(input: Intent): ActivityLauncherForResult<Intent, ActivityResult> {
+    Log.v(
+      "ExternalOnboardingActivityContract",
+      "Building an external contract launcher for Intent(" +
+        "action=${input.action}," +
+        "package=${input.`package`}" +
+        ")",
+    )
     val realLauncher = super.launcher(input)
     return object :
-      ActivityLauncherForResult<Intent, ActivityResult>("ExternalOnboardingActivityC") {
+      ActivityLauncherForResult<Intent, ActivityResult>("ExternalOnboardingActivityContract") {
       override val nodeName: String
         get() = input.action?.let(::hashStringToHex) ?: realLauncher.nodeName
 

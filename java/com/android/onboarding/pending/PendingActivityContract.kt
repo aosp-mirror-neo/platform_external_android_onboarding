@@ -59,7 +59,13 @@ data class PendingActivityContract(private val intent: PersistableIntent) :
 
   override fun erase(): PendingContract.ErasedActivity = this
 
-  override fun toString() = "PendingContract.Activity(${identity()})"
+  override fun toString() =
+    "PendingContract.Activity(" +
+      "contract=${identity()}," +
+      "action=${intent.action}," +
+      "package=${intent.`package`}," +
+      "targetUserId=${targetUserId}" +
+      ")"
 
   /**
    * The ID assigned to this prepared contract launch. It is expected to survive process boundaries
