@@ -2,8 +2,10 @@ package com.android.onboarding.versions.changes
 
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
+import com.android.onboarding.versions.changes.Tags.NEXT
 import com.android.onboarding.versions.changes.Tags.P10_DVT
 import com.android.onboarding.versions.changes.Tags.P10_PVT
+import com.android.onboarding.versions.changes.Tags.P11_EVT
 
 @ChangeId(
   bugId = 383718037L,
@@ -30,5 +32,6 @@ const val ORCHESTRATED_VISIBILITY_CHANGE_ID = 408958992L
   owner = "eliselliott",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
+  tags = [P11_EVT, NEXT],
 )
 const val USE_ORCHESTRATOR_CHANGE_ID = 404239383L
