@@ -456,13 +456,13 @@ class OnboardingTaskServiceServer(
         return false
       }
     if (task !is OnboardingTaskWithSynchronousExecution<*, *, *>) {
-      Log.e(TAG, "Task for token $token is not synchronous")
+      Log.d(TAG, "Task for token $token is not synchronous")
       return false
     }
 
     val state = task.runTaskSynchronous(context = applicationContext, input = bundle)
     if (state == null) {
-      Log.w(TAG, "Synchronous task $task is not run synchronously")
+      Log.d(TAG, "Synchronous task $task is not run synchronously")
       return false
     }
 

@@ -70,6 +70,8 @@ android_onboarding.utils.resources
 android_onboarding.utils.suwmetadata
 android_onboarding.utils.time
 android_onboarding.versions
+android_onboarding.versions.BaseMutableOnboardingChanges
+android_onboarding.versions.BaseOnboardingChanges
 android_onboarding.versions.ComplianceDate
 android_onboarding.versions.OnboardingChanges
 android_onboarding.versions.annotations

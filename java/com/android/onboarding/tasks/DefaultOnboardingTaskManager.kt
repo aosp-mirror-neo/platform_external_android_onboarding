@@ -150,14 +150,14 @@ internal class DefaultOnboardingTaskManager(
     input: I,
   ): OnboardingTaskToken<O>? {
     if (!isTaskRunInSameComponent(contract)) {
-      log.e(
+      log.d(
         "Attempted to run task synchronously but $contract (${contract.nodePackage}) is not running in same process ($nodePackage) "
       )
       return null
     }
 
     if (!localServer.isSynchronousTask(contract)) {
-      log.e(
+      log.d(
         "Attempted to run task state synchronously but $contract is not implemented synchronously"
       )
       return null
@@ -166,7 +166,7 @@ internal class DefaultOnboardingTaskManager(
     val token = generateToken(contract, input)
     try {
       if (!localServer.runTaskSynchronous(token.toErased(), contract.inputEncoder.encode(input))) {
-        log.w("runTaskSynchronous for $token returned false")
+        log.d("runTaskSynchronous for $token returned false")
         return null
       }
     } catch (e: Exception) {

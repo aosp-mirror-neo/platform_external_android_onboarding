@@ -6,16 +6,21 @@ import java.time.Duration
 
 /** A default implementation of [OnboardingFlagsProvider] using system property. */
 class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
+  private fun getSystemPropertyBoolean(key: String, default: Boolean): Boolean =
+    if (Build.VERSION.SDK_INT >= 28) {
+      SystemProperties.getBoolean(key, default)
+    } else {
+      false
+    }
 
 
   override val isContractEnabled: Boolean
-    get() =
-      SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_CONTRACT_ENABLED", false)
+    get() = getSystemPropertyBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_CONTRACT_ENABLED", false)
 
   // Node logging is enabled by default on >= Android V devices
   override val isNodeLoggingEnabled: Boolean
     get() =
-      SystemProperties.getBoolean(
+      getSystemPropertyBoolean(
         "$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_NODE_LOGGING_ENABLED",
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM,
       )
@@ -28,11 +33,11 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
     get() = false
 
   override val isDebug: Boolean
-    get() = SystemProperties.getBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DEBUG_ENABLED", false)
+    get() = getSystemPropertyBoolean("$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_DEBUG_ENABLED", false)
 
   override val shouldVisualiseNodeTransitionsInLogcat: Boolean
     get() =
-      SystemProperties.getBoolean(
+      getSystemPropertyBoolean(
         "$SYSTEM_PROPERTY_NAMESPACE.$FEATURE_VISUALISE_TRANSITIONS",
         false,
       ) || isDebug

@@ -15,6 +15,8 @@ android_library {
     static_libs: [
         "android_onboarding.contracts.annotations.opt_in",
         "android_onboarding.utils.logging",
+        "android_onboarding.versions.BaseMutableOnboardingChanges",
+        "android_onboarding.versions.BaseOnboardingChanges",
         "android_onboarding.versions.ComplianceDate",
         "android_onboarding.versions.OnboardingChanges",
         "android_onboarding.versions.annotations",
@@ -26,30 +28,41 @@ android_library {
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
     target_sdk_version: "35",
-    lint: {
-        baseline_filename: "lint-baseline.xml",
-    },
 }
 
-android_library {
-    name: "android_onboarding.versions.OnboardingChanges",
+java_library {
+    name: "android_onboarding.versions.BaseMutableOnboardingChanges",
     visibility: [
-        "//visibility:public",
+        "//external/android_onboarding:__subpackages__",
     ],
     srcs: [
-        "MutableOnboardingChanges.kt",
-        "OnboardingChanges.kt",
+        "BaseMutableOnboardingChanges.kt",
     ],
     static_libs: [
-        "android_onboarding.versions.ComplianceDate",
-        "android_onboarding.versions.annotations",
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.versions.BaseOnboardingChanges",
+        "android_onboarding.versions.OnboardingChanges",
         "androidx.annotation_annotation",
     ],
     sdk_version: "system_current",
-    dont_merge_manifests: true,
-    manifest: ":android_onboarding.AndroidManifest",
-    min_sdk_version: "23",
-    target_sdk_version: "35",
+    host_supported: true,
+}
+
+java_library {
+    name: "android_onboarding.versions.BaseOnboardingChanges",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "BaseOnboardingChanges.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.versions.OnboardingChanges",
+        "android_onboarding.versions.annotations",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
 }
 
 java_library {
@@ -62,6 +75,24 @@ java_library {
     ],
     static_libs: [
         "android_onboarding.versions.annotations",
+    ],
+    sdk_version: "system_current",
+    host_supported: true,
+}
+
+java_library {
+    name: "android_onboarding.versions.OnboardingChanges",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "MutableOnboardingChanges.kt",
+        "OnboardingChanges.kt",
+    ],
+    static_libs: [
+        "android_onboarding.versions.ComplianceDate",
+        "android_onboarding.versions.annotations",
+        "androidx.annotation_annotation",
     ],
     sdk_version: "system_current",
     host_supported: true,
