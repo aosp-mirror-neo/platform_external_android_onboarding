@@ -4,6 +4,11 @@ import android.content.Intent
 import android.os.BaseBundle
 import android.os.Bundle
 import android.os.PersistableBundle
+import com.android.onboarding.metadata.EncodedMetadata
+import com.android.onboarding.metadata.EncodedMetadata.BooleanMetadata
+import com.android.onboarding.metadata.EncodedMetadata.EnumMetadata
+import com.android.onboarding.metadata.MetadataWriter
+import com.android.onboarding.metadata.NonSensitiveString
 import com.android.onboarding.metadata.OnboardingMetadataStore
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.persistable.Persistable
@@ -163,7 +168,7 @@ data class SetupWizardExtras(
   val isSuwSuggestedActionFlow: Boolean = false,
   val suwLifecycle: SuwLifeCycleEnum = SuwLifeCycleEnum.UNKNOWN,
   val theme: String? = null,
-) : Persistable, StableEquality {
+) : Persistable, MetadataWriter, StableEquality {
 
   /** Creates a new [Bundle] containing only the setup design library extras. */
   fun toBundle(): Bundle = Bundle().also { writeToBaseBundle(it) }
@@ -183,7 +188,31 @@ data class SetupWizardExtras(
     bundle.putString(EXTRA_THEME, theme)
   }
 
+  override fun toNonSensitiveMetadata(): List<EncodedMetadata> =
+    listOf(
+      BooleanMetadata(NonSensitiveString(KEY_IS_FIRST_RUN), isFirstRun),
+      BooleanMetadata(NonSensitiveString(KEY_IS_DEFERRED_SETUP), isDeferredSetup),
+      BooleanMetadata(NonSensitiveString(KEY_IS_PRE_DEFERRED_SETUP), isPreDeferredSetup),
+      BooleanMetadata(NonSensitiveString(KEY_IS_PORTAL_SETUP), isPortalSetup),
+      BooleanMetadata(NonSensitiveString(KEY_IS_SETUP_FLOW), isSetupFlow),
+      BooleanMetadata(
+        NonSensitiveString(KEY_IS_SUW_SUGGESTED_ACTION_FLOW),
+        isSuwSuggestedActionFlow,
+      ),
+      EnumMetadata(NonSensitiveString(KEY_SUW_LIFECYCLE), suwLifecycle),
+      BooleanMetadata(NonSensitiveString(KEY_HAS_THEME), theme != null),
+    )
+
   companion object : PersistableDeserializer<SetupWizardExtras> {
+    internal const val KEY_IS_FIRST_RUN = "isFirstRun"
+    internal const val KEY_IS_DEFERRED_SETUP = "isDeferredSetup"
+    internal const val KEY_IS_PRE_DEFERRED_SETUP = "isPreDeferredSetup"
+    internal const val KEY_IS_PORTAL_SETUP = "isPortalSetup"
+    internal const val KEY_IS_SETUP_FLOW = "isSetupFlow"
+    internal const val KEY_IS_SUW_SUGGESTED_ACTION_FLOW = "isSuwSuggestedActionFlow"
+    internal const val KEY_SUW_LIFECYCLE = "suwLifecycle"
+    internal const val KEY_HAS_THEME = "hasTheme"
+
     /** Default [SetupWizardExtras] values, equivalent to not specifying extras. */
     val EMPTY =
       SetupWizardExtras(
