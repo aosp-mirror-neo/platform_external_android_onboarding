@@ -11,9 +11,14 @@ fun interface Persistable {
   /** Returns a [PersistableBundle] representing this object. */
   fun toPersistableBundle(): PersistableBundle
 
-  companion object : PersistableSerializer<Persistable> {
+  companion object : PersistableSerializer<Persistable>, PersistableDeserializer<Persistable> {
     override fun toPersistableBundle(value: Persistable): PersistableBundle =
       value.toPersistableBundle()
+
+    override fun fromPersistableBundle(persistableBundle: PersistableBundle): Persistable =
+      Persistable {
+        persistableBundle
+      }
   }
 }
 

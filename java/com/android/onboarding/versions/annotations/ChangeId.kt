@@ -46,7 +46,17 @@ annotation class ChangeId(
 
     /** Generate the code to represent this change ID in Kotlin. */
     fun generateChangeIdCode(changeId: ChangeId): String {
-      return "ChangeId(bugId=${changeId.bugId}, owner=\"${changeId.owner}\", breaking=arrayOf(${changeId.breaking.joinToString(", ")}), changeRadius=${changeId.changeRadius}, dependsOn=${changeId.dependsOn}, expedited=${changeId.expedited}, available=\"${changeId.available}\", released=\"${changeId.released}\", tags=arrayOf(${changeId.tags.map { "\"$it\"" }.joinToString(", ")}))"
+      return "ChangeId(" +
+        "bugId=${changeId.bugId}," +
+        " owner=\"${changeId.owner}\"," +
+        " breaking=arrayOf(${changeId.breaking.joinToString(", ")})," +
+        " changeRadius=${changeId.changeRadius}," +
+        " dependsOn=${changeId.dependsOn}," +
+        " expedited=${changeId.expedited}," +
+        " available=\"${changeId.available}\"," +
+        " released=\"${changeId.released}\"," +
+        " tags=arrayOf(${changeId.tags.joinToString(", ") { "\"$it\"" }})" +
+        ")"
     }
   }
 }

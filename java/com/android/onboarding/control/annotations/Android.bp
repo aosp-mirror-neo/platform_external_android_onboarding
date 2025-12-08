@@ -9,6 +9,7 @@ android_library {
         "//visibility:public",
     ],
     srcs: [
+        "CrossProcessSynchronous.kt",
         "HasTaskAlternative.kt",
     ],
     static_libs: [

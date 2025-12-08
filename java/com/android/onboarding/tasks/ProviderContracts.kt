@@ -11,6 +11,7 @@ import com.android.onboarding.contracts.annotations.InterruptReason
 import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.contracts.annotations.POnboardingNode
 import com.android.onboarding.contracts.annotations.asNodeRef
+import com.android.onboarding.control.annotations.CrossProcessSynchronous
 import com.android.onboarding.control.annotations.HasTaskAlternative
 import com.android.onboarding.control.annotations.PHasTaskAlternative
 import com.android.onboarding.encoding.Encoder
@@ -106,6 +107,7 @@ class ContractMetadataProviderContract(component: ComponentRef) :
  * @property usesPrecalculatedResult The [UsesPrecalculatedResult] annotation data.
  * @property precalculation The [Precalculation] annotation data.
  * @property hasTaskAlternative The [HasTaskAlternative] annotation data.
+ * @property isCrossProcessSynchronous The presence of the [CrossProcessSynchronous] annotation.
  */
 
 data class ContractMetadata
@@ -116,6 +118,7 @@ private constructor(
   val usesPrecalculatedResult: PUsesPrecalculatedResult?,
   val precalculation: PPrecalculation?,
   val hasTaskAlternative: PHasTaskAlternative?,
+  val isCrossProcessSynchronous: Boolean,
 ) : Persistable, NodeRef by onboardingNode.asNodeRef() {
   override fun toPersistableBundle() = PersistableBundle {
     putPersistable(KEY_ONBOARDING_NODE, onboardingNode)
@@ -124,6 +127,7 @@ private constructor(
     putPersistable(KEY_HAS_TASK_ALTERNATIVE, hasTaskAlternative)
     compatPutBoolean(KEY_IS_TASK, isTask)
     compatPutBoolean(KEY_IS_ACTIVITY, isActivity)
+    compatPutBoolean(KEY_IS_CROSS_PROCESS_SYNCHRONOUS, isCrossProcessSynchronous)
   }
 
   companion object : PersistableDeserializer<ContractMetadata> {
@@ -133,6 +137,7 @@ private constructor(
     private const val KEY_HAS_TASK_ALTERNATIVE = "HAS_TASK_ALTERNATIVE"
     private const val KEY_IS_TASK = "IS_TASK"
     private const val KEY_IS_ACTIVITY = "IS_ACTIVITY"
+    private const val KEY_IS_CROSS_PROCESS_SYNCHRONOUS = "IS_CROSS_PROCESS_SYNCHRONOUS"
 
     /** Extract [ContractMetadata] from a given [OnboardingActivityApiContract] class. */
     @JvmName("fromActivity")
@@ -155,6 +160,7 @@ private constructor(
             .findAnnotationsOfType<HasTaskAlternative>()
             .singleOrNull()
             ?.let(::PHasTaskAlternative),
+        isCrossProcessSynchronous = false,
       )
 
     /** Extract [ContractMetadata] from a given [OnboardingActivityApiContract]. */
@@ -189,6 +195,8 @@ private constructor(
             .findAnnotationsOfType<HasTaskAlternative>()
             .singleOrNull()
             ?.let(::PHasTaskAlternative),
+        isCrossProcessSynchronous =
+          (klass.findAnnotationsOfType<CrossProcessSynchronous>().isNotEmpty()),
       )
 
     /** Extract [ContractMetadata] from a given [OnboardingTaskContract] class. */
@@ -215,6 +223,8 @@ private constructor(
         precalculation = persistableBundle.getPersistable(KEY_PRECALCULATION, PPrecalculation),
         hasTaskAlternative =
           persistableBundle.getPersistable(KEY_HAS_TASK_ALTERNATIVE, HasTaskAlternative),
+        isCrossProcessSynchronous =
+          persistableBundle.compatGetBoolean(KEY_IS_CROSS_PROCESS_SYNCHRONOUS),
       )
   }
 }

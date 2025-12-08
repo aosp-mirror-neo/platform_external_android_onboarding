@@ -161,7 +161,7 @@ abstract class ActivityLauncherForResult<I, O>(private val logTag: String) : Act
       // activityResultRegistry.onLaunch. We will use the outgoing which was just created in
       // performCreateIntent.
       forResultOutGoingId = intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE_ID)
-      Log.w(logTag, "getSynchronousResult was not called when creating intent.")
+      Log.v(logTag, "COMPLIANCE: getSynchronousResult was not called when creating intent.")
     }
     onPrepareIntent(expectsResult = true, nodeId, forResultOutGoingId)
 

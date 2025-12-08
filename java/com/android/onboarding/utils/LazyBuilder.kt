@@ -15,7 +15,7 @@ open class LazyBuilder<I, V>(private val builder: (I) -> V) : ReadOnlyProperty<I
   private val ref = AtomicReference<V>()
 
   /** Get or build and cache the value with [input]. */
-  @JvmName("get") operator fun invoke(input: I): V = ref.updateAndGet { it ?: builder(input) }
+  @JvmName("get") operator fun invoke(input: I): V = invoke { input }
 
   /** Get or build and cache the value with lazily computed [input]. */
   @JvmName("get")
