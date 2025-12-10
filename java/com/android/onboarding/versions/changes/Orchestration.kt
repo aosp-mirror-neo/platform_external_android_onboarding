@@ -12,6 +12,7 @@ import com.android.onboarding.versions.changes.Tags.P11_EVT
   owner = "petuska",
   breaking = [],
   available = "2025-02-01",
+  released = "2025-12-05",
   tags = [P10_DVT],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
 )
