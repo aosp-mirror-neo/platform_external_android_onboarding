@@ -1,7 +1,7 @@
 package com.android.onboarding.control.chained
 
 import android.os.PersistableBundle
-import android.os.Process.myUserHandle
+import android.os.Process
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import com.android.onboarding.compatibility.compatGetBoolean
@@ -61,6 +61,9 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
 
   /** Reference to the callback node. */
   val callbackRef: UniqueNodeRef
+
+  /** Reference to the specific callback in callback node. */
+  val callbackKey: String
 
   /**
    * Specifies if the callback handles failures itself.
@@ -136,9 +139,10 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val handlesFailure: Boolean = false,
     private val callbackUserId: Int,
     private val state: PersistableBundle? = null,
+    override val callbackKey: String = target.asNodeRef().identity(),
   ) : Activity, NodeRef by callbackRef, StableEquality {
     override fun toString() =
-      "ChainedContract.ActivityToTask(target=${target.identity()},callback=${callbackRef.identity()},handlesFailure=$handlesFailure)"
+      "ChainedContract.ActivityToTask(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
     override fun equals(other: Any?): Boolean =
       other is ActivityToTask &&
@@ -150,7 +154,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         estimatedCallbackRuntime == other.estimatedCallbackRuntime &&
         callbackMetadataStore == other.callbackMetadataStore &&
         handlesFailure == other.handlesFailure &&
-        callbackUserId == other.callbackUserId
+        callbackUserId == other.callbackUserId &&
+        callbackKey == other.callbackKey
 
     override fun hashCode(): Int =
       Objects.hash(
@@ -163,6 +168,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackMetadataStore,
         handlesFailure,
         callbackUserId,
+        callbackKey,
       )
 
     override fun onResult(result: ActivityResult, failure: Boolean): PendingContract.ErasedTask {
@@ -174,6 +180,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
           metadataStore = callbackMetadataStore,
           data = result,
           failure = failure,
+          callbackKey = callbackKey,
         )
       @OptIn(InternalOnboardingApi::class)
       return PendingTaskContract(
@@ -194,6 +201,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         putPersistable(KEY_CALLBACK_SERVICE_INTENT, callbackServiceIntent)
         putInt(KEY_CALLBACK_USER_ID, callbackUserId)
         putPersistable(KEY_CALLBACK_METADATA_STORE, callbackMetadataStore)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
 
     companion object : PersistableDeserializer<ActivityToTask> {
@@ -202,11 +210,12 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         require(persistableBundle.getString(KEY_SUBTYPE) == SUBTYPE_ACTIVITY_TO_TASK) {
           "Invalid subtype"
         }
+        val target =
+          requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Activity))
         return ActivityToTask(
           session = requireNotNull(persistableBundle.getPersistableBundle(KEY_SESSION)),
           state = persistableBundle.getPersistableBundle(KEY_STATE),
-          target =
-            requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Activity)),
+          target = target,
           callbackRef =
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_REF, PersistableUniqueNodeRef)
@@ -215,15 +224,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_SERVICE_INTENT, PersistableIntent)
             ),
-          callbackUserId =
-            persistableBundle.getInt(KEY_CALLBACK_USER_ID)
-              ?: run {
-                Log.w(
-                  TAG,
-                  "Callback user ID is not set, using current user ID: ${myUserHandle().identifier}",
-                )
-                myUserHandle().identifier
-              },
+          callbackUserId = extractCallbackUserId(persistableBundle),
           estimatedCallbackRuntime =
             persistableBundle
               .getString(KEY_ESTIMATED_CALLBACK_RUNTIME)
@@ -231,6 +232,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
           callbackMetadataStore =
             persistableBundle.getPersistable(KEY_CALLBACK_METADATA_STORE, OnboardingMetadataStore),
           handlesFailure = persistableBundle.compatGetBoolean(KEY_HANDLES_FAILURE, false),
+          callbackKey =
+            persistableBundle.getString(KEY_CALLBACK_KEY) ?: target.asNodeRef().identity(),
         )
       }
     }
@@ -248,6 +251,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val callbackRef: UniqueNodeRef,
     private val callbackIntent: PersistableIntent,
     private val callbackUserId: Int,
+    override val callbackKey: String = target.asNodeRef().identity(),
   ) : Activity, NodeRef by callbackRef, StableEquality {
     // No runtime estimates for activities as we don't care about it just yet.
     override val estimatedCallbackRuntime: Duration? = null
@@ -255,7 +259,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val handlesFailure: Boolean = true
 
     override fun toString() =
-      "ChainedContract.ActivityToActivity(target=${target.identity()},callback=${callbackRef.identity()},handlesFailure=$handlesFailure)"
+      "ChainedContract.ActivityToActivity(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
     override fun equals(other: Any?): Boolean =
       other is ActivityToActivity &&
@@ -264,7 +268,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackRef refersTo other.callbackRef &&
         callbackIntent == other.callbackIntent &&
         handlesFailure == other.handlesFailure &&
-        callbackUserId == other.callbackUserId
+        callbackUserId == other.callbackUserId &&
+        callbackKey == other.callbackKey
 
     override fun hashCode(): Int =
       Objects.hash(
@@ -274,6 +279,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackIntent,
         handlesFailure,
         callbackUserId,
+        callbackKey,
       )
 
     override fun onResult(
@@ -288,6 +294,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
           metadataStore = null,
           data = result,
           failure = failure,
+          callbackKey = callbackKey,
         )
       @OptIn(InternalOnboardingApi::class)
       return PendingActivityContract(
@@ -306,6 +313,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         putPersistable(KEY_CALLBACK_REF, callbackRef, PersistableUniqueNodeRef)
         putPersistable(KEY_CALLBACK_SERVICE_INTENT, callbackIntent)
         putInt(KEY_CALLBACK_USER_ID, callbackUserId)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
 
     companion object : PersistableDeserializer<ActivityToActivity> {
@@ -314,10 +322,11 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         require(persistableBundle.getString(KEY_SUBTYPE) == SUBTYPE_ACTIVITY_TO_ACTIVITY) {
           "Invalid subtype"
         }
+        val target =
+          requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Activity))
         return ActivityToActivity(
           session = requireNotNull(persistableBundle.getPersistableBundle(KEY_SESSION)),
-          target =
-            requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Activity)),
+          target = target,
           callbackRef =
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_REF, PersistableUniqueNodeRef)
@@ -326,15 +335,9 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_SERVICE_INTENT, PersistableIntent)
             ),
-          callbackUserId =
-            persistableBundle.getInt(KEY_CALLBACK_USER_ID)
-              ?: run {
-                Log.w(
-                  TAG,
-                  "Callback user ID is not set, using current user ID: ${myUserHandle().identifier}",
-                )
-                myUserHandle().identifier
-              },
+          callbackUserId = extractCallbackUserId(persistableBundle),
+          callbackKey =
+            persistableBundle.getString(KEY_CALLBACK_KEY) ?: target.asNodeRef().identity(),
         )
       }
     }
@@ -374,9 +377,10 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val handlesFailure: Boolean = false,
     private val callbackUserId: Int,
     private val state: PersistableBundle? = null,
+    override val callbackKey: String = target.asNodeRef().identity(),
   ) : Task, NodeRef by callbackRef, StableEquality {
     override fun toString() =
-      "ChainedContract.TaskToTask(target=${target.identity()},callback=${callbackRef.identity()},handlesFailure=$handlesFailure)"
+      "ChainedContract.TaskToTask(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
     override fun equals(other: Any?): Boolean =
       other is TaskToTask &&
@@ -389,7 +393,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         estimatedCallbackRuntime == other.estimatedCallbackRuntime &&
         callbackMetadataStore == other.callbackMetadataStore &&
         handlesFailure == other.handlesFailure &&
-        callbackUserId == other.callbackUserId
+        callbackUserId == other.callbackUserId &&
+        callbackKey == other.callbackKey
 
     override fun hashCode(): Int =
       Objects.hash(
@@ -403,6 +408,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackMetadataStore,
         handlesFailure,
         callbackUserId,
+        callbackKey,
       )
 
     override fun onResult(result: PersistableBundle, failure: Boolean): PendingContract.ErasedTask {
@@ -414,6 +420,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
           metadataStore = callbackMetadataStore,
           data = result,
           failure = failure,
+          callbackKey = callbackKey,
         )
       @OptIn(InternalOnboardingApi::class)
       return PendingTaskContract(
@@ -435,6 +442,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         putPersistable(KEY_CALLBACK_SOURCE, callbackSource, PersistableNodeRef)
         putPersistable(KEY_CALLBACK_METADATA_STORE, callbackMetadataStore)
         putInt(KEY_CALLBACK_USER_ID, callbackUserId)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
 
     companion object : PersistableDeserializer<TaskToTask> {
@@ -466,15 +474,9 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
               .getString(KEY_ESTIMATED_CALLBACK_RUNTIME)
               ?.let(Duration::parseIsoString),
           handlesFailure = persistableBundle.compatGetBoolean(KEY_HANDLES_FAILURE, false),
-          callbackUserId =
-            persistableBundle.getInt(KEY_CALLBACK_USER_ID)
-              ?: run {
-                Log.w(
-                  TAG,
-                  "Callback user ID is not set, using current user ID: ${myUserHandle().identifier}",
-                )
-                myUserHandle().identifier
-              },
+          callbackUserId = extractCallbackUserId(persistableBundle),
+          callbackKey =
+            persistableBundle.getString(KEY_CALLBACK_KEY) ?: target.asNodeRef().identity(),
         )
       }
     }
@@ -492,6 +494,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val callbackRef: UniqueNodeRef,
     private val callbackIntent: PersistableIntent,
     private val callbackUserId: Int,
+    override val callbackKey: String = target.asNodeRef().identity(),
   ) : Task, NodeRef by callbackRef, StableEquality {
     // No runtime estimates for activities as we don't care about it just yet.
     override val estimatedCallbackRuntime: Duration? = null
@@ -500,7 +503,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     override val handlesFailure: Boolean = true
 
     override fun toString() =
-      "ChainedContract.TaskToActivity(target=${target.identity()},callback=${callbackRef.identity()},handlesFailure=$handlesFailure)"
+      "ChainedContract.TaskToActivity(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
     override fun equals(other: Any?): Boolean =
       other is TaskToActivity &&
@@ -509,7 +512,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackRef refersTo other.callbackRef &&
         callbackIntent == other.callbackIntent &&
         handlesFailure == other.handlesFailure &&
-        callbackUserId == other.callbackUserId
+        callbackUserId == other.callbackUserId &&
+        callbackKey == other.callbackKey
 
     override fun hashCode(): Int =
       Objects.hash(
@@ -519,6 +523,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         callbackIntent,
         handlesFailure,
         callbackUserId,
+        callbackKey,
       )
 
     override fun onResult(
@@ -533,6 +538,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
           metadataStore = null,
           data = result,
           failure = failure,
+          callbackKey = callbackKey,
         )
       @OptIn(InternalOnboardingApi::class)
       return PendingActivityContract(
@@ -551,6 +557,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         putPersistable(KEY_CALLBACK_REF, callbackRef, PersistableUniqueNodeRef)
         putPersistable(KEY_CALLBACK_SERVICE_INTENT, callbackIntent)
         putInt(KEY_CALLBACK_USER_ID, callbackUserId)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
 
     companion object : PersistableDeserializer<TaskToActivity> {
@@ -559,10 +566,11 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         require(persistableBundle.getString(KEY_SUBTYPE) == SUBTYPE_TASK_TO_ACTIVITY) {
           "Invalid subtype"
         }
+        val target =
+          requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Task))
         return TaskToActivity(
           session = requireNotNull(persistableBundle.getPersistableBundle(KEY_SESSION)),
-          target =
-            requireNotNull(persistableBundle.getPersistable(KEY_TARGET, PendingContract.Task)),
+          target = target,
           callbackRef =
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_REF, PersistableUniqueNodeRef)
@@ -571,15 +579,9 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
             requireNotNull(
               persistableBundle.getPersistable(KEY_CALLBACK_SERVICE_INTENT, PersistableIntent)
             ),
-          callbackUserId =
-            persistableBundle.getInt(KEY_CALLBACK_USER_ID)
-              ?: run {
-                Log.w(
-                  TAG,
-                  "Callback user ID is not set, using current user ID: ${myUserHandle().identifier}",
-                )
-                myUserHandle().identifier
-              },
+          callbackUserId = extractCallbackUserId(persistableBundle),
+          callbackKey =
+            persistableBundle.getString(KEY_CALLBACK_KEY) ?: target.asNodeRef().identity(),
         )
       }
     }
@@ -596,6 +598,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     private const val KEY_CALLBACK_SERVICE_INTENT = "cc.KEY_CALLBACK_SERVICE_INTENT"
     private const val KEY_CALLBACK_USER_ID = "cc.KEY_CALLBACK_USER_ID"
     private const val KEY_CALLBACK_SOURCE = "cc.KEY_CALLBACK_SOURCE"
+    private const val KEY_CALLBACK_KEY = "cc.KEY_CALLBACK_KEY"
     private const val KEY_TYPE = "cc.TYPE"
     private const val TYPE_ACTIVITY = "Activity"
     private const val TYPE_TASK = "Task"
@@ -612,5 +615,16 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         TYPE_TASK -> Task.fromPersistableBundle(persistableBundle)
         else -> error("Unknown ChainedContract type $type")
       }
+
+    private fun extractCallbackUserId(bundle: PersistableBundle): Int {
+      val id = bundle.getInt(KEY_CALLBACK_USER_ID, -69)
+      return if (id == -69) {
+        val currentUserId = Process.myUserHandle().identifier
+        Log.w(TAG, "Callback user ID is not set, using current user ID: $currentUserId")
+        currentUserId
+      } else {
+        id
+      }
+    }
   }
 }

@@ -91,6 +91,7 @@ sealed interface ChainedInput : Persistable {
       metadataStore: OnboardingMetadataStore? = null,
       failure: Boolean = false,
       state: PersistableBundle? = null,
+      callbackKey: String,
     ) : this(
       PersistableBundle {
         putString(KEY_TYPE, TYPE_ACTIVITY_CALLBACK)
@@ -100,6 +101,7 @@ sealed interface ChainedInput : Persistable {
         putPersistable(KEY_SOURCE, source, PersistableNodeRef)
         putPersistable(KEY_METADATA_STORE, metadataStore)
         putPersistable(KEY_DATA, data, ActivityResultPersistableDelegate)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
     )
 
@@ -135,6 +137,10 @@ sealed interface ChainedInput : Persistable {
     /** Persisted state of the callback node. */
     val state: PersistableBundle?
       get() = bundle.getPersistableBundle(KEY_STATE)
+
+    /** A key identifying a launcher callback to execute. */
+    val callbackKey: String
+      get() = bundle.getString(KEY_CALLBACK_KEY) ?: source.asNodeRef().identity()
   }
 
   /**
@@ -151,6 +157,7 @@ sealed interface ChainedInput : Persistable {
       metadataStore: OnboardingMetadataStore? = null,
       failure: Boolean = false,
       state: PersistableBundle? = null,
+      callbackKey: String,
     ) : this(
       PersistableBundle {
         putString(KEY_TYPE, TYPE_TASK_CALLBACK)
@@ -160,6 +167,7 @@ sealed interface ChainedInput : Persistable {
         putPersistable(KEY_SOURCE, source, PersistableNodeRef)
         putPersistable(KEY_METADATA_STORE, metadataStore)
         putPersistableBundle(KEY_DATA, data)
+        putString(KEY_CALLBACK_KEY, callbackKey)
       }
     )
 
@@ -191,6 +199,10 @@ sealed interface ChainedInput : Persistable {
     /** Persisted state of the callback node. */
     val state: PersistableBundle?
       get() = bundle.getPersistableBundle(KEY_STATE)
+
+    /** A key identifying a launcher callback to execute. */
+    val callbackKey: String
+      get() = bundle.getString(KEY_CALLBACK_KEY) ?: source.asNodeRef().identity()
   }
 
   companion object : PersistableDeserializer<ChainedInput> {
@@ -203,6 +215,7 @@ sealed interface ChainedInput : Persistable {
     private const val KEY_METADATA_STORE = "ci.KEY_METADATA_STORE"
     private const val KEY_DATA = "ci.KEY_DATA"
     private const val KEY_FAILURE = "ci.FAILURE"
+    private const val KEY_CALLBACK_KEY = "ci.CALLBACK_KEY"
 
     override fun fromPersistableBundle(persistableBundle: PersistableBundle): ChainedInput =
       when (persistableBundle.getString(KEY_TYPE)) {

@@ -20,7 +20,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
    * If a package has failed to be loaded, the value will be null. If it has not been attempted the
    * key will be non-present.
    */
-  protected val packageComplianceDates = mutableMapOf<String, ComplianceDate?>()
+  private val packageComplianceDates = mutableMapOf<String, ComplianceDate?>()
 
   /** Log a warn [message] with an optional [tr] error. */
   protected abstract fun warn(message: String, tr: Throwable?)
@@ -29,7 +29,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   protected abstract fun getChangeIdData(@ValidChangeId changeId: Long): ChangeId
 
   /** Is given [packageName] the same as current application package. */
-  protected abstract fun isCurrentPackage(packageName: String): Boolean
+  protected abstract fun isCurrentPackage(packageName: String): Boolean?
 
   /** Get a string `<meta-data \>` value from application's manifest. */
   protected abstract fun getPackageMetaData(packageName: String, key: String): String?
@@ -73,7 +73,8 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
     val changeData = getChangeIdData(changeId)
 
     if (
-      changeData.changeRadius == ChangeRadius.SINGLE_COMPONENT && !isCurrentPackage(packageName)
+      changeData.changeRadius == ChangeRadius.SINGLE_COMPONENT &&
+        isCurrentPackage(packageName) == false
     ) {
       // This should be blocked by conformance
       throw IllegalArgumentException(
@@ -134,28 +135,21 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   }
 
   private fun getChangeOverride(packageName: String, changeData: ChangeId): Boolean? {
-    val bugIdOverride = getSettingOrPropertyBoolean("$packageName.${changeData.bugId}")
-    if (bugIdOverride != null) {
-      return bugIdOverride
-    }
+    val bugIdOverride = getSettingOrPropertyBoolean("$packageName.${changeData.bugId}", tag = false)
+    if (bugIdOverride != null) return bugIdOverride
 
-    val tagOverrides =
-      (changeData.tags + CHANGE_TAG_ALL).map { getSettingOrPropertyBoolean("$packageName.$it") }
-    if (tagOverrides.contains(true)) {
-      return true
-    }
-
-    if (tagOverrides.contains(false)) {
-      return false
-    }
-
-    return null
+    val tagOverride =
+      (changeData.tags + CHANGE_TAG_ALL)
+        .asSequence()
+        .map { getSettingOrPropertyBoolean("$packageName.$it", tag = true) }
+        .firstOrNull { it != null }
+    return tagOverride
   }
 
-  private fun getSettingBoolean(key: String): Boolean? {
+  private fun getSettingBoolean(key: String, tag: Boolean): Boolean? {
     val intValue =
       runCatching { getSettingInt(key) }
-        .recoverCatching { getSettingInt("${key}L") }
+        .recoverCatching { if (!tag) getSettingInt("${key}L") else null }
         .getOrNull()
         ?.equals(1)
     if (intValue != null) return intValue
@@ -173,20 +167,23 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
     }
   }
 
-  private fun getPropertyBoolean(key: String): Boolean? {
+  private fun getPropertyBoolean(key: String, tag: Boolean): Boolean? {
     val property =
       getSystemProperty(key)
-        ?: getSystemProperty("${key}L")
         ?: getSystemProperty("persist.$key")
-        ?: getSystemProperty("persist.${key}L")
+        ?: if (!tag) {
+          getSystemProperty("${key}L") ?: getSystemProperty("persist.${key}L")
+        } else {
+          null
+        }
         ?: return null
     return property == "1" ||
       property.equals("true", ignoreCase = true) ||
       property.equals("on", ignoreCase = true)
   }
 
-  private fun getSettingOrPropertyBoolean(key: String): Boolean? =
-    getSettingBoolean(key) ?: getPropertyBoolean(key)
+  private fun getSettingOrPropertyBoolean(key: String, tag: Boolean): Boolean? =
+    getSettingBoolean(key, tag) ?: getPropertyBoolean(key, tag)
 
   companion object {
     /**
