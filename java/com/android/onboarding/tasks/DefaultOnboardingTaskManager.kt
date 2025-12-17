@@ -345,6 +345,24 @@ internal class DefaultOnboardingTaskManager(
     }
   }
 
+  override fun <O> getTaskMetadataSynchronous(
+    token: OnboardingTaskToken<O>
+  ): OnboardingMetadataStore? {
+    if (!isTaskRunInSameComponent(token)) {
+      log.d(
+        "Attempted to get task metadata synchronously but $token (${token.nodePackage}) is not running in same process ($nodePackage) "
+      )
+      return null
+    }
+    if (!localServer.isSynchronousTask(token)) {
+      log.d(
+        "Attempted to get task metadata synchronously but $token is not implemented synchronously"
+      )
+      return null
+    }
+    return localServer.getTaskMetadataDirectly(token)
+  }
+
   override suspend fun interrupt(token: OnboardingTaskToken<*>, reason: InterruptReason) {
     log.i("interrupt: $token with $reason")
     withService(

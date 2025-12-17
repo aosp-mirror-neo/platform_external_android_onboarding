@@ -157,6 +157,21 @@ class OnboardingTaskServiceServer(
     return taskStateManager.getOrNull(token)
   }
 
+  /**
+   * Gets task metadata for [token] directly without any validation or exception handling.
+   *
+   * Returns null if the task for [token] is not found.
+   *
+   * @see getTaskMetadata
+   */
+  @InternalOnboardingApi
+  fun <O> getTaskMetadataDirectly(token: OnboardingTaskToken<O>): OnboardingMetadataStore? {
+    if (taskStateManager.getTaskInstance(token) == null) {
+      return null
+    }
+    return taskStateManager.getMetadata(token)
+  }
+
   override fun <O> observeTaskState(token: OnboardingTaskToken<O>): Flow<OnboardingTaskState<O>> =
     flow {
         executeServerAction(
@@ -460,6 +475,8 @@ class OnboardingTaskServiceServer(
       return false
     }
 
+    taskStateManager.initMetadataChannel(token)
+    taskStateManager.cacheTaskInstance(token, task)
     val state = task.runTaskSynchronous(context = applicationContext, input = bundle)
     if (state == null) {
       Log.d(TAG, "Synchronous task $task is not run synchronously")
@@ -467,6 +484,8 @@ class OnboardingTaskServiceServer(
     }
 
     taskStateManager[token] = state
+    taskStateManager.closeMetadataChannel(token)
+    task.onDestroy()
     return true
   }
 
