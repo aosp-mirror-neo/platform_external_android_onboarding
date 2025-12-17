@@ -71,7 +71,7 @@ java_library {
 java_library {
     name: "android_onboarding.utils.time",
     visibility: [
-        "//external/android_onboarding:__subpackages__",
+        "//visibility:public",
     ],
     srcs: [
         "time.kt",

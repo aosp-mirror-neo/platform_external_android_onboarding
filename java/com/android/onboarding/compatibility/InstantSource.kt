@@ -5,7 +5,7 @@ import java.time.Instant
 
 /** Equivalent to java.time.InstantSource but supported from SDK 26+ */
 @RequiresApi(26)
-interface InstantSource {
+fun interface InstantSource {
   fun instant(): Instant
 }
 

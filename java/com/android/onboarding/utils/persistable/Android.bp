@@ -21,6 +21,7 @@ android_library {
         "PersistableBitmap.kt",
         "PersistableBoolean.kt",
         "PersistableBundle.kt",
+        "PersistableDouble.kt",
         "PersistableEnum.kt",
         "PersistableInt.kt",
         "PersistableIntent.kt",
