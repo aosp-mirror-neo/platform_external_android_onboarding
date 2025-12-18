@@ -327,6 +327,19 @@ interface OnboardingTaskManager : ComponentRef, AutoCloseable {
   fun <O> getTaskMetadataFlow(token: OnboardingTaskToken<O>): Flow<OnboardingMetadataStore>
 
   /**
+   * Returns the [OnboardingMetadataStore] sent by a task represented by [token] synchronously.
+   *
+   * You should only call this for tasks that were run synchronously with [runTaskSynchronous] or
+   * alike. Otherwise, this could return an empty [OnboardingMetadataStore] when the task is not
+   * complete. Use [getTaskMetadataFlow] to listen for metadata updates from tasks that were run
+   * asynchronously.
+   *
+   * Returns null if the task cannot be found, the task doesn't support to be run synchronously, or
+   * if the metadata cannot be fetched synchronously. E.g. when a task is run cross-process.
+   */
+  fun <O> getTaskMetadataSynchronous(token: OnboardingTaskToken<O>): OnboardingMetadataStore?
+
+  /**
    * Interrupt a task with out-of-band information.
    *
    * The task can choose to use this information in any way. This could result in the task being

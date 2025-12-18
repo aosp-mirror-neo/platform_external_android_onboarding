@@ -50,16 +50,18 @@ sealed interface OnboardingTaskWithSynchronousExecution<I, O, C>
   fun runTaskSynchronous(context: Context, input: PersistableBundle): OnboardingTaskState<O>? {
     try {
       task.contextRef = WeakReference(context)
+      task.isRunning = true
       val result = runTaskSynchronous(context, task.contract.inputDecoder.encode(input))
       if (result == null) {
         return result
       }
-
       return task.successInternal(result)
     } catch (e: Exception) {
       return task.failureInternal(
         SensitiveString("Task failed: ${e.message} (${e.stackTraceToString()})")
       )
+    } finally {
+      task.isRunning = false
     }
   }
 }
