@@ -26,10 +26,12 @@ data class PersistableWizardResult(val resultCode: Int, val intent: PersistableI
 
   companion object : PersistableDeserializer<PersistableWizardResult> {
     override fun fromPersistableBundle(persistableBundle: PersistableBundle) =
-      PersistableWizardResult(
-        resultCode = persistableBundle.getInt(RESULT_CODE_KEY),
-        intent = persistableBundle.getPersistable(INTENT_KEY, PersistableIntent),
-      )
+      if (!persistableBundle.containsKey(RESULT_CODE_KEY)) error("Missing ResultCode")
+      else
+        PersistableWizardResult(
+          resultCode = persistableBundle.getInt(RESULT_CODE_KEY),
+          intent = persistableBundle.getPersistable(INTENT_KEY, PersistableIntent),
+        )
 
     private const val RESULT_CODE_KEY = "result_code"
     private const val INTENT_KEY = "intent"
