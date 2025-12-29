@@ -19,6 +19,7 @@ class FakeOnboardingFlagsProvider(
   override var stableEnvironmentRetryInitialDelay: Duration = Duration.ofSeconds(3),
   override var stableEnvironmentRetryMultiplier: Double = 1.5,
   override var stableEnvironmentNumOfRetries: Int = 3,
+  override val isActivityMetadataLoggingEnabled: Boolean = true,
 ) : OnboardingFlagsProvider {
   @Deprecated(message = "Replaced with overrides", replaceWith = ReplaceWith("isContractEnabled"))
   var isOnboardingContractEnabledFlag: Boolean by ::isContractEnabled
