@@ -54,4 +54,6 @@ interface OnboardingFlagsProvider {
 
   /** Returns the number of retries when trying to set/unset a stable environment. */
   val stableEnvironmentNumOfRetries: Int
+
+  val isActivityMetadataLoggingEnabled: Boolean
 }

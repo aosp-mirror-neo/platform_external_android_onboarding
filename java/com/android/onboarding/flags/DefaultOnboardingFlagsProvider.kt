@@ -25,6 +25,9 @@ class DefaultOnboardingFlagsProvider : OnboardingFlagsProvider {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM,
       )
 
+  override val isActivityMetadataLoggingEnabled: Boolean
+    get() = false
+
 
   override val isUiLoggingEnabled: Boolean
     get() = true
