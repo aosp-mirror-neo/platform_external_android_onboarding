@@ -20,6 +20,12 @@ enum class PrecalculationTrigger : PersistableEnum {
    * whether an account was added.
    */
   ACCOUNT_SETUP_COMPLETE,
+  /**
+   * The point in setup where the user has chosen what data they want to be restored. This may be
+   * immediately after choosing "Express" restore, or after they have chosen what to copy in
+   * "Customize" restore.
+   */
+  RESTORE_READY,
   PERSONALIZATION_FLOW_STARTED,
   /** Triggered at the very beginning of deferred setup. */
   DEFERRED_SETUP_STARTED;
@@ -27,8 +33,5 @@ enum class PrecalculationTrigger : PersistableEnum {
   override val id = name
 
   companion object :
-    PersistableDeserializer<PrecalculationTrigger> by PersistableEnum.deserializer(
-      entries,
-      UNKNOWN,
-    )
+    PersistableDeserializer<PrecalculationTrigger> by PersistableEnum.deserializer(entries, UNKNOWN)
 }
