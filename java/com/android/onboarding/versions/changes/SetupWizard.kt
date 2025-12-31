@@ -462,6 +462,15 @@ const val PRE_PHENOTYPE_PRECALC_TASKS = 410554685L
 const val DSE_FLOW_CONTROL_PRECALC_TASK_DEFAULT = 438609409L
 
 @ChangeId(
+  bugId = 451533821L,
+  owner = "eliselliott",
+  breaking = [],
+  tags = [P11_EVT],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+)
+const val CONSENT_TRANSFER_PRECALC_TASKS_DEFAULT = 451533821L
+
+@ChangeId(
   bugId = 434904270L,
   owner = "scottjonathan",
   breaking = [],
