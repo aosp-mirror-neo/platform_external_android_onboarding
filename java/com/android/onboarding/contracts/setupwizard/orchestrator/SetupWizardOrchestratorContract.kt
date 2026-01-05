@@ -4,10 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.CATEGORY_DEFAULT
-import com.android.onboarding.common.SETUP_WIZARD
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
-import com.android.onboarding.contracts.annotations.ForegroundOnboardingNode
-import com.android.onboarding.contracts.annotations.OnboardingNode
 import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistableExtra
@@ -16,25 +13,25 @@ import com.google.android.setupcompat.util.WizardManagerHelper
 import com.google.android.wizardmanager.WizardManagerExtras
 
 /**
- * Orchestrator for SetupWizard.
+ * Base class for SetupWizard orchestrator contracts. This contract launches an orchestrator
+ * activity which controls screen flow during onboarding. This screen is responsible for controlling
+ * the flow of screens throughout Setup Wizard. It fulfils the requirements of an Onboarding
+ * Orchestrator and so is able to execute Orchestrated Tasks.
  *
- * This screen is responsible for controlling the flow of screens throughout Setup Wizard. It
- * fulfils the requirements of an Onboarding Orchestrator and so is able to execute Orchestrated
- * Tasks.
+ * Subclasses are expected to override [activityComponentName] to point to the orchestrator activity
+ * implementation, and optionally [intentAction] if required by the activity.
  *
- * This screen shows the "unified waiting screen" interface which presents a sequence of tasks and
- * breaks out when it encounters a screen which cannot be ran in the background.
- *
- * Currently, this is only used for the initial loading during the quickstart flow, and control is
- * passed back to [WizardManagerActivity] whenever an issue is encountered.
+ * @see IowaWaitingScreenContract
+ * @see SpinnerWaitingScreenContract
  */
-@OnboardingNode(
-  component = SETUP_WIZARD,
-  name = "SetupWizardOrchestrator",
-  foreground = ForegroundOnboardingNode(uiType = ForegroundOnboardingNode.UiType.LOADING),
-)
-object SetupWizardOrchestratorContract :
+abstract class SetupWizardOrchestratorContract :
   VoidOnboardingActivityApiContract<SetupWizardOrchestratorContract.OrchestratorArgument>() {
+
+  /** The component name of the orchestrator activity implementation. */
+  abstract val activityComponentName: ComponentName
+
+  /** The intent action required by the orchestrator activity, or null if not required. */
+  abstract val intentAction: String?
 
   /**
    * Argument used for entering orchestration.
@@ -63,13 +60,11 @@ object SetupWizardOrchestratorContract :
   }
 
   override fun performCreateIntent(context: Context, arg: OrchestratorArgument): Intent =
-    Intent(INTENT_ACTION).also {
-      it.setComponent(
-        ComponentName(
-          "com.google.android.setupwizard",
-          "com.google.android.setupwizard.SetupWizardOrchestratorActivity",
-        )
-      )
+    Intent().also {
+      if (intentAction != null) {
+        it.action = intentAction
+      }
+      it.component = activityComponentName
       it.addCategory(CATEGORY_DEFAULT)
       it.putPersistableExtra(KEY_EXTRAS, arg.extras)
 
@@ -115,9 +110,10 @@ object SetupWizardOrchestratorContract :
         },
     )
 
-  private const val INTENT_ACTION = "com.android.wizard.ORCHESTRATOR"
-  private const val KEY_EXTRAS = "extras"
-  private const val KEY_RESULT = "result"
-  private const val KEY_TASK = "task"
-  private const val KEY_ON_FAILURE = "fallback"
+  private companion object {
+    const val KEY_EXTRAS = "extras"
+    const val KEY_RESULT = "result"
+    const val KEY_TASK = "task"
+    const val KEY_ON_FAILURE = "fallback"
+  }
 }

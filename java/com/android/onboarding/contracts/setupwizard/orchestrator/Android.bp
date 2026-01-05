@@ -9,7 +9,9 @@ android_library {
         "//visibility:public",
     ],
     srcs: [
+        "IowaWaitingScreenContract.kt",
         "SetupWizardOrchestratorContract.kt",
+        "SpinnerWaitingScreenContract.kt",
     ],
     static_libs: [
         "android_onboarding.common",
