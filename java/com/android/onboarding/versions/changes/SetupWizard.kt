@@ -403,6 +403,15 @@ const val AUTH_EARLY_UPDATE_ROLLBACK_RUNS_WITHOUT_UI_DEPENDENCY = 368378446L
 const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
 
 @ChangeId(
+  bugId = 470030883L,
+  owner = "scottjonathan",
+  breaking = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  dependsOn = CHECKIN_AND_UPDATE_RUNS_WITHOUT_UI_DEPENDENCY,
+)
+const val COMPAT_CHECKIN_AND_EARLY_UPDATE_DOES_NOT_USE_LOGIC = 470030883L
+
+@ChangeId(
   bugId = 408134087L,
   owner = "scottjonathan",
   breaking = [],
