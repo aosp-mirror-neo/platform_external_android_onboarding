@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.guava.future
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 
@@ -89,6 +90,12 @@ class DefaultOnboardingDataStore(
   override fun <T : Persistable> writeAsync(key: String, value: T): ListenableFuture<Unit> =
     writeAsync(key, value, Persistable::toPersistableBundle)
 
+  override fun <T> writeBlocking(key: String, value: T, serializer: PersistableSerializer<T>) =
+    runBlocking(coroutineScope.coroutineContext) { write(key, value, serializer) }
+
+  override fun <T : Persistable> writeBlocking(key: String, value: T) =
+    runBlocking(coroutineScope.coroutineContext) { write(key, value) }
+
   override suspend fun <T> read(key: String, deserializer: PersistableDeserializer<T>): T? {
     if (!onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CHANGE_ID)) {
       return null
@@ -102,6 +109,9 @@ class DefaultOnboardingDataStore(
     key: String,
     deserializer: PersistableDeserializer<T>,
   ): ListenableFuture<T?> = coroutineScope.future { read(key, deserializer) }
+
+  override fun <T> readBlocking(key: String, deserializer: PersistableDeserializer<T>): T? =
+    runBlocking(coroutineScope.coroutineContext) { read(key, deserializer) }
 
   private suspend fun writePersistableBundle(key: String, value: PersistableBundle) {
     val keyWithPrefix = appendPrefixIfNecessary(key)
