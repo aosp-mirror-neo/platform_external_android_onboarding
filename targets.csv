@@ -78,5 +78,6 @@ android_onboarding.versions.annotations
 android_onboarding.versions.change_collector
 android_onboarding.versions.change_collector.change_collector_lib
 android_onboarding.versions.changes
+android_onboarding.waiting.waiting_screen_provider
 android_onboarding.wizardmanager.actions
 wizard_manager.WizardManagerExtras
