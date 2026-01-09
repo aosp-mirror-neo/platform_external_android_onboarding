@@ -1,5 +1,6 @@
 package com.google.android.setupwizard.waiting
 
+import android.content.Context
 import android.content.Intent
 import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.pending.PendingContract
@@ -45,6 +46,20 @@ interface WaitingScreen<T : WaitingScreenArgument> {
       originalExtras.pendingActivityMetadata,
     )
   }
+
+  fun launch(
+    context: Context,
+    originalIntent: Intent,
+    stack: WizardStack,
+    wizardAction: WizardAction,
+  )
+
+  fun createIntent(
+    context: Context,
+    originalIntent: Intent,
+    stack: WizardStack,
+    wizardAction: WizardAction,
+  ): Intent
 }
 
 abstract class WaitingScreenContract<T : WaitingScreenArgument> :
