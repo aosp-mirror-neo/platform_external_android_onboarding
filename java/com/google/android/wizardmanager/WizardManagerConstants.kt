@@ -53,8 +53,8 @@ object WizardManagerConstants {
   const val EXTRA_SHOW_FINAL_SCREEN_ON_BREAKOUT = "com.android.onboarding.showFinalScreenOnBreakout"
 
   /**
-   * Key for global system settings that returns if the user has broken out from the unified waiting
-   * screen.
+   * Key for [com.android.onboarding.datastore.OnboardingDataStore] that returns if the user has
+   * broken out from the unified waiting screen.
    */
   const val KEY_IS_BROKEN_OUT_FROM_UNIFIED_WAITING_SCREEN =
     "is_broken_out_from_unified_waiting_screen"
