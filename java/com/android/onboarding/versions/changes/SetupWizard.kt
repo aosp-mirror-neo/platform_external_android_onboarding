@@ -484,7 +484,7 @@ const val EARLY_SIM_INFO = 434904270L
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   tags = [P11_EVT, NEXT],
-  available = ChangeId.NOT_AVAILABLE,
+  available = "2026-01-01",
 )
 const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
 
