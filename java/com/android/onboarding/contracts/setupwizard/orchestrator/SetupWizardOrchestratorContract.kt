@@ -4,12 +4,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.CATEGORY_DEFAULT
-import com.android.onboarding.contracts.VoidOnboardingActivityApiContract
 import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistableExtra
 import com.android.onboarding.wizardmanager.actions.PersistableWizardResult
 import com.google.android.setupcompat.util.WizardManagerHelper
+import com.google.android.setupwizard.waiting.WaitingScreenArgument
+import com.google.android.setupwizard.waiting.WaitingScreenContract
 import com.google.android.wizardmanager.WizardManagerExtras
 
 /**
@@ -25,7 +26,7 @@ import com.google.android.wizardmanager.WizardManagerExtras
  * @see SpinnerWaitingScreenContract
  */
 abstract class SetupWizardOrchestratorContract :
-  VoidOnboardingActivityApiContract<SetupWizardOrchestratorContract.OrchestratorArgument>() {
+  WaitingScreenContract<SetupWizardOrchestratorContract.OrchestratorArgument>() {
 
   /** The component name of the orchestrator activity implementation. */
   abstract val activityComponentName: ComponentName
@@ -39,7 +40,11 @@ abstract class SetupWizardOrchestratorContract :
    * @param extras WizardManagerExtras which must have been initialised earlier in the flow.
    * @param action The action to be performed by the loading screen
    */
-  data class OrchestratorArgument(val extras: WizardManagerExtras, val action: Action)
+  data class OrchestratorArgument(override val extras: WizardManagerExtras, val action: Action) :
+    WaitingScreenArgument() {
+    override val task: PendingContract.ErasedTask?
+      get() = (action as? Action.TaskAction)?.task
+  }
 
   sealed class Action {
     /** [Action] which indicates the given result should be used to continue the onboarding flow. */

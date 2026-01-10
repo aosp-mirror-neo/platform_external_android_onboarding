@@ -15,10 +15,10 @@ android_library {
     ],
     static_libs: [
         "android_onboarding.common",
-        "android_onboarding.contracts",
         "android_onboarding.contracts.annotations",
         "android_onboarding.pending",
         "android_onboarding.utils.persistable",
+        "android_onboarding.waiting.waiting_screen_provider",
         "android_onboarding.wizardmanager.actions",
         "setupcompat",
         "wizard_manager.WizardManagerExtras",
