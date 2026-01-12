@@ -408,6 +408,7 @@ const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   tags = [P11_EVT, NEXT],
+  available = "2025-12-25",
 )
 const val UNIFIED_LOADING_EVERYWHERE = 408134087L
 
@@ -437,7 +438,7 @@ const val PERSIST_ACCOUNTS_SNAPSHOT = 401476658L
   breaking = [],
   tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  available = ChangeId.NOT_AVAILABLE,
+  available = "2025-12-25",
 )
 const val WIZARD_SCRIPT_SUPPORTS_TASK_ACTION = 436772442L
 
@@ -465,8 +466,9 @@ const val DSE_FLOW_CONTROL_PRECALC_TASK_DEFAULT = 438609409L
   bugId = 451533821L,
   owner = "eliselliott",
   breaking = [],
-  tags = [P11_EVT],
+  tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2025-12-25",
 )
 const val CONSENT_TRANSFER_PRECALC_TASKS_DEFAULT = 451533821L
 
@@ -499,6 +501,7 @@ const val ESIM_ORCHESTRATION_SUPPORT = 444632096L
   breaking = [],
   tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2025-12-25",
 )
 const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
 
@@ -508,6 +511,7 @@ const val SUPPORT_MULTI_NEXT_ACTIONS_AND_YIELD_IN_SCRIPT = 448547273L
   breaking = [],
   tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2025-12-25",
 )
 const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
 
@@ -522,5 +526,6 @@ const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
   breaking = [],
   tags = [P11_EVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2025-12-25",
 )
 const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L

@@ -34,5 +34,6 @@ const val ORCHESTRATED_VISIBILITY_CHANGE_ID = 408958992L
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   tags = [P11_EVT, NEXT],
+  available = "2025-12-25",
 )
 const val USE_ORCHESTRATOR_CHANGE_ID = 404239383L
