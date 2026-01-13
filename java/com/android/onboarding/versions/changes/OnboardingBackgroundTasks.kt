@@ -46,6 +46,16 @@ const val SEND_LARGE_DATA_IN_CHUNKS_CHANGE_ID = 394763768L
 )
 const val SETUP_SESSION_BASED_STORAGE_CHANGE_ID = 409902959L
 
+@ChangeId(
+  bugId = 474505888L,
+  owner = "iancheng",
+  breaking = [],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2026-01-09",
+  tags = [P11_EVT, NEXT],
+)
+const val SETUP_SESSION_BASED_STORAGE_CACHE_CHANGE_ID = 474505888L
+
 /**
  * Feature flag that enables storing task states in disk.
  *

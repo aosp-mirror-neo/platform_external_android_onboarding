@@ -2,6 +2,7 @@ package com.android.onboarding.datastore
 
 import android.content.Context
 import android.os.PersistableBundle
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
@@ -20,8 +21,11 @@ import com.android.onboarding.utils.suwmetadata.DefaultSuwMetadataProvider
 import com.android.onboarding.utils.suwmetadata.SuwMetadataProvider
 import com.android.onboarding.versions.DefaultOnboardingChanges
 import com.android.onboarding.versions.OnboardingChanges
+import com.android.onboarding.versions.changes.SETUP_SESSION_BASED_STORAGE_CACHE_CHANGE_ID
 import com.android.onboarding.versions.changes.SETUP_SESSION_BASED_STORAGE_CHANGE_ID
 import com.google.common.util.concurrent.ListenableFuture
+import java.util.Optional
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -45,8 +49,8 @@ import kotlinx.coroutines.withContext
  *
  * Complex clients, e.g. those with submodules, are encouraged to provide unique [keyPrefix] for
  * each different instances of [DefaultOnboardingDataStore] to minimize the risk of key name
- * collision. Alternatively, you can provide different custom [dataStore], which allows customizing
- * file corruption handling on top of namespace collision.
+ * collision and caching issues. Alternatively, you can provide different custom [dataStore], which
+ * allows customizing file corruption handling on top of namespace collision.
  *
  * @param coroutineScope Coroutine scope to be used for launching async tasks and creating
  *   [ListenableFuture].
@@ -68,13 +72,16 @@ class DefaultOnboardingDataStore(
 ) : OnboardingDataStore {
   private val context = context.applicationContext
   private var cachedLastAccessedSuwSessionId: Long = 0L
+  private val cachedData = ConcurrentHashMap<String, Optional<PersistableBundle>>()
 
   override suspend fun <T> write(key: String, value: T, serializer: PersistableSerializer<T>) {
     if (!onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CHANGE_ID)) {
       return
     }
-    withContext(coroutineScope.coroutineContext) {
-      writePersistableBundle(key, serializer.toPersistableBundle(value))
+    updateSuwSessionIdAndCleanupIfNecessary()
+    serializer.toPersistableBundle(value).also {
+      cacheData(key, it)
+      withContext(coroutineScope.coroutineContext) { writePersistableBundle(key, it) }
     }
   }
 
@@ -100,6 +107,13 @@ class DefaultOnboardingDataStore(
     if (!onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CHANGE_ID)) {
       return null
     }
+    updateSuwSessionIdAndCleanupIfNecessary()
+    if (
+      onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CACHE_CHANGE_ID) &&
+        isDataCached(key)
+    ) {
+      return getCachedData(key)?.let { deserializer.fromPersistableBundle(it) }
+    }
     return withContext(coroutineScope.coroutineContext) {
       readPersistableBundle(key)?.let { deserializer.fromPersistableBundle(it) }
     }
@@ -113,10 +127,23 @@ class DefaultOnboardingDataStore(
   override fun <T> readBlocking(key: String, deserializer: PersistableDeserializer<T>): T? =
     runBlocking(coroutineScope.coroutineContext) { read(key, deserializer) }
 
+  @VisibleForTesting
+  fun clearCachedData() {
+    cachedData.clear()
+  }
+
+  private fun cacheData(key: String, data: PersistableBundle?) {
+    cachedData[key] = Optional.ofNullable(data)
+  }
+
+  private fun isDataCached(key: String): Boolean = cachedData.containsKey(key)
+
+  private fun getCachedData(key: String): PersistableBundle? = cachedData[key]?.orElse(null)
+
   private suspend fun writePersistableBundle(key: String, value: PersistableBundle) {
     val keyWithPrefix = appendPrefixIfNecessary(key)
     try {
-      getDataStore().edit { it[byteArrayPreferencesKey(keyWithPrefix)] = value.toByteArray() }
+      dataStore.edit { it[byteArrayPreferencesKey(keyWithPrefix)] = value.toByteArray() }
     } catch (e: Exception) {
       Log.e(TAG, "Ignoring error", e)
     }
@@ -127,12 +154,13 @@ class DefaultOnboardingDataStore(
     var bundle: PersistableBundle? = null
     try {
       bundle =
-        getDataStore().data.firstOrNull()?.get(byteArrayPreferencesKey(keyWithPrefix))?.let {
+        dataStore.data.firstOrNull()?.get(byteArrayPreferencesKey(keyWithPrefix))?.let {
           persistableBundleOfChunks(listOf(it))
         }
     } catch (e: Exception) {
       Log.e(TAG, "Ignoring error", e)
     }
+    cacheData(key, bundle)
     return bundle
   }
 
@@ -143,28 +171,34 @@ class DefaultOnboardingDataStore(
       keyPrefix + key
     }
 
-  /** Gets the [DataStore] for the current SUW session. */
-  private suspend fun getDataStore(): DataStore<Preferences> {
+  /**
+   * Fetches the latest SUW session ID and prepares the [dataStore] and [cachedData] for the
+   * session.
+   *
+   * This should be called at the beginning of [read] and [write].
+   */
+  private suspend fun updateSuwSessionIdAndCleanupIfNecessary() {
     val suwSessionId = suwMetadataProvider.getSuwSessionId()
     if (suwSessionId == 0L) {
-      Log.w(TAG, "Failed to get SUW session id. Returning DataStore as is.")
-      return dataStore
+      Log.w(TAG, "Failed to get SUW session id.")
+      return
     }
-
     // Accessing a new SUW session means the previous one is concluded. Clear it.
-    if (suwSessionId != getLastAccessedSuwSessionId()) {
+    val lastAccessedSuwSessionId = getLastAccessedSuwSessionId()
+    if (suwSessionId != lastAccessedSuwSessionId) {
       try {
-        Log.d(TAG, "Preparing dataStore")
+        Log.d(TAG, "Preparing dataStore for new SUW session $suwSessionId")
+        clearCachedData()
         context.defaultDataStore.edit { it.clear() }
         dataStore.edit { it.clear() }
         persistSuwSessionId(suwSessionId)
-        Log.d(TAG, "Cleared DataStore for SUW session $suwSessionId")
+        if (lastAccessedSuwSessionId != 0L) {
+          Log.d(TAG, "Cleared DataStore for SUW session $lastAccessedSuwSessionId")
+        }
       } catch (e: Exception) {
         Log.e(TAG, "Ignoring error", e)
       }
     }
-
-    return dataStore
   }
 
   /** Persists the last accessed SUW session ID to both memory and disk. */
