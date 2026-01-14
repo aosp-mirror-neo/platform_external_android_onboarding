@@ -96,8 +96,8 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
     }
   }
 
-  override fun getSystemProperty(key: String): String? {
-    return if (Build.VERSION.SDK_INT >= 28) {
+  override val systemProperties = AndroidSystemPropertyResolver { key ->
+    if (Build.VERSION.SDK_INT >= 28) {
       SystemProperties.get(key).takeIf(String::isNotBlank)
     } else {
       // On less than 28 we had length limits for system properties - we'll just not support

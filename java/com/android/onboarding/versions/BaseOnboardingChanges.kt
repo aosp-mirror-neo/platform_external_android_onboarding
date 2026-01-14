@@ -40,8 +40,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   /** Get [Int] value from global settings under [key]. */
   protected abstract fun getSettingInt(key: String): Int?
 
-  /** Get value from system properties under [key]. */
-  protected abstract fun getSystemProperty(key: String): String?
+  protected abstract val systemProperties: SystemPropertyResolver<String>
 
   final override fun getComplianceDate(component: String): ComplianceDate {
     val packageName = extractPackageFromComponent(component)
@@ -125,11 +124,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   private fun getComplianceVersionOverride(packageName: String): ComplianceDate? {
     val key = "$packageName.complianceDate"
 
-    val dateString =
-      getSettingString(key)
-        ?: getSystemProperty(key)
-        ?: getSystemProperty("persist.$key")
-        ?: return null
+    val dateString = getSettingString(key) ?: systemProperties[key] ?: return null
 
     return ComplianceDate(dateString)
   }
@@ -169,10 +164,9 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
 
   private fun getPropertyBoolean(key: String, tag: Boolean): Boolean? {
     val property =
-      getSystemProperty(key)
-        ?: getSystemProperty("persist.$key")
+      systemProperties[key]
         ?: if (!tag) {
-          getSystemProperty("${key}L") ?: getSystemProperty("persist.${key}L")
+          systemProperties["${key}L"]
         } else {
           null
         }

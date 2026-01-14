@@ -9,6 +9,7 @@ android_library {
         "//visibility:public",
     ],
     srcs: [
+        "AndroidSystemPropertyResolver.kt",
         "DefaultMutableOnboardingChanges.kt",
         "DefaultOnboardingChanges.kt",
     ],
@@ -55,6 +56,7 @@ java_library {
     ],
     srcs: [
         "BaseOnboardingChanges.kt",
+        "SystemPropertyResolver.kt",
     ],
     static_libs: [
         "android_onboarding.contracts.annotations.opt_in",
