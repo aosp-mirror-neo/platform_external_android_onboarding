@@ -90,6 +90,18 @@ private constructor(private var _lastUpdate: Instant, bundle: PersistableBundle)
     }
   }
 
+  /**
+   * Replace metadata in this store with metadata from [other].
+   *
+   * Any metadata not present in [other] will not be modified.
+   */
+  fun putAll(other: OnboardingMetadataStore) {
+    synchronized(bundle) {
+      _lastUpdate = Instant.now()
+      bundle.putAll(other.bundle)
+    }
+  }
+
   /** Clears all stored metadata of any type. */
   fun clear() {
     synchronized(bundle) {
@@ -99,9 +111,8 @@ private constructor(private var _lastUpdate: Instant, bundle: PersistableBundle)
   }
 
   override fun toString(): String {
-    return "OnboardingMetadataStore{lastUpdate=$lastUpdate, metadata=" +
-      bundle.keySet().joinToString(",") +
-      "}"
+    val metadataString = bundle.keySet().joinToString(", ") { key -> "$key=${bundle.get(key)}" }
+    return "OnboardingMetadataStore{lastUpdate=$lastUpdate, metadata={$metadataString}}"
   }
 
   override fun toPersistableBundle() =
