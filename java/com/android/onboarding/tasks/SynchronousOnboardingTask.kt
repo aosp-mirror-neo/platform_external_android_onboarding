@@ -16,8 +16,7 @@ import java.lang.ref.WeakReference
  * It is permitted to call [runTaskSynchronous] to see if a result can be generated synchronously
  * and then not continue to [runTask].
  */
-sealed interface OnboardingTaskWithSynchronousExecution<I, O, C>
-  where C : OnboardingTaskContract<I, O> {
+sealed interface OnboardingTaskWithSynchronousExecution<I, O, C : OnboardingTaskContract<I, O>> {
 
   /** The task that's being run. */
   val task: OnboardingTask<I, O, C>
