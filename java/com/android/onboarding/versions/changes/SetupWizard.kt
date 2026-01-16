@@ -37,7 +37,7 @@ const val JOINED_UP_LOADING = 390215035L
   owner = "scottjonathan",
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
-  tags = [USE_FRAGMENT_LOGIC],
+  tags = [USE_FRAGMENT_LOGIC, NEXT, P11_EVT],
   available = "2024-09-16",
 )
 const val TRANSFER_WIFI_INFO_USE_FRAGMENT_LOGIC = 341941999L
@@ -48,7 +48,7 @@ const val TRANSFER_WIFI_INFO_USE_FRAGMENT_LOGIC = 341941999L
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   dependsOn = TRANSFER_WIFI_INFO_USE_FRAGMENT_LOGIC,
-  tags = [MOVE_TO_BACKGROUND],
+  tags = [MOVE_TO_BACKGROUND, NEXT, P11_EVT],
   available = "2024-09-16",
 )
 const val TRANSFER_WIFI_INFO_RUNS_WITHOUT_UI_DEPENDENCY = 342221069L
@@ -399,6 +399,8 @@ const val AUTH_EARLY_UPDATE_ROLLBACK_RUNS_WITHOUT_UI_DEPENDENCY = 368378446L
   breaking = [],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
   dependsOn = TRANSFER_WIFI_INFO_RUNS_WITHOUT_UI_DEPENDENCY,
+  tags = [NEXT, P11_EVT],
+  available = "2026-01-01",
 )
 const val TRANSFER_WIFI_INFO_TASK_DOES_NOT_USE_LOGIC = 401531972L
 
