@@ -173,6 +173,7 @@ internal class DefaultOnboardingTaskManager(
       log.e("Error calling runTaskSynchronous", e)
       return null
     }
+
     return token
   }
 
