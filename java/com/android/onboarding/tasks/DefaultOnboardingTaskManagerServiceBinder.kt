@@ -856,7 +856,11 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
    * @param nodeRef The [UniqueNodeRef] to assign to the task. If not provided, will be extracted
    *   from the task or default to [generateNodeId].
    */
-  fun initialiseTask(task: OnboardingTask<*, *, *>, nodeRef: UniqueNodeRef? = null) {
+  fun initialiseTask(
+    task: OnboardingTask<*, *, *>,
+    nodeRef: UniqueNodeRef? = null,
+    forceAsync: Boolean = false,
+  ) {
     val ref =
       nodeRef
         ?: runCatching(task::asUniqueNodeRef)
@@ -868,6 +872,7 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
         coroutineContext = coroutineScope.coroutineContext,
         onboardingChanges = onboardingChanges,
         onboardingTaskManager = otm,
+        forceAsync = forceAsync,
       )
     )
   }

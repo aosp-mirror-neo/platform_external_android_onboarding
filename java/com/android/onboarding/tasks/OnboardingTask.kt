@@ -331,7 +331,14 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
     // singleton is being re-run.
     metadataStore.clear()
     taskContext?.taskStateManager?.setMetadata(this, metadataStore)
-    return startExecution(timeout) { runTask(context, input) }
+    return startExecution(timeout) {
+      if (taskContext?.forceAsync == true) {
+        @Suppress("UNCHECKED_CAST") // We're using `as?`
+        (this as? SometimesSynchronousOnboardingTask<I, O, *>)?.runTaskAsync(context, input)
+      } else {
+        null
+      } ?: runTask(context, input)
+    }
   }
 
   /** Start the [execution] and handle common failures. */
@@ -674,6 +681,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
     val coroutineContext: CoroutineContext,
     val onboardingChanges: OnboardingChanges,
     val onboardingTaskManager: OnboardingTaskManager,
+    val forceAsync: Boolean = false,
   ) : UniqueNodeRef by nodeRef
 }
 
