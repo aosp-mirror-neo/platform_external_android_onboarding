@@ -40,8 +40,13 @@ abstract class SetupWizardOrchestratorContract :
    * @param extras WizardManagerExtras which must have been initialised earlier in the flow.
    * @param action The action to be performed by the loading screen
    */
-  data class OrchestratorArgument(override val extras: WizardManagerExtras, val action: Action) :
-    WaitingScreenArgument() {
+  data class OrchestratorArgument
+  @JvmOverloads
+  constructor(
+    override val extras: WizardManagerExtras,
+    val action: Action,
+    val actionAlreadyExecuted: Boolean = false,
+  ) : WaitingScreenArgument() {
     override val task: PendingContract.ErasedTask?
       get() = (action as? Action.TaskAction)?.task
   }
@@ -84,6 +89,10 @@ abstract class SetupWizardOrchestratorContract :
         Intent().apply { putExtras(arg.extras.toBundle()) }
       WizardManagerHelper.copyWizardManagerExtras(srcIntentContainerForWizardManagerExtras, it)
 
+      if (arg.actionAlreadyExecuted) {
+        it.putExtra(KEY_ACTION_ALREADY_EXECUTED, true)
+      }
+
       when (arg.action) {
         is Action.ResultAction -> it.putPersistableExtra(KEY_RESULT, arg.action.result)
         is Action.TaskAction -> {
@@ -113,6 +122,7 @@ abstract class SetupWizardOrchestratorContract :
         } else {
           error("Missing action")
         },
+      actionAlreadyExecuted = intent.getBooleanExtra(KEY_ACTION_ALREADY_EXECUTED, false),
     )
 
   private companion object {
@@ -120,5 +130,7 @@ abstract class SetupWizardOrchestratorContract :
     const val KEY_RESULT = "result"
     const val KEY_TASK = "task"
     const val KEY_ON_FAILURE = "fallback"
+    const val KEY_ACTION_ALREADY_EXECUTED =
+      "com.google.android.setupwizard.extra.ACTION_ALREADY_EXECUTED"
   }
 }
