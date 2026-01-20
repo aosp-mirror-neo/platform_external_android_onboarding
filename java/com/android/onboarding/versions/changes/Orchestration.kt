@@ -18,6 +18,9 @@ import com.android.onboarding.versions.changes.Tags.P11_EVT
 )
 const val SUB_ORCHESTRATION_CHANGE_ID = 383718037L
 
+/**
+ * Enabled UWS invisibility control tied to orchestrated task's `estimatedCallbackRuntime` values.
+ */
 @ChangeId(
   bugId = 408958992L,
   owner = "petuska",
