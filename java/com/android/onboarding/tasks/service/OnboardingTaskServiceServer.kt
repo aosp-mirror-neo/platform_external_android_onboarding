@@ -37,10 +37,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 import kotlin.properties.ReadOnlyProperty
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -286,9 +288,33 @@ class OnboardingTaskServiceServer(
           currentState
         } else {
           // Waiting for task to complete.
-          checkNotNull(taskStateManager.getTaskExecution(token)) { ERROR_TASK_CANNOT_BE_FOUND }
-            .join()
-          taskStateManager[token]
+          val taskExecution = taskStateManager.getTaskExecution(token)
+          if (taskExecution != null) {
+            taskExecution.join()
+            taskStateManager[token]
+          } else {
+            // Fallback to poll for completion.
+            Log.w(
+              TAG,
+              "awaitTaskCompletion: Task($token) not found in execution cache. Fallback to polling.",
+            )
+            // Poll for 30 seconds max.
+            var counter = 1
+            while (!taskStateManager[token].isCompleted && counter++ < 60) {
+              delay(500.milliseconds)
+            }
+            val state = taskStateManager[token]
+            if (state.isCompleted) {
+              Log.w(TAG, "awaitTaskCompletion: Task($token) is now complete after polling.")
+              state
+            } else {
+              Log.e(
+                TAG,
+                "awaitTaskCompletion: Task($token) does not complete after polling for 30 seconds.",
+              )
+              throw IllegalStateException("Task does not complete after polling for 30 seconds.")
+            }
+          }
         }
       Log.v(TAG, "awaitTaskCompletion($token): Flushing before returning")
       taskStateManager.flush()
