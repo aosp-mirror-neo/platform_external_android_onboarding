@@ -5,6 +5,7 @@ import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.text.TextUtils;
 import android.util.SparseArray;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.android.onboarding.utils.StableEquality;
@@ -15,6 +16,7 @@ import java.util.List;
  * A data structure for the branches from a WizardAction, mapping result codes to next actions, with
  * the addition of a default action.
  */
+@Keep
 public class WizardBranchArray extends SparseArray<String>
     implements Parcelable, Persistable, StableEquality {
 

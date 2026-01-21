@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -19,6 +20,7 @@ import java.util.Objects;
  * Description of a single WizardAction item contained within a setup script. This is an immutable
  * object.
  */
+@Keep
 public class WizardAction implements Parcelable, Persistable, StableEquality {
 
   // These can be made private if converted to Kotlin and the Deserializer moved
