@@ -5,6 +5,7 @@ import static com.android.onboarding.utils.persistable.PersistableBundleKt.putPe
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
@@ -18,6 +19,7 @@ import java.util.List;
  * included in the bundled extra attached to each action executed by setup wizard, and is utilized
  * when returning from one script to its caller.
  */
+@Keep
 public class WizardStack implements Parcelable, Persistable, StableEquality {
 
   // These can be made private if converted to Kotlin and the Deserializer moved
