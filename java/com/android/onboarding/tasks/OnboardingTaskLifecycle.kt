@@ -6,7 +6,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import java.lang.ref.WeakReference
 
 /**
@@ -57,6 +57,6 @@ internal class OnboardingTaskLifecycle(provider: LifecycleOwner) : Lifecycle() {
   }
 
   private companion object {
-    val log = logger()
+    val log = OnboardingLog.logger("OnboardingTaskLifecycle")
   }
 }

@@ -122,9 +122,6 @@ object OnboardingLog {
   /** Create a pre-tagged [OnboardingLog.Logger] for [tag]. */
   @JvmStatic fun logger(tag: String) = Logger(tag)
 
-  /** Create a pre-tagged [OnboardingLog.Logger] for [clazz]. */
-  @JvmStatic fun logger(clazz: Class<*>) = logger(clazz.simpleName)
-
   /**
    * Pre-tagged [OnboardingLog.Logger] which logs to [OnboardingLog].
    *
@@ -177,19 +174,4 @@ object OnboardingLog {
     /** @see Log.wtf */
     @CanIgnoreReturnValue fun wtf(tr: Throwable) = OnboardingLog.wtf(tag, tr)
   }
-}
-
-/**
- * Create a pre-tagged [OnboardingLog.Logger] for [T]. When used inside companion object, it will
- * extract containing class name.
- */
-inline fun <reified T : Any> T.logger(): OnboardingLog.Logger {
-  val kClass = T::class
-  val clazz =
-    if (kClass.simpleName == "Companion") {
-      kClass.java.declaringClass
-    } else {
-      kClass.java
-    }
-  return OnboardingLog.logger(requireNotNull(clazz))
 }

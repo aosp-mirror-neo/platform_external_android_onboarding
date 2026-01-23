@@ -1,5 +1,7 @@
 package com.android.onboarding.pending
 
+import android.content.Context.BIND_ALLOW_ACTIVITY_STARTS
+import android.os.Build
 import android.os.PersistableBundle
 import android.os.Process.myUserHandle
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
@@ -9,7 +11,7 @@ import com.android.onboarding.nodes.ComponentRef
 import com.android.onboarding.nodes.NodeRef
 import com.android.onboarding.nodes.generateHash
 import com.android.onboarding.utils.generateHash
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.PersistableIntent
 import java.util.Objects
 
@@ -40,7 +42,7 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
   }
 
   companion object {
-    private val log = logger()
+    private val log = OnboardingLog.logger("BackgroundLaunchable")
     const val SERVICE_ACTION = "com.android.onboarding.task.RUN_ONBOARDING_TASK"
 
     /**
@@ -60,6 +62,12 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
           `package` = component.nodePackage,
           categories = setOf(component.subcomponent),
         )
+      if (component.identity() == "com.google.android.apps.restore/restore") {
+        if (Build.VERSION.SDK_INT >= 34) {
+          log.v("Allowing activity starts as special case for restore")
+          intent.addFlags(BIND_ALLOW_ACTIVITY_STARTS)
+        }
+      }
       if (component.nodePackage == "com.google.android.gms" && component.subcomponent != "auth") {
         log.v("Rewriting GMS intent action")
         // Clear categories and rewrite GMS intent action so it's unique for all submodules.
