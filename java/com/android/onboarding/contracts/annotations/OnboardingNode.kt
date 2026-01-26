@@ -76,6 +76,13 @@ annotation class OnboardingNode(
    * expose all listed metadata.
    */
   @get:ExtractMetadata val metadata: Array<KClass<out OnboardingMetadata>> = [],
+
+  /**
+   * The identifier of the worker that should execute this node.
+   *
+   * If not specified, the architecture will help to assign.
+   */
+  val workerId: Int = UNSPECIFIED_WORKER,
 ) {
   enum class SpecificationType : PersistableEnum {
     /**
@@ -140,6 +147,12 @@ annotation class OnboardingNode(
       extractNodeMetadata(nodeClass).timeoutInSeconds.also(::validateNodeTimeout).let {
         Duration.ofSeconds(it)
       }
+
+    /** Returns the node [workerId] for given node's contract class. */
+    fun extractWorkerIdFromClass(nodeClass: Class<*>): Int = extractNodeMetadata(nodeClass).workerId
+
+    /** Constant representing an unspecified worker. */
+    const val UNSPECIFIED_WORKER: Int = -1
 
     /** Returns the node [OnboardingNodeMetadata] for given node's component name. */
     fun getOnboardingNodeMetadata(nodeClass: Class<*>): OnboardingNodeMetadata {

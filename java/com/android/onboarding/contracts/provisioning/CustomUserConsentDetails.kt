@@ -7,7 +7,7 @@ import com.android.onboarding.metadata.EncodedMetadata.EnumMetadata
 import com.android.onboarding.metadata.MetadataWriter
 import com.android.onboarding.metadata.NonSensitiveString
 import com.android.onboarding.utils.StableEquality
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.PersistableEnum
@@ -74,7 +74,7 @@ sealed class CustomUserConsentDetails : Persistable, StableEquality, MetadataWri
   companion object :
     PersistableDeserializer<CustomUserConsentDetails>,
     PersistableSerializer<CustomUserConsentDetails> {
-    private val log = logger()
+    private val log = OnboardingLog.logger("CustomUserConsentDetails")
     internal const val KEY_TYPE = "type"
     internal const val TYPE_NOT_REQUIRED = "notRequired"
     internal const val TYPE_REQUIRED = "required"

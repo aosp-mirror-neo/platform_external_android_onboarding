@@ -20,7 +20,7 @@ import com.android.onboarding.tasks.service.OnboardingTaskServiceServer
 import com.android.onboarding.utils.KnownStableEquality
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.TimeSource
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.getPersistable
@@ -505,7 +505,7 @@ internal class DefaultOnboardingTaskManager(
   }
 
   private companion object {
-    val log = logger()
+    val log = OnboardingLog.logger("DefaultOnboardingTaskManager")
 
     /**
      * The key for the [taskDataStore]. It holds historic entries of task executions history of

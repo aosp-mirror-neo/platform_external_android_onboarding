@@ -115,6 +115,7 @@ private constructor(
   val isTask: Boolean,
   val isActivity: Boolean,
   val onboardingNode: POnboardingNode,
+  val workerId: Int,
   val usesPrecalculatedResult: PUsesPrecalculatedResult?,
   val precalculation: PPrecalculation?,
   val hasTaskAlternative: PHasTaskAlternative?,
@@ -122,6 +123,7 @@ private constructor(
 ) : Persistable, NodeRef by onboardingNode.asNodeRef() {
   override fun toPersistableBundle() = PersistableBundle {
     putPersistable(KEY_ONBOARDING_NODE, onboardingNode)
+    putInt(KEY_WORKER_ID, workerId)
     putPersistable(KEY_USES_PRECALCULATION_RESULT, usesPrecalculatedResult)
     putPersistable(KEY_PRECALCULATION, precalculation)
     putPersistable(KEY_HAS_TASK_ALTERNATIVE, hasTaskAlternative)
@@ -132,6 +134,7 @@ private constructor(
 
   companion object : PersistableDeserializer<ContractMetadata> {
     private const val KEY_ONBOARDING_NODE = "ONBOARDING_NODE"
+    private const val KEY_WORKER_ID = "WORKER_ID"
     private const val KEY_USES_PRECALCULATION_RESULT = "USES_PRECALCULATION_RESULT"
     private const val KEY_PRECALCULATION = "PRECALCULATION"
     private const val KEY_HAS_TASK_ALTERNATIVE = "HAS_TASK_ALTERNATIVE"
@@ -148,6 +151,7 @@ private constructor(
         isActivity = true,
         onboardingNode =
           klass.findAnnotationsOfType<OnboardingNode>().single().let(::POnboardingNode),
+        workerId = OnboardingNode.extractWorkerIdFromClass(klass.java),
         usesPrecalculatedResult =
           klass
             .findAnnotationsOfType<UsesPrecalculatedResult>()
@@ -183,6 +187,7 @@ private constructor(
         isActivity = false,
         onboardingNode =
           klass.findAnnotationsOfType<OnboardingNode>().single().let(::POnboardingNode),
+        workerId = OnboardingNode.extractWorkerIdFromClass(klass.java),
         usesPrecalculatedResult =
           klass
             .findAnnotationsOfType<UsesPrecalculatedResult>()
@@ -218,6 +223,7 @@ private constructor(
         isActivity = persistableBundle.compatGetBoolean(KEY_IS_ACTIVITY),
         onboardingNode =
           requireNotNull(persistableBundle.getPersistable(KEY_ONBOARDING_NODE, OnboardingNode)),
+        workerId = persistableBundle.getInt(KEY_WORKER_ID, OnboardingNode.UNSPECIFIED_WORKER),
         usesPrecalculatedResult =
           persistableBundle.getPersistable(KEY_USES_PRECALCULATION_RESULT, UsesPrecalculatedResult),
         precalculation = persistableBundle.getPersistable(KEY_PRECALCULATION, PPrecalculation),
