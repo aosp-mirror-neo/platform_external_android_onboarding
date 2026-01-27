@@ -10,13 +10,17 @@ android_library {
     ],
     srcs: [
         "IowaWaitingScreenContract.kt",
+        "RecordActionResultContract.kt",
         "SetupWizardOrchestratorContract.kt",
         "SpinnerWaitingScreenContract.kt",
     ],
     static_libs: [
         "android_onboarding.common",
+        "android_onboarding.compatibility",
         "android_onboarding.contracts.annotations",
+        "android_onboarding.control.ActivityLaunch",
         "android_onboarding.pending",
+        "android_onboarding.tasks.OnboardingTaskContract",
         "android_onboarding.utils.persistable",
         "android_onboarding.waiting.waiting_screen_provider",
         "android_onboarding.wizardmanager.actions",
@@ -27,5 +31,5 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "35",
+    target_sdk_version: "36",
 }

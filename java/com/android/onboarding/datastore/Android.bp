@@ -19,6 +19,7 @@ android_library {
         "android_onboarding.utils.suwmetadata",
         "android_onboarding.versions",
         "android_onboarding.versions.changes",
+        "androidx.annotation_annotation",
         "androidx.datastore_datastore",
         "androidx.datastore_datastore-core",
         "androidx.datastore_datastore-preferences",
@@ -30,5 +31,5 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "35",
+    target_sdk_version: "36",
 }

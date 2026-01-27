@@ -11,6 +11,7 @@ android_onboarding.contracts.provisioning
 android_onboarding.contracts.setupwizard
 android_onboarding.contracts.setupwizard.orchestrator
 android_onboarding.contracts.testing
+android_onboarding.control.ActivityLaunch
 android_onboarding.control.OrchestratedResult
 android_onboarding.control.annotations
 android_onboarding.control.chained
