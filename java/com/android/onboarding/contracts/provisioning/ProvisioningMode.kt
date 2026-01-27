@@ -9,7 +9,7 @@ import com.android.onboarding.metadata.EncodedMetadata.EnumMetadata
 import com.android.onboarding.metadata.MetadataWriter
 import com.android.onboarding.metadata.NonSensitiveString
 import com.android.onboarding.utils.StableEquality
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.PersistableEnum
 
@@ -52,7 +52,7 @@ enum class ProvisioningMode(override val id: String) :
       default = Unknown,
     ) {
     internal const val PROVISIONING_MODE_METADATA_NAME = "provisioningMode"
-    private val log = logger()
+    private val log = OnboardingLog.logger("ProvisioningMode")
 
     /**
      * Returns the provisioning mode that corresponds to [devicePolicyManagerId], or [Unknown] if

@@ -316,7 +316,7 @@ constructor(
   fun removeExtra(key: String?): Unit = extras.remove(key)
 
   /** @see [Intent.addFlags] */
-  fun addFlags(flags: Int) = build { this.flags = this.flags or flags }
+  @CanIgnoreReturnValue fun addFlags(flags: Int) = build { this.flags = this.flags or flags }
 
   /** @see [Intent.putExtras] */
   fun putExtras(src: Intent) = build { src.extras?.toPersistableBundle()?.let(this.extras::putAll) }

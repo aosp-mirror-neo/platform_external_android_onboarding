@@ -4,7 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 
 /**
  * Version of [DefaultOnboardingChanges] which supports changing versioning information.
@@ -52,6 +52,6 @@ constructor(
   override fun resetTag(tag: String) = resetTag(applicationContext.packageName, tag)
 
   private companion object {
-    val log = logger()
+    val log = OnboardingLog.logger("DefaultMutableOnboardingChanges")
   }
 }

@@ -8,7 +8,7 @@ import android.os.Build
 import android.os.SystemProperties
 import android.provider.Settings
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
-import com.android.onboarding.utils.logging.logger
+import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ValidChangeId
 import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
@@ -132,6 +132,6 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
   }
 
   companion object {
-    private val log = logger()
+    private val log = OnboardingLog.logger("DefaultOnboardingChanges")
   }
 }
