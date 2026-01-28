@@ -360,4 +360,6 @@ interface OnboardingTaskManager : ComponentRef, AutoCloseable {
     contract: BackgroundLaunchableForResult<I, O>,
     input: I,
   ): OnboardingTaskToken<O>
+
+  companion object
 }
