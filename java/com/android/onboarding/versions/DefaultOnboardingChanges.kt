@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
-import android.os.Build
-import android.os.SystemProperties
 import android.provider.Settings
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.utils.logging.OnboardingLog
@@ -92,16 +90,6 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
     return try {
       Settings.Global.getInt(applicationContext.contentResolver, key)
     } catch (_: Settings.SettingNotFoundException) {
-      null
-    }
-  }
-
-  override val systemProperties = AndroidSystemPropertyResolver { key ->
-    if (Build.VERSION.SDK_INT >= 28) {
-      SystemProperties.get(key).takeIf(String::isNotBlank)
-    } else {
-      // On less than 28 we had length limits for system properties - we'll just not support
-      // this feature on older versions.
       null
     }
   }
