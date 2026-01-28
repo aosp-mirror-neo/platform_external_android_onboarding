@@ -29,7 +29,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "35",
+    target_sdk_version: "36",
     optimize: {
         proguard_flags_files: [
             "base.pgcfg",
@@ -53,7 +53,7 @@ android_library {
     dont_merge_manifests: true,
     manifest: ":android_onboarding.AndroidManifest",
     min_sdk_version: "23",
-    target_sdk_version: "35",
+    target_sdk_version: "36",
     optimize: {
         proguard_flags_files: [
             "base.pgcfg",
