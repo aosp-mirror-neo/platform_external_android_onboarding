@@ -40,8 +40,6 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   /** Get [Int] value from global settings under [key]. */
   protected abstract fun getSettingInt(key: String): Int?
 
-  protected abstract val systemProperties: SystemPropertyResolver<String>
-
   final override fun getComplianceDate(component: String): ComplianceDate {
     val packageName = extractPackageFromComponent(component)
     val complianceOverride = getComplianceVersionOverride(packageName)
@@ -121,22 +119,17 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
     }
   }
 
-  private fun getComplianceVersionOverride(packageName: String): ComplianceDate? {
-    val key = "$packageName.complianceDate"
-
-    val dateString = getSettingString(key) ?: systemProperties[key] ?: return null
-
-    return ComplianceDate(dateString)
-  }
+  private fun getComplianceVersionOverride(packageName: String): ComplianceDate? =
+    getSettingString("$packageName.complianceDate")?.let(::ComplianceDate)
 
   private fun getChangeOverride(packageName: String, changeData: ChangeId): Boolean? {
-    val bugIdOverride = getSettingOrPropertyBoolean("$packageName.${changeData.bugId}", tag = false)
+    val bugIdOverride = getSettingBoolean("$packageName.${changeData.bugId}", tag = false)
     if (bugIdOverride != null) return bugIdOverride
 
     val tagOverride =
       (changeData.tags + CHANGE_TAG_ALL)
         .asSequence()
-        .map { getSettingOrPropertyBoolean("$packageName.$it", tag = true) }
+        .map { getSettingBoolean("$packageName.$it", tag = true) }
         .firstOrNull { it != null }
     return tagOverride
   }
@@ -161,23 +154,6 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
       null
     }
   }
-
-  private fun getPropertyBoolean(key: String, tag: Boolean): Boolean? {
-    val property =
-      systemProperties[key]
-        ?: if (!tag) {
-          systemProperties["${key}L"]
-        } else {
-          null
-        }
-        ?: return null
-    return property == "1" ||
-      property.equals("true", ignoreCase = true) ||
-      property.equals("on", ignoreCase = true)
-  }
-
-  private fun getSettingOrPropertyBoolean(key: String, tag: Boolean): Boolean? =
-    getSettingBoolean(key, tag) ?: getPropertyBoolean(key, tag)
 
   companion object {
     /**

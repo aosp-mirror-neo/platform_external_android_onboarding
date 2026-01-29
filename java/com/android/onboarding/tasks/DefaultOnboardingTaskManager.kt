@@ -74,7 +74,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultOnboardingTaskManager(
   private val component: ComponentRef,
   coroutineContext: CoroutineContext,
-  private val localServer: OnboardingTaskServiceServer,
+  private val localServer: OnboardingTaskServiceServer?,
   private val onboardingChanges: OnboardingChanges,
   private val taskDataStore: OnboardingDataStore,
   private val crossProcessTaskManager: CrossProcessTaskManager,
@@ -153,6 +153,11 @@ internal class DefaultOnboardingTaskManager(
       log.d(
         "Attempted to run task synchronously but $contract (${contract.nodePackage}) is not running in same process ($nodePackage) "
       )
+      return null
+    }
+
+    if (localServer == null) {
+      log.d("Attempted to run task state synchronously but localServer is null")
       return null
     }
 
@@ -283,6 +288,10 @@ internal class DefaultOnboardingTaskManager(
       )
       return null
     }
+    if (localServer == null) {
+      log.e("Attempted to get task state synchronously but localServer is null")
+      return null
+    }
     return localServer.getTaskStateDirectly(token)
   }
 
@@ -353,6 +362,10 @@ internal class DefaultOnboardingTaskManager(
       log.d(
         "Attempted to get task metadata synchronously but $token (${token.nodePackage}) is not running in same process ($nodePackage) "
       )
+      return null
+    }
+    if (localServer == null) {
+      log.e("Attempted to get task metadata synchronously but localServer is null")
       return null
     }
     if (!localServer.isSynchronousTask(token)) {
@@ -492,7 +505,11 @@ internal class DefaultOnboardingTaskManager(
     action: suspend OnboardingTaskService.() -> O,
   ): O {
     return try {
-      if (isTaskRunInSameComponent(token) && token.targetUserId == myUserHandle().identifier) {
+      if (
+        isTaskRunInSameComponent(token) &&
+          token.targetUserId == myUserHandle().identifier &&
+          localServer != null
+      ) {
         log.v("Going through local server for same-process operation.")
         localServer.action()
       } else {
