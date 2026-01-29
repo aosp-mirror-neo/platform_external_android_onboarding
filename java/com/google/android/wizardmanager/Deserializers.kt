@@ -4,6 +4,7 @@ import android.os.PersistableBundle
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.getPersistable
 import com.google.android.wizardmanager.WizardAction.BRANCHES_KEY
+import com.google.android.wizardmanager.WizardAction.DEPENDENCIES_KEY
 import com.google.android.wizardmanager.WizardAction.FLOW_KEY
 import com.google.android.wizardmanager.WizardAction.ID_KEY
 import com.google.android.wizardmanager.WizardAction.IF_FLOW_KEY
@@ -37,6 +38,7 @@ object Deserializers {
         .flow(persistableBundle.getString(FLOW_KEY))
         .ifFlow(persistableBundle.getString(IF_FLOW_KEY))
         .branches(branches)
+        .dependencies(persistableBundle.getStringArray(DEPENDENCIES_KEY)?.toList() ?: emptyList())
         .build()
     }
   }
