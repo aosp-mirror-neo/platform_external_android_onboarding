@@ -71,12 +71,12 @@ sealed class OrchestratedResult<out O : Persistable> : Persistable, OverriddenEq
    * is expected, use the result of that activity in place of the otherwise expected result from the
    * task which returned this result.
    */
-  data class StartActivity(val activity: PendingContract.ErasedActivity) :
+  data class StartActivity(val activity: PendingContract.Activity<*>) :
     OrchestratedResult<Nothing>(), StableEquality {
     override fun toPersistableBundle(): PersistableBundle =
       PersistableBundle().apply {
         putString(KEY_RESULT_TYPE, RESULT_TYPE_START_ACTIVITY)
-        putPersistable(KEY_PENDING_CONTRACT, activity)
+        putPersistable(KEY_PENDING_CONTRACT, activity.erase())
       }
 
     companion object : PersistableDeserializer<StartActivity> {

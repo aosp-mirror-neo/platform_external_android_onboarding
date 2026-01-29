@@ -21,7 +21,7 @@ abstract class WaitingScreenArgument {
   /** The extras to use for the waiting screen. */
   abstract val extras: WizardManagerExtras
   /** The task intended to be executed with the waiting screen, if any. */
-  abstract val task: PendingContract.ErasedTask?
+  abstract val task: PendingContract.Task<*>?
 }
 
 /**

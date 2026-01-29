@@ -131,7 +131,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
    */
   class ActivityToTask(
     private val session: PersistableBundle,
-    override val target: PendingContract.ErasedActivity,
+    target: PendingContract.Activity<*>,
     override val callbackRef: UniqueNodeRef,
     private val callbackServiceIntent: PersistableIntent,
     override val estimatedCallbackRuntime: Duration?,
@@ -141,6 +141,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     private val state: PersistableBundle? = null,
     override val callbackKey: String = target.asNodeRef().identity(),
   ) : Activity, NodeRef by callbackRef, StableEquality {
+    override val target = target.erase()
+
     override fun toString() =
       "ChainedContract.ActivityToTask(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
@@ -247,12 +249,14 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
    */
   class ActivityToActivity(
     private val session: PersistableBundle,
-    override val target: PendingContract.ErasedActivity,
+    target: PendingContract.Activity<*>,
     override val callbackRef: UniqueNodeRef,
     private val callbackIntent: PersistableIntent,
     private val callbackUserId: Int,
     override val callbackKey: String = target.asNodeRef().identity(),
   ) : Activity, NodeRef by callbackRef, StableEquality {
+    override val target: PendingContract.ErasedActivity = target.erase()
+
     // No runtime estimates for activities as we don't care about it just yet.
     override val estimatedCallbackRuntime: Duration? = null
 
@@ -368,7 +372,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
    */
   class TaskToTask(
     private val session: PersistableBundle,
-    override val target: PendingContract.ErasedTask,
+    target: PendingContract.Task<*>,
     override val callbackRef: UniqueNodeRef,
     private val callbackServiceIntent: PersistableIntent,
     private val callbackSource: NodeRef = target,
@@ -379,6 +383,8 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     private val state: PersistableBundle? = null,
     override val callbackKey: String = target.asNodeRef().identity(),
   ) : Task, NodeRef by callbackRef, StableEquality {
+    override val target = target.erase()
+
     override fun toString() =
       "ChainedContract.TaskToTask(target=${target.identity()},callback=${callbackRef.identity()},callbackKey=${callbackKey},handlesFailure=$handlesFailure)"
 
