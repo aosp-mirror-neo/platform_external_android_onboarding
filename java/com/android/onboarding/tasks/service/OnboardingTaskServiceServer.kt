@@ -38,6 +38,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 import kotlin.properties.ReadOnlyProperty
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toKotlinDuration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -294,25 +296,35 @@ class OnboardingTaskServiceServer(
             taskStateManager[token]
           } else {
             // Fallback to poll for completion.
-            Log.w(
+            if (token.timeout == null) {
+              Log.w(TAG, "awaitTaskCompletion: Task($token) does not have a timeout defined.")
+            }
+            val timeoutDuration = token.timeout?.toKotlinDuration() ?: 30.seconds
+            val pollingInterval = 50.milliseconds
+            var timeLapsed = kotlin.time.Duration.ZERO
+            Log.v(
               TAG,
-              "awaitTaskCompletion: Task($token) not found in execution cache. Fallback to polling.",
+              "awaitTaskCompletion: Task($token) not found in execution cache. Fallback to polling: timeoutDuration=$timeoutDuration pollingInterval=$pollingInterval",
             )
-            // Poll for 30 seconds max.
-            var counter = 1
-            while (!taskStateManager[token].isCompleted && counter++ < 60) {
-              delay(500.milliseconds)
+            while (!taskStateManager[token].isCompleted && timeLapsed < timeoutDuration) {
+              delay(pollingInterval)
+              timeLapsed += pollingInterval
             }
             val state = taskStateManager[token]
             if (state.isCompleted) {
-              Log.w(TAG, "awaitTaskCompletion: Task($token) is now complete after polling.")
+              Log.v(
+                TAG,
+                "awaitTaskCompletion: Task($token) is now complete after polling for $timeoutDuration.",
+              )
               state
             } else {
               Log.e(
                 TAG,
-                "awaitTaskCompletion: Task($token) does not complete after polling for 30 seconds.",
+                "awaitTaskCompletion: Task($token) does not complete after polling for $timeoutDuration.",
               )
-              throw IllegalStateException("Task does not complete after polling for 30 seconds.")
+              throw IllegalStateException(
+                "Task does not complete after polling for $timeoutDuration."
+              )
             }
           }
         }

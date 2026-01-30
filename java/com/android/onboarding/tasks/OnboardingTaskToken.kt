@@ -21,8 +21,10 @@ import com.android.onboarding.pending.BackgroundLaunchableForResult
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
 import com.android.onboarding.utils.generateHash
+import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getLongOrNull
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
+import java.time.Duration
 import java.util.Objects
 import java.util.function.Supplier
 
@@ -30,6 +32,9 @@ import java.util.function.Supplier
  * Local-only variant of the [UnresolvedOnboardingTaskToken] preserving reference to the associated
  * contract. Note that it needs to be erased via [toErased] call in order for it to be passable
  * across process boundaries.
+ *
+ * @param timeout The timeout duration, after which, the node referenced by this token should be
+ *   considered to have failed. Returns null if timeout is not applicable to the node.
  */
 @OptIn(InternalOnboardingApi::class)
 data class OnboardingTaskToken<O>(
@@ -42,6 +47,7 @@ data class OnboardingTaskToken<O>(
   override val nodeId: NodeId,
   override val targetUserId: Int,
   override val targetPackageName: String,
+  override val timeout: Duration? = null,
 ) :
   UnresolvedOnboardingTaskToken<O>,
   ResultHandler<PersistableBundle, O> by resultHandler,
@@ -52,6 +58,7 @@ data class OnboardingTaskToken<O>(
     nodeId: NodeId = generateNodeId(),
     targetUserId: Int,
     targetPackageName: String,
+    timeout: Duration? = null,
   ) : this(
     taskManagerId = taskManagerId,
     nodeRef = contract,
@@ -69,6 +76,7 @@ data class OnboardingTaskToken<O>(
         if (it == ErasedOnboardingTaskToken.UNKNOWN_TARGET_PACKAGE_NAME) contract.nodePackage
         else it
       },
+    timeout = timeout,
   )
 
   override fun equals(other: Any?): Boolean =
@@ -100,6 +108,7 @@ data class OnboardingTaskToken<O>(
       bundle.putLong(ErasedOnboardingTaskToken.EXTRA_TASK_MANAGER_ID, taskManagerId)
       bundle.putInt(EXTRA_TARGET_USER, targetUserId)
       bundle.putString(EXTRA_TARGET_PACKAGE_NAME, targetPackageName)
+      timeout?.let { bundle.putLong(EXTRA_TIMEOUT_IN_SECONDS, it.seconds) }
     }
 
   /**
@@ -122,6 +131,7 @@ data class OnboardingTaskToken<O>(
     const val SERVICE_ACTION = BackgroundLaunchable.SERVICE_ACTION
     const val EXTRA_TARGET_USER = "$NAMESPACE.TARGET_USER"
     const val EXTRA_TARGET_PACKAGE_NAME = "$NAMESPACE.TARGET_PACKAGE_NAME"
+    const val EXTRA_TIMEOUT_IN_SECONDS = "$NAMESPACE.TIMEOUT_IN_SECONDS"
   }
 }
 
@@ -141,6 +151,7 @@ sealed interface UnresolvedOnboardingTaskToken<out O> : UniqueNodeRef, Persistab
 
   val targetUserId: Int
   val targetPackageName: String
+  val timeout: Duration?
 
   /** Convert this token to a [PersistableBundle]. */
   @InternalOnboardingApi override fun toPersistableBundle(): PersistableBundle
@@ -163,6 +174,7 @@ sealed interface UnresolvedOnboardingTaskToken<out O> : UniqueNodeRef, Persistab
       nodeId = nodeId,
       targetUserId = targetUserId,
       targetPackageName = targetPackageName,
+      timeout = timeout,
     )
 }
 
@@ -191,6 +203,10 @@ class ErasedOnboardingTaskToken internal constructor(private val bundle: Persist
   override val targetPackageName: String
     get() =
       bundle.getString(OnboardingTaskToken.EXTRA_TARGET_PACKAGE_NAME) ?: UNKNOWN_TARGET_PACKAGE_NAME
+
+  override val timeout: Duration?
+    get() =
+      bundle.getLongOrNull(OnboardingTaskToken.EXTRA_TIMEOUT_IN_SECONDS)?.let(Duration::ofSeconds)
 
   @OptIn(InternalOnboardingApi::class)
   override fun toPersistableBundle(): PersistableBundle = PersistableBundle(bundle)
