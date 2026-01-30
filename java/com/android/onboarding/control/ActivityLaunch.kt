@@ -14,12 +14,10 @@ import com.android.onboarding.utils.persistable.putPersistable
  *
  * If [requestCode] is non-null then we expect this to be launched forResult.
  */
-data class ActivityLaunch(
-  val contract: PendingContract.ErasedActivity,
-  val requestCode: Int? = null,
-) : Persistable, StableEquality {
+data class ActivityLaunch(val contract: PendingContract.Activity<*>, val requestCode: Int? = null) :
+  Persistable, StableEquality {
   override fun toPersistableBundle() = PersistableBundle {
-    putPersistable(KEY_CONTRACT, contract)
+    putPersistable(KEY_CONTRACT, contract.erase())
     requestCode?.let { putInt(KEY_REQUEST_CODE, it) }
   }
 

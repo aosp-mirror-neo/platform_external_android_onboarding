@@ -124,15 +124,17 @@ abstract class OnboardingActivityApiContract<I, O> :
    * Prepares a launch of this contract with supplied [input] without actually launching. Returned
    * [PendingContract] can safely be passed around between processes and invoked later.
    */
-  fun prepare(context: Context, input: I): PendingContract.ErasedActivity {
+  fun prepare(context: Context, input: I): PendingContract.Activity<O> {
     val intent = performCreateIntent(context, input)
     val launch =
-      PendingActivityContract(intent).apply {
-        nodeComponent = this@OnboardingActivityApiContract.nodeComponent
-        nodeName = this@OnboardingActivityApiContract.nodeName
-        creatorNodeId = context.activityNodeId()
-        targetUserId = getTargetUserId(input)
-      }
+      PendingActivityContract(intent)
+        .apply {
+          nodeComponent = this@OnboardingActivityApiContract.nodeComponent
+          nodeName = this@OnboardingActivityApiContract.nodeName
+          creatorNodeId = context.activityNodeId()
+          targetUserId = getTargetUserId(input)
+        }
+        .resolve(this)
     OnboardingGraphLog.log(
       PendingContractPreparedForActivity(
         nodeRef = this,
@@ -588,6 +590,5 @@ fun OnboardingActivityApiContract<Unit, *>.createIntent(context: Context) =
   createIntent(context, Unit)
 
 /** See [OnboardingActivityApiContract.prepare]. */
-fun OnboardingActivityApiContract<Unit, *>.prepare(
-  context: Context
-): PendingContract.ErasedActivity = prepare(context, Unit)
+fun OnboardingActivityApiContract<Unit, *>.prepare(context: Context): PendingContract.Activity<*> =
+  prepare(context, Unit)

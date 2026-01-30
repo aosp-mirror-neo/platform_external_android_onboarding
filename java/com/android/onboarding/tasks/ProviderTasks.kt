@@ -53,11 +53,12 @@ class PendingContractProviderTask(
     if (aContract != null) {
       return aContract
         .prepareFromRaw(context, PersistableIntent.fromPersistableBundle(input.input).toIntent())
+        .erase()
         .also { Log.d(TAG, "Provided PendingContract.Activity for $ref") }
     }
     val tContract = tasks[ref]
     if (tContract != null) {
-      return tContract.prepareFromRaw(input.input).also {
+      return tContract.prepareFromRaw(input.input).erase().also {
         Log.d(TAG, "Provided PendingContract.Task for $ref")
       }
     }

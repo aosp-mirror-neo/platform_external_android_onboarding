@@ -83,18 +83,19 @@ abstract class OnboardingTaskContract<I, O> : BaseOnboardingTaskContract<I, O>()
    * Prepares a launch of this contract with supplied [input] without actually launching. Returned
    * [PendingContract] can safely be passed around between processes and invoked later.
    */
-  fun prepare(input: I): PendingContract.ErasedTask {
+  fun prepare(input: I): PendingContract.Task<O> {
     val bundle = performEncodeArgs(input)
     val launch =
       PendingTaskContract(
-        input = bundle,
-        ref = this,
+          input = bundle,
+          ref = this,
 
-        creatorNodeId = UNKNOWN_NODE_ID,
-        taskServiceIntent = taskServiceIntent,
-        targetUserId = getTargetUserId(input),
-        targetPackageName = getTargetComponent(input),
-      )
+          creatorNodeId = UNKNOWN_NODE_ID,
+          taskServiceIntent = taskServiceIntent,
+          targetUserId = getTargetUserId(input),
+          targetPackageName = getTargetComponent(input),
+        )
+        .resolve(this)
     OnboardingGraphLog.log(
       OnboardingEvent.PendingContractPreparedForTask(
         nodeRef = this,
@@ -216,7 +217,7 @@ abstract class ArgumentFreeVoidOnboardingTaskContract : ArgumentFreeOnboardingTa
 }
 
 /** See [OnboardingTaskContract.prepare]. */
-fun OnboardingTaskContract<Unit, *>.prepare(): PendingContract.ErasedTask = prepare(Unit)
+fun <O> OnboardingTaskContract<Unit, O>.prepare(): PendingContract.Task<O> = prepare(Unit)
 
 /**
  * An [OnboardingTaskContract] with default implementations for encoding and extracting input and

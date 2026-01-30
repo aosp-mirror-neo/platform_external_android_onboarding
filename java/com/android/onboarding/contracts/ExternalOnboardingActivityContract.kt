@@ -86,8 +86,10 @@ object ExternalOnboardingActivityContract :
   }
 
   /** @see OnboardingActivityApiContract.prepare */
-  fun prepare(context: Context, input: PersistableIntent): PendingContract.ErasedActivity =
-    prepare(context, input.toIntent())
+  fun prepare(
+    context: Context,
+    input: PersistableIntent,
+  ): PendingContract.Activity<ActivityResult> = prepare(context, input.toIntent())
 }
 
 /** Extract [Intent] from the [contract] and launch it. */

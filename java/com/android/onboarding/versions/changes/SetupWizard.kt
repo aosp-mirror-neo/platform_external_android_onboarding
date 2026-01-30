@@ -531,3 +531,13 @@ const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
   available = "2025-12-25",
 )
 const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
+
+@ChangeId(
+  bugId = 475397409L,
+  owner = "atpugnayra",
+  breaking = [],
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
+  tags = [P11_EVT, NEXT],
+  available = ChangeId.NOT_AVAILABLE,
+)
+const val ESIM_FALLBACK_SEPARATION = 475397409L

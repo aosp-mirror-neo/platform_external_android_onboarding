@@ -47,7 +47,7 @@ abstract class SetupWizardOrchestratorContract :
     val action: Action,
     val actionAlreadyExecuted: Boolean = false,
   ) : WaitingScreenArgument() {
-    override val task: PendingContract.ErasedTask?
+    override val task: PendingContract.Task<*>?
       get() = (action as? Action.TaskAction)?.task
   }
 
@@ -64,8 +64,8 @@ abstract class SetupWizardOrchestratorContract :
      */
     @Deprecated("Not supported - NextActionController is entirely responsible for task execution")
     data class TaskAction(
-      val task: PendingContract.ErasedTask,
-      val onFailure: PendingContract.ErasedActivity?,
+      val task: PendingContract.Task<*>,
+      val onFailure: PendingContract.Activity<*>?,
     ) : Action()
   }
 
