@@ -4,6 +4,7 @@ import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.changes.Tags.NEXT
 import com.android.onboarding.versions.changes.Tags.P10_DVT
+import com.android.onboarding.versions.changes.Tags.P11_DVT
 import com.android.onboarding.versions.changes.Tags.P11_EVT
 
 const val USE_FRAGMENT_LOGIC = "use_fragment_logic"
@@ -537,7 +538,24 @@ const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
   owner = "atpugnayra",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  tags = [P11_EVT, NEXT],
+  tags = [P11_DVT, NEXT],
   available = ChangeId.NOT_AVAILABLE,
 )
 const val ESIM_FALLBACK_SEPARATION = 475397409L
+
+/**
+ * When enabled, this ignores the phenotype compliance date overrides and instead forces a recent
+ * compliance date for all components.
+ *
+ * This is intended to be a temporary change for P11 EVT due to some issues around compliance date
+ * upgrades and downgrades causing issues.
+ */
+@ChangeId(
+  bugId = 480030468L,
+  owner = "scottjonathan",
+  breaking = [],
+  changeRadius = ChangeRadius.MULTI_COMPONENT,
+  tags = [P11_EVT, NEXT],
+  available = "2026-01-01",
+)
+const val DISABLE_PHENOTYPE_COMPLIANCE_DATE_OVERRIDES = 480030468L
