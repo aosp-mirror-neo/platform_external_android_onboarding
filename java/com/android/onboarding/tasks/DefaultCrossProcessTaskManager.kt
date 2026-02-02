@@ -58,6 +58,7 @@ class DefaultCrossProcessTaskManager(
    */
   @VisibleForTesting
   val serviceRegistry = ConcurrentHashMap<NodeRef.Stable, OnboardingTaskManagerServiceConnection>()
+  private val serviceUsage = ConcurrentHashMap<NodeRef.Stable, Int>()
 
   override suspend fun startTask(token: OnboardingTaskToken<*>, input: PersistableBundle) {
     val service = prepareService(token)
@@ -65,12 +66,10 @@ class DefaultCrossProcessTaskManager(
 
     return service.execute(
       token,
-      closeServiceAfterExecution = false,
       onError = { Log.w(TAG, "startTask#Task service failed for token ${token.identity()}", it) },
     ) {
       it.startTask(token, input)
     }
-    // We need to maintain the connection to not lose the in-memory execution cache.
   }
 
   override suspend fun <O> getTaskState(token: OnboardingTaskToken<O>): OnboardingTaskState<O> {
@@ -197,10 +196,12 @@ class DefaultCrossProcessTaskManager(
 
             override fun onServiceDisconnected() {
               serviceRegistry.remove(nodeRef)
+              serviceUsage.remove(nodeRef)
             }
 
             override fun onConnectionClosed() {
               serviceRegistry.remove(nodeRef)
+              serviceUsage.remove(nodeRef)
             }
           }
         return OnboardingTaskManagerServiceConnection(
@@ -210,15 +211,26 @@ class DefaultCrossProcessTaskManager(
             listener = listener,
             onboardingChanges = onboardingChanges,
             targetComponent = token,
+            serviceUsage = serviceUsage,
           )
           .also { ref ->
             Log.d(TAG, "Adding service $ref to serviceRegistry. ComponentRef=$nodeRef")
             serviceRegistry[nodeRef] = ref
+            increaseServiceUsage(nodeRef)
           }
       } else {
         Log.d(TAG, "prepareService#Returning existing service $existingService for $nodeRef")
+        increaseServiceUsage(nodeRef)
         return existingService
       }
+    }
+  }
+
+  private fun increaseServiceUsage(nodeRef: NodeRef.Stable) {
+    synchronized(serviceUsage) {
+      val newUsageCount = serviceUsage[nodeRef]?.inc() ?: 1
+      serviceUsage[nodeRef] = newUsageCount
+      Log.d(TAG, "Service connection usage for $nodeRef has increased to $newUsageCount")
     }
   }
 
@@ -230,6 +242,7 @@ class DefaultCrossProcessTaskManager(
     synchronized(serviceRegistry) {
       val services = serviceRegistry.values
       serviceRegistry.clear()
+      serviceUsage.clear()
       for (service in services) {
         service.close()
       }
@@ -245,6 +258,7 @@ private constructor(
   private val listener: ConnectionListener,
   private val onboardingChanges: OnboardingChanges,
   private val targetComponent: ComponentRef,
+  private val serviceUsage: ConcurrentHashMap<NodeRef.Stable, Int>,
 ) : AutoCloseable, ServiceConnection {
   private val context = WeakReference(context.applicationContext)
   private val service = MutableStateFlow<OnboardingTaskServiceClient?>(null)
@@ -286,14 +300,11 @@ private constructor(
    * @param onError a notify callback to be invoked on any expected errors. This callback does not
    *   suppress the error and will always rethrow it. It is meant for error observation to log it or
    *   reach to it in other ways.
-   * @param closeServiceAfterExecution should service closure be attempted after each execution.
-   *   Even if true, it is still subject to flagging state.
    * @throws OnboardingTaskServiceException
    */
   suspend fun <R> execute(
     ref: UniqueNodeRef,
     onError: (OnboardingTaskServiceException) -> Unit,
-    closeServiceAfterExecution: Boolean = true,
     action: suspend (service: OnboardingTaskServiceClient) -> R,
   ): R =
     try {
@@ -301,7 +312,7 @@ private constructor(
       action(server)
     } catch (e: DeadObjectException) {
       Log.w(TAG, "Task service died!", e)
-      close()
+      closeRef(ref)
       val clientError = OnboardingTaskServiceClientException(ref, e, ERROR_SERVICE_DIED)
       onError(clientError)
       throw clientError
@@ -310,16 +321,34 @@ private constructor(
       throw e
     } finally {
       if (
-        closeServiceAfterExecution &&
-          onboardingChanges.currentProcessSupportsChange(CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID) &&
+        onboardingChanges.currentProcessSupportsChange(CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID) &&
           onboardingChanges.componentSupportsChange(
             targetComponent.nodeComponent,
             CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID,
           )
       ) {
-        close()
+        closeRef(ref)
       }
     }
+
+  /**
+   * Decreases the service usage for [ref]. Close the corresponding service connection if there's no
+   * longer any usage.
+   */
+  private fun closeRef(ref: UniqueNodeRef) {
+    if (decreaseServiceUsage(ref.asNodeRef()) == 0) {
+      close()
+    }
+  }
+
+  private fun decreaseServiceUsage(nodeRef: NodeRef.Stable): Int {
+    synchronized(serviceUsage) {
+      val newUsageCount = serviceUsage[nodeRef]?.dec() ?: 0
+      serviceUsage[nodeRef] = newUsageCount
+      Log.d(TAG, "Service connection usage for $nodeRef has decreased to $newUsageCount")
+      return newUsageCount
+    }
+  }
 
   override fun close() {
     Log.i(TAG, "Closing service connection: $this")
@@ -342,6 +371,7 @@ private constructor(
       listener: ConnectionListener,
       onboardingChanges: OnboardingChanges,
       targetComponent: ComponentRef,
+      serviceUsage: ConcurrentHashMap<NodeRef.Stable, Int>,
     ): OnboardingTaskManagerServiceConnection {
       val applicationContext = context.applicationContext
       val connection =
@@ -350,6 +380,7 @@ private constructor(
           listener,
           onboardingChanges,
           targetComponent.asComponentRef(),
+          serviceUsage,
         )
       val isServiceBound =
         if (targetUserId != Process.myUserHandle().identifier) {
