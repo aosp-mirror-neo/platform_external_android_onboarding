@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
@@ -39,12 +40,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
   /** The yield action that is used to yield the script. */
   public static final WizardAction YIELD_ACTION =
-      new WizardAction(
-          /* scriptUri= */ YIELD_ACTION_ID,
-          /* index= */ 0,
-          /* id= */ YIELD_ACTION_ID,
-          /* uri= */ null,
-          new WizardBranchArray());
+      new WizardAction.Builder(YIELD_ACTION_ID, 0).id(YIELD_ACTION_ID).uri(null).build();
 
   /** URI to be invoked for this action, generated using "adb shell am to-intent-uri" */
   @Nullable private final String uri;
@@ -75,57 +71,92 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
   @NonNull private final String logId;
 
-  public WizardAction(
-      @NonNull String scriptUri,
-      int index,
-      @Nullable String id,
-      @Nullable String uri,
-      @NonNull WizardBranchArray branches) {
-    this(
-        scriptUri,
-        index,
-        id,
-        uri,
-        /* node= */ null,
-        /* ifLifecycle= */ null,
-        /* flow= */ null,
-        /* ifFlow= */ null,
-        branches);
-  }
-
-  protected WizardAction(WizardAction action) {
-    this(
-        action.scriptUri,
-        action.index,
-        action.id,
-        action.uri,
-        action.node,
-        action.ifLifecycle,
-        action.flow,
-        action.ifFlow,
-        action.branches);
-  }
-
-  public WizardAction(
-      @NonNull String scriptUri,
-      int index,
-      @Nullable String id,
-      @Nullable String uri,
-      @Nullable String node,
-      @Nullable String ifLifecycle,
-      @Nullable String flow,
-      @Nullable String ifFlow,
-      @NonNull WizardBranchArray branches) {
-    this.scriptUri = scriptUri;
-    this.index = index;
-    this.id = id;
-    this.uri = uri;
-    this.node = node;
-    this.ifLifecycle = ifLifecycle;
-    this.flow = flow;
-    this.ifFlow = ifFlow;
-    this.branches = branches;
+  protected WizardAction(Builder builder) {
+    this.scriptUri = builder.scriptUri;
+    this.index = builder.index;
+    this.id = builder.id;
+    this.uri = builder.uri;
+    this.node = builder.node;
+    this.ifLifecycle = builder.ifLifecycle;
+    this.flow = builder.flow;
+    this.ifFlow = builder.ifFlow;
+    this.branches = builder.branches;
     this.logId = String.format("%s#%s", scriptUri, id);
+  }
+
+  /** Builder for {@link WizardAction}. */
+  public static class Builder {
+    private final String scriptUri;
+    private final int index;
+    private String id;
+    private String uri;
+    private String node;
+    private String ifLifecycle;
+    private String flow;
+    private String ifFlow;
+    private WizardBranchArray branches = new WizardBranchArray();
+
+    public Builder(@NonNull String scriptUri, int index) {
+      this.scriptUri = scriptUri;
+      this.index = index;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder id(@Nullable String id) {
+      this.id = id;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder uri(@Nullable String uri) {
+      this.uri = uri;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder node(@Nullable String node) {
+      this.node = node;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder ifLifecycle(@Nullable String ifLifecycle) {
+      this.ifLifecycle = ifLifecycle;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder flow(@Nullable String flow) {
+      this.flow = flow;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder ifFlow(@Nullable String ifFlow) {
+      this.ifFlow = ifFlow;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder branches(@NonNull WizardBranchArray branches) {
+      this.branches = branches;
+      return this;
+    }
+
+    public WizardAction build() {
+      return new WizardAction(this);
+    }
+  }
+
+  public Builder toBuilder() {
+    return new Builder(scriptUri, index)
+        .id(id)
+        .uri(uri)
+        .node(node)
+        .ifLifecycle(ifLifecycle)
+        .flow(flow)
+        .ifFlow(ifFlow)
+        .branches(branches);
   }
 
   @Nullable
@@ -293,8 +324,15 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
           WizardBranchArray branches =
               source.readParcelable(WizardBranchArray.class.getClassLoader());
-          return new WizardAction(
-              scriptUri, index, id, uri, node, ifLifecycle, flow, ifFlow, branches);
+          return new WizardAction.Builder(scriptUri, index)
+              .id(id)
+              .uri(uri)
+              .node(node)
+              .ifLifecycle(ifLifecycle)
+              .flow(flow)
+              .ifFlow(ifFlow)
+              .branches(branches)
+              .build();
         }
 
         @Override
