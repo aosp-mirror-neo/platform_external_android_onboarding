@@ -23,19 +23,22 @@ object Deserializers {
   object WizardAction : PersistableDeserializer<com.google.android.wizardmanager.WizardAction> {
     override fun fromPersistableBundle(
       persistableBundle: PersistableBundle
-    ): com.google.android.wizardmanager.WizardAction =
-      WizardAction(
-        persistableBundle.getString(SCRIPT_URI_KEY) ?: error("Missing SCRIPT_URI"),
-        persistableBundle.getInt(INDEX_KEY),
-        persistableBundle.getString(ID_KEY),
-        persistableBundle.getString(URI_KEY),
-        persistableBundle.getString(NODE_KEY),
-        persistableBundle.getString(IF_LIFECYCLE_KEY),
-        persistableBundle.getString(FLOW_KEY),
-        persistableBundle.getString(IF_FLOW_KEY),
+    ): com.google.android.wizardmanager.WizardAction {
+      val scriptUri = persistableBundle.getString(SCRIPT_URI_KEY) ?: error("Missing SCRIPT_URI")
+      val index = persistableBundle.getInt(INDEX_KEY)
+      val branches =
         persistableBundle.getPersistable(BRANCHES_KEY, WizardBranchArray)
-          ?: error("Missing BRANCHES"),
-      )
+          ?: error("Missing BRANCHES")
+      return com.google.android.wizardmanager.WizardAction.Builder(scriptUri, index)
+        .id(persistableBundle.getString(ID_KEY))
+        .uri(persistableBundle.getString(URI_KEY))
+        .node(persistableBundle.getString(NODE_KEY))
+        .ifLifecycle(persistableBundle.getString(IF_LIFECYCLE_KEY))
+        .flow(persistableBundle.getString(FLOW_KEY))
+        .ifFlow(persistableBundle.getString(IF_FLOW_KEY))
+        .branches(branches)
+        .build()
+    }
   }
 
   object WizardBranchArray :
