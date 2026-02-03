@@ -30,6 +30,7 @@ android_onboarding.pending
 android_onboarding.process
 android_onboarding.shim
 android_onboarding.tasks.CrossProcessTaskManager
+android_onboarding.tasks.DefaultOnboardingTaskManager
 android_onboarding.tasks.DefaultOnboardingTaskManagerServiceBinder
 android_onboarding.tasks.OnboardingTask
 android_onboarding.tasks.OnboardingTaskContract

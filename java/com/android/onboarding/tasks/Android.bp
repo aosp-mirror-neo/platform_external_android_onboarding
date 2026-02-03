@@ -38,12 +38,52 @@ android_library {
 }
 
 android_library {
-    name: "android_onboarding.tasks.DefaultOnboardingTaskManagerServiceBinder",
+    name: "android_onboarding.tasks.DefaultOnboardingTaskManager",
     visibility: [
         "//external/android_onboarding:__subpackages__",
     ],
     srcs: [
         "DefaultOnboardingTaskManager.kt",
+    ],
+    static_libs: [
+        "android_onboarding.contracts.annotations",
+        "android_onboarding.datastore",
+        "android_onboarding.metadata",
+        "android_onboarding.nodes",
+        "android_onboarding.pending",
+        "android_onboarding.tasks.CrossProcessTaskManager",
+        "android_onboarding.tasks.OnboardingTaskContract",
+        "android_onboarding.tasks.OnboardingTaskManager",
+        "android_onboarding.tasks.OnboardingTaskState",
+        "android_onboarding.tasks.OnboardingTaskToken",
+        "android_onboarding.tasks.aidl",
+        "android_onboarding.tasks.service",
+        "android_onboarding.tasks.service.OnboardingTaskServiceException",
+        "android_onboarding.tasks.service.server",
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.logging",
+        "android_onboarding.utils.persistable",
+        "android_onboarding.utils.time",
+        "android_onboarding.versions",
+        "android_onboarding.versions.changes",
+        "androidx.annotation_annotation",
+        "guava-listenablefuture-prebuilt-jar",
+        "kotlinx-coroutines-core",
+        "kotlinx_coroutines_guava",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "36",
+}
+
+android_library {
+    name: "android_onboarding.tasks.DefaultOnboardingTaskManagerServiceBinder",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
         "DefaultOnboardingTaskManagerServiceBinder.kt",
     ],
     static_libs: [
@@ -53,9 +93,9 @@ android_library {
         "android_onboarding.encoding",
         "android_onboarding.metadata",
         "android_onboarding.nodes",
-        "android_onboarding.pending",
         "android_onboarding.process",
         "android_onboarding.tasks.CrossProcessTaskManager",
+        "android_onboarding.tasks.DefaultOnboardingTaskManager",
         "android_onboarding.tasks.OnboardingTask",
         "android_onboarding.tasks.OnboardingTaskContract",
         "android_onboarding.tasks.OnboardingTaskManager",
@@ -71,7 +111,6 @@ android_library {
         "android_onboarding.tasks.service.server",
         "android_onboarding.tasks.utils",
         "android_onboarding.utils.datasplitter",
-        "android_onboarding.utils.equality",
         "android_onboarding.utils.logging",
         "android_onboarding.utils.persistable",
         "android_onboarding.utils.time",
@@ -79,7 +118,6 @@ android_library {
         "android_onboarding.versions.changes",
         "androidx.annotation_annotation",
         "error_prone_annotations",
-        "guava-listenablefuture-prebuilt-jar",
         "kotlinx-coroutines-core",
         "kotlinx_coroutines_guava",
     ],
@@ -223,7 +261,7 @@ android_library {
         "OnboardingTaskToken.kt",
     ],
     static_libs: [
-        "android_onboarding.contracts.annotations.opt_in",
+        "android_onboarding.contracts.annotations",
         "android_onboarding.encoding",
         "android_onboarding.nodes",
         "android_onboarding.pending",
