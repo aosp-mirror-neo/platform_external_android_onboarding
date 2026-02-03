@@ -26,7 +26,9 @@ private constructor(private var _lastUpdate: Instant, bundle: PersistableBundle)
 
   constructor() : this(Instant.now(), PersistableBundle())
 
-  val lastUpdate: Instant = _lastUpdate
+  /** The last update time of the store. */
+  val lastUpdate
+    get() = _lastUpdate
 
   /** True if there is no metadata in this store. */
   val isEmpty: Boolean
