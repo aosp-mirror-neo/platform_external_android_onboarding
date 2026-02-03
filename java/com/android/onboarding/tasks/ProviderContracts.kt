@@ -25,8 +25,10 @@ import com.android.onboarding.tasks.precalculation.annotations.PPrecalculation
 import com.android.onboarding.tasks.precalculation.annotations.PUsesPrecalculatedResult
 import com.android.onboarding.tasks.precalculation.annotations.Precalculation
 import com.android.onboarding.tasks.precalculation.annotations.UsesPrecalculatedResult
+import com.android.onboarding.utils.KnownStableEquality
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.forceToString
+import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getIntOrThrow
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableBundle
 import com.android.onboarding.utils.persistable.PersistableDeserializer
@@ -73,6 +75,65 @@ private constructor(final override val nodeComponent: String, final override val
   fun interface Builder<I, O> {
     fun build(component: ComponentRef): ProviderContract<I, O>
   }
+}
+
+/**
+ * A [ProviderContract] for getting diagnostic information about the
+ * [OnboardingTaskManagerServiceBinder].
+ *
+ * @param component a [ComponentRef] of the target component providing the data.
+ */
+class DiagnosisProviderContract(component: ComponentRef) :
+  ProviderContract<DiagnosisProviderContract.Input, DiagnosisProviderContract.Output>(
+    component = component,
+    type = "DiagnosisProviderContract",
+  ) {
+  override val inputEncoder = Encoder(Input::toPersistableBundle)
+  override val inputDecoder = Input
+  override val resultEncoder = Encoder(Output::toPersistableBundle)
+  override val resultDecoder = Output
+
+  override fun cleanInput(input: Input): String = input.toString()
+
+  /**
+   * Input arguments to [DiagnosisProviderContract].
+   *
+   * @property delayFor if set, delay execution for specified duration.
+   */
+  data class Input(val delayFor: @KnownStableEquality Duration? = null) :
+    Persistable, StableEquality {
+    override fun toPersistableBundle() = PersistableBundle {
+      putString(KEY_DELAY_FOR, delayFor?.toString())
+    }
+
+    companion object : PersistableDeserializer<Input> {
+      private const val KEY_DELAY_FOR = "delayFor"
+
+      override fun fromPersistableBundle(persistableBundle: PersistableBundle) =
+        Input(delayFor = persistableBundle.getString(KEY_DELAY_FOR)?.let(Duration::parse))
+    }
+  }
+
+  /**
+   * Outputs container for [DiagnosisProviderContract].
+   *
+   * @property ownerIdentityHash hash code of the owner (usually
+   *   [OnboardingTaskManagerServiceBinder]) instance identity as implemented by the jvm.
+   */
+  data class Output(val ownerIdentityHash: Int) : Persistable, StableEquality {
+    override fun toPersistableBundle() = PersistableBundle {
+      putInt(KEY_OWNER_IDENTITY_HASH, ownerIdentityHash)
+    }
+
+    companion object : PersistableDeserializer<Output> {
+      private const val KEY_OWNER_IDENTITY_HASH = "ownerIdentityHash"
+
+      override fun fromPersistableBundle(persistableBundle: PersistableBundle) =
+        Output(ownerIdentityHash = persistableBundle.getIntOrThrow(KEY_OWNER_IDENTITY_HASH))
+    }
+  }
+
+  companion object : Builder<Input, Output> by Builder(::DiagnosisProviderContract)
 }
 
 /**

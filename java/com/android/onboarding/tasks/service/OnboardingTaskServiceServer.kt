@@ -105,6 +105,7 @@ class OnboardingTaskServiceServer(
         component = asComponentRef(),
         tasks = providedTasks,
         activities = providedActivities,
+        owner = this@OnboardingTaskServiceServer,
       )
     ConcurrentHashMap(tasks.associateBy { it.get().contract.asNodeRef() } + providers)
   }

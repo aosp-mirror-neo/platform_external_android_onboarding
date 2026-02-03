@@ -9,10 +9,34 @@ import com.android.onboarding.nodes.NodeRef
 import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.utils.logging.OnboardingLog as Log
 import com.android.onboarding.utils.persistable.PersistableIntent
+import kotlinx.coroutines.delay
 
 /** An [OnboardingTask] base for [ProviderContract] implementations. */
 sealed class ProviderTask<I, O>(final override val contract: ProviderContract<I, O>) :
   OnboardingTask<I, O, ProviderContract<I, O>>()
+
+class DiagnosisProviderTask(component: ComponentRef, private val binderIdentityHash: Int) :
+  ProviderTask<DiagnosisProviderContract.Input, DiagnosisProviderContract.Output>(
+    DiagnosisProviderContract(component)
+  ) {
+
+  override suspend fun runTask(
+    context: Context,
+    input: DiagnosisProviderContract.Input,
+  ): DiagnosisProviderContract.Output {
+    log.v("Collecting diagnostic information")
+    input.delayFor?.let { duration ->
+      log.v("Delaying for $duration before execution")
+      delay(duration.toMillis())
+    }
+
+    return DiagnosisProviderContract.Output(ownerIdentityHash = binderIdentityHash)
+  }
+
+  private companion object {
+    val log = Log.logger("DiagnosisProviderTask")
+  }
+}
 
 /**
  * An implementation of [PendingContractProviderContract].
