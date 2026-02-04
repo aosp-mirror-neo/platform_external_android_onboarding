@@ -133,6 +133,7 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
         component = asComponentRef(),
         tasks = providedTasks,
         activities = providedActivities,
+        owner = this@DefaultOnboardingTaskManagerServiceBinder,
       )
     ConcurrentHashMap(tasks.associateBy { it.get().contract.asNodeRef() } + providers)
   }

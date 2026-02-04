@@ -72,7 +72,7 @@ import kotlinx.coroutines.withContext
  * @param taskDataStore [OnboardingDataStore] to persist task data.
  */
 @InternalOnboardingApi
-internal class DefaultOnboardingTaskManager(
+class DefaultOnboardingTaskManager(
   private val component: ComponentRef,
   coroutineContext: CoroutineContext,
   private val localServer: OnboardingTaskServiceServer?,
