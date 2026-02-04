@@ -1,7 +1,6 @@
 package com.android.onboarding.tasks
 
 import android.os.PersistableBundle
-import android.os.Process.myUserHandle
 import androidx.annotation.VisibleForTesting
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.InterruptReason
@@ -20,6 +19,7 @@ import com.android.onboarding.tasks.service.OnboardingTaskServiceServer
 import com.android.onboarding.utils.KnownStableEquality
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.TimeSource
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
@@ -510,7 +510,7 @@ class DefaultOnboardingTaskManager(
     return try {
       if (
         isTaskRunInSameComponent(token) &&
-          token.targetUserId == myUserHandle().identifier &&
+          token.targetUserId == currentUserIdentifier &&
           localServer != null
       ) {
         log.v("Going through local server for same-process operation.")

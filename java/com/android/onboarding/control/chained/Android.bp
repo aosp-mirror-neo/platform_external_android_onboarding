@@ -21,6 +21,7 @@ android_library {
         "android_onboarding.utils",
         "android_onboarding.utils.equality",
         "android_onboarding.utils.persistable",
+        "android_onboarding.utils.user",
         "androidx.activity_activity-ktx",
         "androidx.annotation_annotation",
     ],

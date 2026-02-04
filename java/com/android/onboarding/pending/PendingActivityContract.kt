@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Parcel
 import android.os.Parcelable
 import android.os.PersistableBundle
-import android.os.Process.myUserHandle
 import androidx.activity.result.ActivityResult
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.encoding.ResultHandler
@@ -26,6 +25,7 @@ import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TA
 import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TYPE
 import com.android.onboarding.pending.PendingContractMetadata.Companion.NAMESPACE
 import com.android.onboarding.utils.StableEquality
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableIntent
 
@@ -108,7 +108,7 @@ data class PendingActivityContract(private val intent: PersistableIntent) :
     }
 
   override var targetUserId: Int
-    get() = intent.extras.getInt(EXTRA_TARGET_USER_ID, myUserHandle().identifier)
+    get() = intent.extras.getInt(EXTRA_TARGET_USER_ID, currentUserIdentifier)
     set(value) {
       intent.extras.putInt(EXTRA_TARGET_USER_ID, value)
     }

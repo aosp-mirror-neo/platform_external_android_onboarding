@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.UserHandle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -14,6 +13,8 @@ import com.android.onboarding.nodes.NodeId
 import com.android.onboarding.nodes.UNKNOWN_NODE_ID
 import com.android.onboarding.pending.Launchable
 import com.android.onboarding.pending.LaunchableActivityForResult
+import com.android.onboarding.utils.currentUserIdentifier
+import com.android.onboarding.utils.userHandleOf
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 
 /** [ActivityLauncher] to use from inside existing Activities. */
@@ -34,9 +35,9 @@ internal constructor(protected val context: Context, protected open val contract
         }
       }
     val targetUserId = contract.getTargetUserId(input)
-    if (targetUserId != UserHandle.myUserId()) {
+    if (targetUserId != currentUserIdentifier) {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        context.startActivityAsUser(intent, UserHandle.of(targetUserId))
+        context.startActivityAsUser(intent, userHandleOf(targetUserId))
       } else {
         throw UnsupportedOperationException(
           "Cross user activity launch is not supported on this platform, requires U+"
@@ -46,10 +47,6 @@ internal constructor(protected val context: Context, protected open val contract
       context.startActivity(intent, options)
     }
     return intent.getLongExtra(EXTRA_ONBOARDING_NODE_ID, UNKNOWN_NODE_ID)
-  }
-
-  companion object {
-    private const val TAG = "DefaultActivityLauncher"
   }
 }
 

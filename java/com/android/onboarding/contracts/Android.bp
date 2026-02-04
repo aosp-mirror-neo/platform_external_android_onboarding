@@ -38,6 +38,7 @@ android_library {
         "android_onboarding.utils.hash",
         "android_onboarding.utils.logging",
         "android_onboarding.utils.persistable",
+        "android_onboarding.utils.user",
         "androidx.activity_activity-ktx",
         "androidx.annotation_annotation",
         "androidx.lifecycle_lifecycle-common",

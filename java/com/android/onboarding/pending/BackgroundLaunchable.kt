@@ -3,13 +3,13 @@ package com.android.onboarding.pending
 import android.content.Context.BIND_ALLOW_ACTIVITY_STARTS
 import android.os.Build
 import android.os.PersistableBundle
-import android.os.Process.myUserHandle
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.encoding.ResultHandler
 import com.android.onboarding.encoding.WithInputEncoder
 import com.android.onboarding.nodes.ComponentRef
 import com.android.onboarding.nodes.NodeRef
 import com.android.onboarding.nodes.generateHash
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
 import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.PersistableIntent
@@ -32,9 +32,7 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
   val taskServiceIntent: PersistableIntent
 
   /** Returns the target user id for the task, given the [input]. */
-  fun getTargetUserId(input: I): Int {
-    return myUserHandle().identifier
-  }
+  fun getTargetUserId(input: I): Int = currentUserIdentifier
 
   /** Returns the target component for the task, given the [input]. */
   fun getTargetComponent(input: I): String {

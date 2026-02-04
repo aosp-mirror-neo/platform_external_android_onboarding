@@ -1,7 +1,6 @@
 package com.android.onboarding.control.chained
 
 import android.os.PersistableBundle
-import android.os.Process
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import com.android.onboarding.compatibility.compatGetBoolean
@@ -19,6 +18,7 @@ import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.pending.PendingTaskContract
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableBundle
@@ -625,7 +625,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
     private fun extractCallbackUserId(bundle: PersistableBundle): Int {
       val id = bundle.getInt(KEY_CALLBACK_USER_ID, -69)
       return if (id == -69) {
-        val currentUserId = Process.myUserHandle().identifier
+        val currentUserId = currentUserIdentifier
         Log.w(TAG, "Callback user ID is not set, using current user ID: $currentUserId")
         currentUserId
       } else {
