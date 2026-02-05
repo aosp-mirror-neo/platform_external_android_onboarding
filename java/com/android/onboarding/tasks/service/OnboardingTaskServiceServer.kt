@@ -321,7 +321,7 @@ class OnboardingTaskServiceServer(
             } else {
               Log.e(
                 TAG,
-                "awaitTaskCompletion: Task($token) does not complete after polling for $timeoutDuration.",
+                "awaitTaskCompletion: Task($token) does not complete after polling for $timeoutDuration. Are you using a singleton binder? b/479654792",
               )
               throw IllegalStateException(
                 "Task does not complete after polling for $timeoutDuration."
