@@ -37,8 +37,13 @@ inline fun <reified T : Parcelable> reparcelize(input: T): T {
  * [File][java.io.File] and finally reads everything back from the [File][java.io.File] and returns
  * the resulting [PersistableBundle].
  */
-fun <T : Persistable> repersist(input: T, deserializer: PersistableDeserializer<T>): T =
-  repersist(input, Persistable::toPersistableBundle, deserializer)
+fun <T : Persistable?> repersist(input: T, deserializer: PersistableDeserializer<T>): T {
+  if (input == null) {
+    @Suppress("UNCHECKED_CAST")
+    return null as T
+  }
+  return repersist(input, Persistable::toPersistableBundle, deserializer)
+}
 
 /**
  * Writes [input] to a [PersistableBundle] extra, then writes that [PersistableBundle] to

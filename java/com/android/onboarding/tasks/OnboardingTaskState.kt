@@ -103,7 +103,8 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
     override val lastMetadata: OnboardingMetadataStore?,
   ) : OnboardingTaskState<O>() {
     /** The result of the completed task. */
-    val result: O? by lazy { resultBundle?.let(parser::encode) }
+    @Suppress("UNCHECKED_CAST")
+    val result: O by lazy { resultBundle?.let(parser::encode) ?: null as O }
 
     @InternalOnboardingApi
     override fun toPersistableBundle(): PersistableBundle =
