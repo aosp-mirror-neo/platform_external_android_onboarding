@@ -3,7 +3,6 @@ package com.android.onboarding.pending
 import android.os.Parcel
 import android.os.Parcelable
 import android.os.PersistableBundle
-import android.os.Process
 import androidx.annotation.VisibleForTesting
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.encoding.Encoder
@@ -24,6 +23,7 @@ import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TY
 import com.android.onboarding.pending.PendingContractMetadata.Companion.NAMESPACE
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
 import com.android.onboarding.utils.persistable.PersistableIntent
 import com.android.onboarding.utils.persistable.getPersistable
@@ -39,7 +39,7 @@ class PendingTaskContract(
     ref: NodeRef,
     creatorNodeId: NodeId,
     taskServiceIntent: PersistableIntent,
-    targetUserId: Int = Process.myUserHandle().identifier,
+    targetUserId: Int = currentUserIdentifier,
     targetPackageName: String = ref.nodePackage,
   ) : this(input) {
     this.nodeComponent = ref.nodeComponent
@@ -116,7 +116,7 @@ class PendingTaskContract(
 
   /** An internal space to store arbitrary onboarding metadata. */
   override var targetUserId: Int
-    get() = bundle.getInt(EXTRA_TARGET_USER_ID, Process.myUserHandle().identifier)
+    get() = bundle.getInt(EXTRA_TARGET_USER_ID, currentUserIdentifier)
     set(value) {
       bundle.putInt(EXTRA_TARGET_USER_ID, value)
     }

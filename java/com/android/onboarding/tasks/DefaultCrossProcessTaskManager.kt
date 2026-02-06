@@ -8,8 +8,6 @@ import android.os.Build
 import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.PersistableBundle
-import android.os.Process
-import android.os.UserHandle
 import androidx.annotation.VisibleForTesting
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.InterruptReason
@@ -23,8 +21,10 @@ import com.android.onboarding.tasks.service.OnboardingTaskServiceClient
 import com.android.onboarding.tasks.service.OnboardingTaskServiceClientException
 import com.android.onboarding.tasks.service.OnboardingTaskServiceException
 import com.android.onboarding.tasks.service.OnboardingTaskServiceServerException
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.logging.OnboardingLog as Log
 import com.android.onboarding.utils.safeUnbindService
+import com.android.onboarding.utils.userHandleOf
 import com.android.onboarding.versions.OnboardingChanges
 import com.android.onboarding.versions.changes.CHANGE_ID_ASYNC_TASK_CLIENT
 import com.android.onboarding.versions.changes.CHANGE_ID_ASYNC_TASK_SERVER
@@ -383,7 +383,7 @@ private constructor(
           serviceUsage,
         )
       val isServiceBound =
-        if (targetUserId != Process.myUserHandle().identifier) {
+        if (targetUserId != currentUserIdentifier) {
           bindServiceCrossUser(applicationContext, intent, connection, targetUserId)
         } else {
           bindService(applicationContext, intent, connection)
@@ -428,18 +428,18 @@ private constructor(
       try {
         Log.i(
           TAG,
-          "Binding cross-user: $intent from user ${Process.myUserHandle().identifier} to user $targetUserId",
+          "Binding cross-user: $intent from user $currentUserIdentifier to user $targetUserId",
         )
         return context.bindServiceAsUser(
           intent,
           connection,
           Context.BIND_AUTO_CREATE,
-          UserHandle.of(targetUserId),
+          userHandleOf(targetUserId),
         )
       } catch (e: Exception) {
         Log.w(
           TAG,
-          "Failed to bind cross-user: $intent from user ${Process.myUserHandle().identifier} to user $targetUserId",
+          "Failed to bind cross-user: $intent from user $currentUserIdentifier to user $targetUserId",
           e,
         )
         return false

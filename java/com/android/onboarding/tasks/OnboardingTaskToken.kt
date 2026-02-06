@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Parcel
 import android.os.Parcelable
 import android.os.PersistableBundle
-import android.os.Process
 import androidx.annotation.VisibleForTesting
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.encoding.ResultHandler
@@ -20,6 +19,7 @@ import com.android.onboarding.pending.BackgroundLaunchable
 import com.android.onboarding.pending.BackgroundLaunchableForResult
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
 import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getLongOrNull
 import com.android.onboarding.utils.persistable.Persistable
@@ -67,9 +67,7 @@ data class OnboardingTaskToken<O>(
     nodeId = nodeId,
     targetUserId =
       targetUserId.let {
-        if (it == ErasedOnboardingTaskToken.UNKNOWN_TARGET_USER_ID)
-          Process.myUserHandle().identifier
-        else it
+        if (it == ErasedOnboardingTaskToken.UNKNOWN_TARGET_USER_ID) currentUserIdentifier else it
       },
     targetPackageName =
       targetPackageName.let {

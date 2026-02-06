@@ -21,4 +21,9 @@
         <!-- name explains what the result code stands for. Does not affect execution. -->
         <attr name="name" format="string" />
     </declare-styleable>
+
+    <declare-styleable name="dependsOnAll">
+        <!-- The action ids that all actions depend on. This is a comma-separated list of actions. -->
+        <attr name="action" format="string" />
+    </declare-styleable>
 </resources>

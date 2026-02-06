@@ -2,7 +2,6 @@ package com.android.onboarding.pending
 
 import android.content.Context
 import android.content.Intent
-import android.os.Process.myUserHandle
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import com.android.onboarding.contracts.NodeResult
@@ -15,6 +14,7 @@ import com.android.onboarding.nodes.OnboardingGraphLog
 import com.android.onboarding.nodes.UNKNOWN_NODE_ID
 import com.android.onboarding.nodes.activityNodeId
 import com.android.onboarding.nodes.nodeId
+import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.logging.OnboardingLog as Log
 import java.util.UUID
 
@@ -24,9 +24,7 @@ interface Launchable<I> {
   @InternalOnboardingApi fun launcher(input: I): ActivityLauncher<I>
 
   /** Returns the target user id for the launch, given the [input]. */
-  fun getTargetUserId(input: I): Int {
-    return myUserHandle().identifier
-  }
+  fun getTargetUserId(input: I): Int = currentUserIdentifier
 }
 
 /**

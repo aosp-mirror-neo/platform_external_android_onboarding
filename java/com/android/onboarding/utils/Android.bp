@@ -41,6 +41,24 @@ android_library {
     target_sdk_version: "36",
 }
 
+android_library {
+    name: "android_onboarding.utils.user",
+    visibility: [
+        "//external/android_onboarding:__subpackages__",
+    ],
+    srcs: [
+        "user.kt",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "36",
+}
+
 java_library {
     name: "android_onboarding.utils.equality",
     visibility: [

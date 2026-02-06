@@ -14,6 +14,7 @@ import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,6 +35,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   static final String FLOW_KEY = "flow";
   static final String IF_FLOW_KEY = "if_flow";
   static final String BRANCHES_KEY = "branches";
+  static final String DEPENDENCIES_KEY = "dependencies";
 
   /** Special action id indicating that the script should be yielded. */
   public static final String YIELD_ACTION_ID = "#YIELD";
@@ -56,6 +58,9 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
   /** Transition table, mapping result codes to the next action to run */
   @NonNull private final WizardBranchArray branches;
+
+  /** The dependencies of this action. */
+  @NonNull private final List<String> dependencies;
 
   /** The URI of the script declaring this action. */
   @NonNull private final String scriptUri;
@@ -81,6 +86,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     this.flow = builder.flow;
     this.ifFlow = builder.ifFlow;
     this.branches = builder.branches;
+    this.dependencies = builder.dependencies;
     this.logId = String.format("%s#%s", scriptUri, id);
   }
 
@@ -95,6 +101,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     private String flow;
     private String ifFlow;
     private WizardBranchArray branches = new WizardBranchArray();
+    private List<String> dependencies = new ArrayList<>();
 
     public Builder(@NonNull String scriptUri, int index) {
       this.scriptUri = scriptUri;
@@ -143,6 +150,12 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder dependencies(@NonNull List<String> dependencies) {
+      this.dependencies = dependencies;
+      return this;
+    }
+
     public WizardAction build() {
       return new WizardAction(this);
     }
@@ -156,7 +169,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         .ifLifecycle(ifLifecycle)
         .flow(flow)
         .ifFlow(ifFlow)
-        .branches(branches);
+        .branches(branches)
+        .dependencies(dependencies);
   }
 
   @Nullable
@@ -231,6 +245,11 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     return branches;
   }
 
+  @NonNull
+  public List<String> getDependencies() {
+    return dependencies;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof WizardAction) {
@@ -243,14 +262,16 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
           && Objects.equals(scriptUri, o.scriptUri)
           && Objects.equals(ifLifecycle, o.ifLifecycle)
           && Objects.equals(flow, o.flow)
-          && Objects.equals(ifFlow, o.ifFlow);
+          && Objects.equals(ifFlow, o.ifFlow)
+          && Objects.equals(dependencies, o.dependencies);
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(scriptUri, index, id, uri, node, ifLifecycle, flow, ifFlow, branches);
+    return Objects.hash(
+        scriptUri, index, id, uri, node, ifLifecycle, flow, ifFlow, branches, dependencies);
   }
 
   @Override
@@ -273,6 +294,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         + index
         + " branches="
         + branches
+        + " dependencies="
+        + dependencies
         + "}";
   }
 
@@ -288,6 +311,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     bldr.append(indentStr).append(" flow = ").append(flow).append("\n");
     bldr.append(indentStr).append(" ifFlow = ").append(ifFlow).append("\n");
     bldr.append(indentStr).append(" branches = ").append(branches).append("\n");
+    bldr.append(indentStr).append(" dependencies = ").append(dependencies).append("\n");
     return bldr.append(indentStr).append("}").toString();
   }
 
@@ -307,6 +331,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     dest.writeString(flow);
     dest.writeString(ifFlow);
     dest.writeParcelable(branches, flags);
+    dest.writeStringList(dependencies);
   }
 
   public static final Parcelable.Creator<WizardAction> CREATOR =
@@ -324,6 +349,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
           WizardBranchArray branches =
               source.readParcelable(WizardBranchArray.class.getClassLoader());
+          List<String> dependencies = new ArrayList<>();
+          source.readStringList(dependencies);
           return new WizardAction.Builder(scriptUri, index)
               .id(id)
               .uri(uri)
@@ -332,6 +359,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
               .flow(flow)
               .ifFlow(ifFlow)
               .branches(branches)
+              .dependencies(dependencies)
               .build();
         }
 
@@ -374,6 +402,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     bundle.putString(FLOW_KEY, flow);
     bundle.putString(IF_FLOW_KEY, ifFlow);
     putPersistable(bundle, BRANCHES_KEY, branches);
+    bundle.putStringArray(DEPENDENCIES_KEY, dependencies.toArray(new String[0]));
 
     return bundle;
   }
