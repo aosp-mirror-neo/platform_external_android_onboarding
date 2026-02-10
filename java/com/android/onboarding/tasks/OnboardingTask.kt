@@ -370,7 +370,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
         // Wait for either mainExecution or coroutineWatcher to finish
         val selected = select {
           // We're just trying to extract exceptions - we get the actual result below
-          val unused1 = mainExecution.onAwait { it as Any }
+          val unused1 = mainExecution.onAwait { it }
           val unused2 = coroutineWatcher.onAwait {}
         }
 
