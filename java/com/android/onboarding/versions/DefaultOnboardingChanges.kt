@@ -1,11 +1,12 @@
 package com.android.onboarding.versions
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
+import android.content.res.Resources
 import android.provider.Settings
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
+import com.android.onboarding.nodes.ComponentRef
 import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ValidChangeId
@@ -18,10 +19,25 @@ import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
  * change ID is checked where the component is not already cached. The cache can be reloaded by
  * calling [loadSupportedChanges] again.
  *
- * Versioning works by each onboarding component including a meta data of the following form in
- * their manifest:
- *
+ * Versioning works by each onboarding component including a metadata of the following form in their
+ * manifest:
+ * ```xml
  * <meta-data android:name="onboarding-compliance-date" android:value="2023-07-10" />
+ * ```
+ *
+ * Alternatively, apps with multiple subcomponent can specify compliance dates per-subcomponent by
+ * defining non-translatable string resource, which when present will take precedence over app-level
+ * compliance date for that subcomponent. The resource key must be formatted as
+ * `<res_compliant_lowercase_subname>_onboarding_compliance_date`, where `.` and `-` are replaced
+ * with `_`:
+ * ```xml
+ * <?xml version="1.0" encoding="utf-8"?>
+ * <!-- res/values/strings.xml -->
+ * <resources>
+ *     <!-- Android Onboarding compliance date -->
+ *     <string name="subcomponent_onboarding_compliance_date" translatable="false">2026-01-01</string>
+ * </resources>
+ * ```
  *
  * This indicates that this APK is compatible with onboarding APIs as of 2023-07-10. Breaking API
  * changes should not be introduced from the point of view of this APK without that compliance date
@@ -45,10 +61,24 @@ import com.android.onboarding.versions.changes.ALL_CHANGE_IDS
  *
  * On SDK 26+, System properties can also be used as an alternative to global settings. If both a
  * global setting and a system property are set, the global setting will take priority.
+ *
+ * @param component the [ComponentRef] of the "current" component owning this instance for implicit
+ *   change checks.
  */
 @OptIn(InternalOnboardingApi::class)
-class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
+class DefaultOnboardingChanges
+@JvmOverloads
+constructor(context: Context, component: ComponentRef? = null) : BaseOnboardingChanges() {
   private val applicationContext = context.applicationContext
+
+  /**
+   * The [ComponentRef] of the "current" component owning this instance for implicit change checks.
+   */
+  val owner: ComponentRef =
+    component
+      ?: ComponentRef(
+        "${applicationContext.packageName}/${applicationContext.packageName.substringAfterLast(".")}"
+      )
 
   override fun warn(message: String, tr: Throwable?) {
     if (tr != null) log.w(message, tr) else log.w(message)
@@ -61,19 +91,34 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
   }
 
   override fun isCurrentPackage(packageName: String): Boolean {
-    return packageName == applicationContext.packageName
+    return packageName == owner.nodePackage
   }
 
-  override fun getPackageMetaData(packageName: String, key: String): String? {
+  override fun getComplianceDateFromMetaData(component: ComponentRef): String? {
+    val subcomponentComplianceDate =
+      try {
+        val res =
+          applicationContext.packageManager.getResourcesForApplication(component.nodePackage)
+        @Suppress("DiscouragedApi") // No other ways to get the value xApp
+        val id = res.getIdentifier(complianceDateResKey(component), "string", component.nodePackage)
+        res.getString(id)
+      } catch (e: NameNotFoundException) {
+        log.e("Package ${component.nodePackage} not found in package manager", e)
+        null
+      } catch (_: Resources.NotFoundException) {
+        null
+      }
+    if (subcomponentComplianceDate != null) return subcomponentComplianceDate
+
     return try {
-      val app: ApplicationInfo =
+      val info =
         applicationContext.packageManager.getApplicationInfo(
-          packageName,
+          component.nodePackage,
           PackageManager.GET_META_DATA,
         )
-      app.metaData?.getString(key)
+      info.metaData?.getString(COMPLIANCE_DATE_METADATA_KEY)
     } catch (e: NameNotFoundException) {
-      log.e("Package $packageName not found in package manager", e)
+      log.e("Package ${component.nodePackage} not found in package manager", e)
       null
     }
   }
@@ -99,7 +144,7 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
     "ValidChangeId"
   )
   override fun currentProcessSupportsChange(@ValidChangeId changeId: Long): Boolean {
-    return componentSupportsChange(applicationContext.packageName, changeId)
+    return componentSupportsChange(owner, changeId)
   }
 
   override fun requireCurrentProcessSupportsChange(@ValidChangeId changeId: Long) {
@@ -114,7 +159,7 @@ class DefaultOnboardingChanges(context: Context) : BaseOnboardingChanges() {
       )
     } else {
       throw UnsupportedOperationException(
-        "This API is not available. The change ($changeId) is available as of ${changeData.available} but the compliance date of this package is ${getComplianceDate(applicationContext.packageName)}"
+        "This API is not available. The change ($changeId) is available as of ${changeData.available} but the compliance date of this package is ${getComplianceDate(owner)}"
       )
     }
   }

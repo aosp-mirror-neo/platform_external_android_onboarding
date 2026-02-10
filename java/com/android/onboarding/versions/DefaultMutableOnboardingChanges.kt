@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
+import com.android.onboarding.nodes.ComponentRef
 import com.android.onboarding.utils.logging.OnboardingLog
 
 /**
@@ -21,7 +22,19 @@ constructor(
   context: Context,
   onboardingChanges: DefaultOnboardingChanges = DefaultOnboardingChanges(context),
 ) : BaseMutableOnboardingChanges(onboardingChanges) {
+  /**
+   * @param component the [ComponentRef] of the "current" component owning this instance for
+   *   implicit change checks.
+   */
+  constructor(
+    context: Context,
+    component: ComponentRef,
+  ) : this(context, DefaultOnboardingChanges(context, component))
+
   private val applicationContext = context.applicationContext
+
+  /** @see DefaultOnboardingChanges.owner */
+  val owner: ComponentRef = onboardingChanges.owner
 
   override fun debug(message: String) {
     log.d(message)
@@ -35,21 +48,20 @@ constructor(
     Settings.Global.putInt(applicationContext.contentResolver, key, value)
   }
 
-  override fun enableTag(tag: String) = enableTag(applicationContext.packageName, tag)
+  override fun enableTag(tag: String) = enableTag(owner, tag)
 
-  override fun disableTag(tag: String) = disableTag(applicationContext.packageName, tag)
+  override fun disableTag(tag: String) = disableTag(owner, tag)
 
-  override fun enableChange(changeId: Long) = enableChange(applicationContext.packageName, changeId)
+  override fun enableChange(changeId: Long) = enableChange(owner, changeId)
 
-  override fun disableChange(changeId: Long) =
-    disableChange(applicationContext.packageName, changeId)
+  override fun disableChange(changeId: Long) = disableChange(owner, changeId)
 
   override fun setChangeEnabled(changeId: Long, enabled: Boolean) =
-    setChangeEnabled(applicationContext.packageName, changeId, enabled)
+    setChangeEnabled(owner, changeId, enabled)
 
-  override fun resetChange(changeId: Long) = resetChange(applicationContext.packageName, changeId)
+  override fun resetChange(changeId: Long) = resetChange(owner, changeId)
 
-  override fun resetTag(tag: String) = resetTag(applicationContext.packageName, tag)
+  override fun resetTag(tag: String) = resetTag(owner, tag)
 
   private companion object {
     val log = OnboardingLog.logger("DefaultMutableOnboardingChanges")

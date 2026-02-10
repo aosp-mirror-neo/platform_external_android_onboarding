@@ -1,6 +1,7 @@
 package com.android.onboarding.versions
 
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
+import com.android.onboarding.nodes.ComponentRef
 import com.android.onboarding.versions.annotations.ChangeId
 import com.android.onboarding.versions.annotations.ChangeRadius
 import com.android.onboarding.versions.annotations.ValidChangeId
@@ -22,7 +23,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
    */
   private val packageComplianceDates = mutableMapOf<String, ComplianceDate?>()
 
-  /** Log a warn [message] with an optional [tr] error. */
+  /** Log warn [message] with an optional [tr] error. */
   protected abstract fun warn(message: String, tr: Throwable?)
 
   /** Expand given [changeId] to a full [ChangeId] data. */
@@ -31,8 +32,8 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   /** Is given [packageName] the same as current application package. */
   protected abstract fun isCurrentPackage(packageName: String): Boolean?
 
-  /** Get a string `<meta-data \>` value from application's manifest. */
-  protected abstract fun getPackageMetaData(packageName: String, key: String): String?
+  /** Get a compliance date string from `<meta-data \>` value for given [component]. */
+  protected abstract fun getComplianceDateFromMetaData(component: ComponentRef): String?
 
   /** Get [String] value from global settings under [key]. */
   protected abstract fun getSettingString(key: String): String?
@@ -40,24 +41,42 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
   /** Get [Int] value from global settings under [key]. */
   protected abstract fun getSettingInt(key: String): Int?
 
-  final override fun getComplianceDate(component: String): ComplianceDate {
-    val packageName = extractPackageFromComponent(component)
+  final override fun getComplianceDate(component: ComponentRef): ComplianceDate {
+    return getComplianceDateOrNull(component) ?: ComplianceDate()
+  }
+
+  /** Get [ComplianceDate] or null if an error occurs or component does not specify it. */
+  fun getComplianceDateOrNull(component: ComponentRef): ComplianceDate? {
+    val packageName = component.nodePackage
     val complianceOverride = getComplianceVersionOverride(packageName)
     return if (complianceOverride != null) {
       complianceOverride
     } else {
-      val complianceDateString = getPackageMetaData(packageName, COMPLIANCE_DATE_METADATA_KEY)
+      val complianceDateString = getComplianceDateFromMetaData(component)
       try {
         complianceDateString?.let(::ComplianceDate)
       } catch (e: DateTimeParseException) {
         warn("Invalid compliance date $complianceDateString", e)
         null
-      } ?: ComplianceDate()
+      }
     }
   }
 
+  /**
+   * Checks if the [changeId] is enabled for [component].
+   *
+   * Since this bypasses [ChangeRadius] checks, the method returning true does not necessarily mean
+   * that it is safe for the calling component to use the feature guarded by [changeId].
+   */
+  @InternalOnboardingApi
+  fun isChangeEnabledForComponent(component: ComponentRef, @ValidChangeId changeId: Long): Boolean {
+    val packageName = component.nodePackage
+    val changeData = getChangeIdData(changeId)
+    return componentSupportsChange(packageName, changeData, component)
+  }
+
   final override fun componentSupportsChange(
-    component: String,
+    component: ComponentRef,
     @ValidChangeId(
       allowedChangeRadii = [ChangeRadius.MULTI_COMPONENT],
       disallowedChangeRadiiError =
@@ -65,7 +84,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
     )
     changeId: Long,
   ): Boolean {
-    val packageName = extractPackageFromComponent(component)
+    val packageName = component.nodePackage
 
     val changeData = getChangeIdData(changeId)
 
@@ -79,6 +98,14 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
       )
     }
 
+    return componentSupportsChange(packageName, changeData, component)
+  }
+
+  private fun componentSupportsChange(
+    packageName: String,
+    changeData: ChangeId,
+    component: ComponentRef,
+  ): Boolean {
     val changeOverride = getChangeOverride(packageName, changeData)
     if (changeOverride != null) {
       return changeOverride
@@ -92,15 +119,15 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
 
     // if (!packageComplianceDates.containsKey(packageName)) {
 
-    loadSupportedChanges(packageName)
+    loadSupportedChanges(component)
     // }
 
     // If we can't fetch the supported features we assume no non-released features
     return packageComplianceDates[packageName]?.isAvailable(changeData) ?: false
   }
 
-  final override fun loadSupportedChanges(component: String) {
-    val packageName = extractPackageFromComponent(component)
+  final override fun loadSupportedChanges(component: ComponentRef) {
+    val packageName = component.nodePackage
 
     val complianceOverride = getComplianceVersionOverride(packageName)
     if (complianceOverride != null) {
@@ -110,8 +137,7 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
 
     try {
       val complianceDateString =
-        getPackageMetaData(packageName, COMPLIANCE_DATE_METADATA_KEY)
-          ?: ComplianceDate.EARLIEST_COMPLIANCE_DATE_STRING
+        getComplianceDateFromMetaData(component) ?: ComplianceDate.EARLIEST_COMPLIANCE_DATE_STRING
       packageComplianceDates[packageName] = ComplianceDate(complianceDateString)
     } catch (e: Exception) {
       warn("Could not find package info for $packageName", e)
@@ -162,10 +188,14 @@ abstract class BaseOnboardingChanges : OnboardingChanges {
      */
     private const val CHANGE_TAG_ALL = "all"
 
-    /** The meta-data key used to indicate compliance date. */
+    /** The meta-data key used to indicate compliance date in android manifest meta-data. */
     @InternalOnboardingApi const val COMPLIANCE_DATE_METADATA_KEY = "onboarding-compliance-date"
 
+    /** The meta-data key used to indicate compliance date in android resources. */
     @InternalOnboardingApi
-    fun extractPackageFromComponent(component: String) = component.split("/", limit = 2)[0]
+    fun complianceDateResKey(component: ComponentRef): String {
+      val resPrefix = component.subcomponent.replace(".", "_").replace("-", "_")
+      return "${resPrefix}_onboarding_compliance_date"
+    }
   }
 }
