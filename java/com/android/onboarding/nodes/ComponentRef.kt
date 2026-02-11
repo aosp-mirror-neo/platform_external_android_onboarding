@@ -28,7 +28,10 @@ interface ComponentRef {
   val subcomponent: String
     get() =
       nodeComponent
-        .substringAfterLast("/", missingDelimiterValue = "")
+        .substringAfterLast(
+          "/",
+          missingDelimiterValue = nodeComponent.substringAfterLast(".", missingDelimiterValue = ""),
+        )
         .takeIf(String::isNotBlank)
         .let(::checkNotNull)
 
@@ -46,6 +49,9 @@ interface ComponentRef {
 
   private data class StableImpl(override val nodeComponent: String) : Stable {
     constructor(ref: ComponentRef) : this(ref.nodeComponent)
+
+    override val nodePackage: String by lazy { super.nodePackage }
+    override val subcomponent: String by lazy { super.subcomponent }
 
     override fun toPersistableBundle() = toPersistableBundle(this)
 

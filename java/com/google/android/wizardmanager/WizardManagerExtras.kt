@@ -18,6 +18,7 @@ import com.android.onboarding.utils.persistable.getPersistableMapWithLongKey
 import com.android.onboarding.utils.persistable.putPersistable
 import com.android.onboarding.utils.persistable.putPersistableMapWithLongKey
 import com.google.android.setupcompat.util.SuwLifeCycleEnum
+import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_IS_CUSTOM_SETUP
 import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_IS_DEFERRED_SETUP
 import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_IS_FIRST_RUN
 import com.google.android.setupcompat.util.WizardManagerConstants.EXTRA_IS_PORTAL_SETUP
@@ -164,6 +165,7 @@ data class SetupWizardExtras(
   val isDeferredSetup: Boolean = false,
   val isPreDeferredSetup: Boolean = false,
   val isPortalSetup: Boolean = false,
+  val isCustomSetup: Boolean = false,
   val isSetupFlow: Boolean = false,
   val isSuwSuggestedActionFlow: Boolean = false,
   val suwLifecycle: SuwLifeCycleEnum = SuwLifeCycleEnum.UNKNOWN,
@@ -182,6 +184,7 @@ data class SetupWizardExtras(
     bundle.putBoolean(EXTRA_IS_DEFERRED_SETUP, isDeferredSetup)
     bundle.putBoolean(EXTRA_IS_PRE_DEFERRED_SETUP, isPreDeferredSetup)
     bundle.putBoolean(EXTRA_IS_PORTAL_SETUP, isPortalSetup)
+    bundle.putBoolean(EXTRA_IS_CUSTOM_SETUP, isCustomSetup)
     bundle.putBoolean(EXTRA_IS_SETUP_FLOW, isSetupFlow)
     bundle.putBoolean(EXTRA_IS_SUW_SUGGESTED_ACTION_FLOW, isSuwSuggestedActionFlow)
     bundle.putInt(EXTRA_SUW_LIFECYCLE, suwLifecycle.value)
@@ -194,6 +197,7 @@ data class SetupWizardExtras(
       BooleanMetadata(NonSensitiveString(KEY_IS_DEFERRED_SETUP), isDeferredSetup),
       BooleanMetadata(NonSensitiveString(KEY_IS_PRE_DEFERRED_SETUP), isPreDeferredSetup),
       BooleanMetadata(NonSensitiveString(KEY_IS_PORTAL_SETUP), isPortalSetup),
+      BooleanMetadata(NonSensitiveString(KEY_IS_CUSTOM_SETUP), isCustomSetup),
       BooleanMetadata(NonSensitiveString(KEY_IS_SETUP_FLOW), isSetupFlow),
       BooleanMetadata(
         NonSensitiveString(KEY_IS_SUW_SUGGESTED_ACTION_FLOW),
@@ -208,6 +212,7 @@ data class SetupWizardExtras(
     internal const val KEY_IS_DEFERRED_SETUP = "isDeferredSetup"
     internal const val KEY_IS_PRE_DEFERRED_SETUP = "isPreDeferredSetup"
     internal const val KEY_IS_PORTAL_SETUP = "isPortalSetup"
+    internal const val KEY_IS_CUSTOM_SETUP = "isCustomSetup"
     internal const val KEY_IS_SETUP_FLOW = "isSetupFlow"
     internal const val KEY_IS_SUW_SUGGESTED_ACTION_FLOW = "isSuwSuggestedActionFlow"
     internal const val KEY_SUW_LIFECYCLE = "suwLifecycle"
@@ -220,6 +225,7 @@ data class SetupWizardExtras(
         isDeferredSetup = false,
         isPreDeferredSetup = false,
         isPortalSetup = false,
+        isCustomSetup = false,
         isSetupFlow = false,
         isSuwSuggestedActionFlow = false,
         suwLifecycle = SuwLifeCycleEnum.UNKNOWN,
@@ -238,6 +244,7 @@ data class SetupWizardExtras(
         isDeferredSetup = bundle.getBoolean(EXTRA_IS_DEFERRED_SETUP),
         isPreDeferredSetup = bundle.getBoolean(EXTRA_IS_PRE_DEFERRED_SETUP),
         isPortalSetup = bundle.getBoolean(EXTRA_IS_PORTAL_SETUP),
+        isCustomSetup = bundle.getBoolean(EXTRA_IS_CUSTOM_SETUP),
         isSetupFlow = bundle.getBoolean(EXTRA_IS_SETUP_FLOW),
         isSuwSuggestedActionFlow = bundle.getBoolean(EXTRA_IS_SUW_SUGGESTED_ACTION_FLOW),
         suwLifecycle =

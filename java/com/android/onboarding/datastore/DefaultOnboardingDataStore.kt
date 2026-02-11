@@ -76,6 +76,7 @@ class DefaultOnboardingDataStore(
 
   override suspend fun <T> write(key: String, value: T, serializer: PersistableSerializer<T>) {
     if (!onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CHANGE_ID)) {
+      Log.w(TAG, "Feature disabled. Ignore writing key: $key")
       return
     }
     updateSuwSessionIdAndCleanupIfNecessary()
@@ -105,6 +106,7 @@ class DefaultOnboardingDataStore(
 
   override suspend fun <T> read(key: String, deserializer: PersistableDeserializer<T>): T? {
     if (!onboardingChanges.currentProcessSupportsChange(SETUP_SESSION_BASED_STORAGE_CHANGE_ID)) {
+      Log.w(TAG, "Feature disabled. Returning null for reading key: $key")
       return null
     }
     updateSuwSessionIdAndCleanupIfNecessary()
