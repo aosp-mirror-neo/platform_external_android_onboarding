@@ -6,7 +6,7 @@ package {
 android_library {
     name: "android_onboarding.flags",
     visibility: [
-        "//visibility:public",
+        "//external/android_onboarding:__subpackages__",
     ],
     srcs: [
         "DefaultOnboardingFlagsProvider.kt",

@@ -3,6 +3,10 @@ package com.android.onboarding.flags
 import java.time.Duration
 
 /** Interface for getting enabled state of different onboarding feature flags. */
+@Deprecated(
+  "Should not be used anymore as all flags managed by default implementation are now static." +
+    "Prefer using OnboardingChanges instead."
+)
 interface OnboardingFlagsProvider {
   @Deprecated(message = "Replaced with a property", replaceWith = ReplaceWith("isContractEnabled"))
   fun isOnboardingContractEnabled(): Boolean = isContractEnabled
