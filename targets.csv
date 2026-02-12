@@ -83,3 +83,4 @@ android_onboarding.versions.changes
 android_onboarding.waiting.waiting_screen_provider
 android_onboarding.wizardmanager.actions
 wizard_manager.WizardManagerExtras
+wizard_manager.config
