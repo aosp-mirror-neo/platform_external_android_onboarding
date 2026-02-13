@@ -27,6 +27,7 @@ android_library {
         "androidx.appcompat_appcompat",
         "error_prone_annotations",
         "setupcompat_wizard_manager_constants",
+        "wizard_manager.config",
     ],
     sdk_version: "system_current",
     dont_merge_manifests: true,
