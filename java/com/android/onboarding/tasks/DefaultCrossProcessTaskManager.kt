@@ -188,41 +188,50 @@ class DefaultCrossProcessTaskManager(
     val nodeRef = token.asNodeRef()
     synchronized(serviceRegistry) {
       val existingService = serviceRegistry[nodeRef]
-      if (existingService == null) {
-        Log.d(TAG, "prepareService#Existing service is null for $nodeRef")
-        val listener =
-          object : ConnectionListener {
-            override fun onServiceConnected() {}
-
-            override fun onServiceDisconnected() {
-              serviceRegistry.remove(nodeRef)
-              serviceUsage.remove(nodeRef)
-            }
-
-            override fun onConnectionClosed() {
-              serviceRegistry.remove(nodeRef)
-              serviceUsage.remove(nodeRef)
-            }
-          }
-        return OnboardingTaskManagerServiceConnection(
-            context = applicationContext,
-            intent = intent,
-            targetUserId = token.targetUserId,
-            listener = listener,
-            onboardingChanges = onboardingChanges,
-            targetComponent = token,
-            serviceUsage = serviceUsage,
-          )
-          .also { ref ->
-            Log.d(TAG, "Adding service $ref to serviceRegistry. ComponentRef=$nodeRef")
-            serviceRegistry[nodeRef] = ref
+      if (existingService != null) {
+        synchronized(existingService) {
+          if (!existingService.isClosed) {
+            Log.d(TAG, "prepareService#Returning existing service $existingService for $nodeRef")
             increaseServiceUsage(nodeRef)
+            return existingService
+          } else {
+            Log.d(TAG, "prepareService#Existing service is closed $existingService for $nodeRef")
+            // The service is closed/closing, so we remove it (if it hasn't been already) and
+            // create a new one.
+            serviceRegistry.remove(nodeRef, existingService)
           }
-      } else {
-        Log.d(TAG, "prepareService#Returning existing service $existingService for $nodeRef")
-        increaseServiceUsage(nodeRef)
-        return existingService
+        }
       }
+
+      Log.d(TAG, "prepareService#Creating new service for $nodeRef")
+      val listener =
+        object : ConnectionListener {
+          override fun onServiceConnected() {}
+
+          override fun onServiceDisconnected() {
+            serviceRegistry.remove(nodeRef)
+            serviceUsage.remove(nodeRef)
+          }
+
+          override fun onConnectionClosed(connection: OnboardingTaskManagerServiceConnection) {
+            serviceRegistry.remove(nodeRef, connection)
+            serviceUsage.remove(nodeRef, 0)
+          }
+        }
+      return OnboardingTaskManagerServiceConnection(
+          context = applicationContext,
+          intent = intent,
+          targetUserId = token.targetUserId,
+          listener = listener,
+          onboardingChanges = onboardingChanges,
+          targetComponent = token,
+          serviceUsage = serviceUsage,
+        )
+        .also { ref ->
+          Log.d(TAG, "Adding service $ref to serviceRegistry. ComponentRef=$nodeRef")
+          serviceRegistry[nodeRef] = ref
+          increaseServiceUsage(nodeRef)
+        }
     }
   }
 
@@ -336,8 +345,10 @@ private constructor(
    * longer any usage.
    */
   private fun closeRef(ref: UniqueNodeRef) {
-    if (decreaseServiceUsage(ref.asNodeRef()) == 0) {
-      close()
+    synchronized(this) {
+      if (decreaseServiceUsage(ref.asNodeRef()) == 0) {
+        close()
+      }
     }
   }
 
@@ -350,11 +361,21 @@ private constructor(
     }
   }
 
+  @VisibleForTesting
+  var isClosed = false
+    private set
+
   override fun close() {
-    Log.i(TAG, "Closing service connection: $this")
-    context.get()?.let(::safeUnbindService)
+    synchronized(this) {
+      if (isClosed) return
+      Log.i(TAG, "Closing service connection: $this")
+      isClosed = true
+    }
+    // We remove the connection from the registry first to ensure no new clients get this dying
+    // connection.
+    listener.onConnectionClosed(this)
     this@OnboardingTaskManagerServiceConnection.service.value = null
-    listener.onConnectionClosed()
+    context.get()?.let(::safeUnbindService)
   }
 
   companion object {
@@ -468,6 +489,6 @@ private constructor(
      *
      * @see close
      */
-    fun onConnectionClosed()
+    fun onConnectionClosed(connection: OnboardingTaskManagerServiceConnection)
   }
 }
