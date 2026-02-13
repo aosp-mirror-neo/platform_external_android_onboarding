@@ -108,8 +108,6 @@ const val GET_TASK_STATE_WITH_CALLBACK_ID = 427841662L
   owner = "iancheng",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
-  available = "2025-08-04",
-  tags = [P11_EVT, NEXT],
 )
 const val CLOSE_SERVICE_CONNECTION_AFTER_RPC_ID = 428071871L
 
