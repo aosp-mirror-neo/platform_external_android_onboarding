@@ -1,6 +1,7 @@
 package com.android.onboarding.control
 
 import android.os.PersistableBundle
+import com.android.onboarding.nodes.NodeRef
 import com.android.onboarding.pending.PendingContract
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.persistable.Persistable
@@ -15,7 +16,7 @@ import com.android.onboarding.utils.persistable.putPersistable
  * If [requestCode] is non-null then we expect this to be launched forResult.
  */
 data class ActivityLaunch(val contract: PendingContract.Activity<*>, val requestCode: Int? = null) :
-  Persistable, StableEquality {
+  Persistable, StableEquality, NodeRef by contract {
   override fun toPersistableBundle() = PersistableBundle {
     putPersistable(KEY_CONTRACT, contract.erase())
     requestCode?.let { putInt(KEY_REQUEST_CODE, it) }
