@@ -30,6 +30,7 @@ import com.android.onboarding.utils.datasplitter.splitForTransaction
 import com.android.onboarding.utils.datasplitter.toPendingBundle
 import com.android.onboarding.utils.forceToString
 import com.android.onboarding.utils.generateHash
+import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getPersistableBundleOrThrow
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.getPersistable
@@ -103,8 +104,7 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
     override val lastMetadata: OnboardingMetadataStore?,
   ) : OnboardingTaskState<O>() {
     /** The result of the completed task. */
-    @Suppress("UNCHECKED_CAST")
-    val result: O by lazy { resultBundle?.let(parser::encode) ?: null as O }
+    abstract val result: O?
 
     @InternalOnboardingApi
     override fun toPersistableBundle(): PersistableBundle =
@@ -130,7 +130,7 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
     override val parser: Encoder<PersistableBundle, O>,
     override val nodeRef: NodeRef,
     override val nodeId: NodeId,
-    private val resultBundle: PersistableBundle?,
+    private val resultBundle: PersistableBundle,
     override val lastMetadata: OnboardingMetadataStore?,
   ) : Completed<O>(resultBundle, lastMetadata) {
     internal constructor(
@@ -141,21 +141,23 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
       parser = parser,
       nodeRef = nodeRef,
       nodeId = bundle.nodeId,
-      resultBundle = bundle.getPersistableBundle(EXTRA_RESULT),
+      resultBundle = bundle.getPersistableBundleOrThrow(EXTRA_RESULT),
       lastMetadata = bundle.getPersistable(EXTRA_LAST_METADATA, OnboardingMetadataStore),
     )
 
     constructor(
       token: OnboardingTaskToken<O>,
-      result: O?,
+      result: O,
       lastMetadata: OnboardingMetadataStore? = null,
     ) : this(
       parser = token.resultDecoder,
       nodeRef = token,
       nodeId = token.nodeId,
-      resultBundle = result?.let(token.resultEncoder::encode),
+      resultBundle = token.resultEncoder.encode(result),
       lastMetadata = lastMetadata,
     )
+
+    override val result: O by lazy { parser.encode(resultBundle) }
 
     override val type: String = TYPE_SUCCESS
 
@@ -174,7 +176,9 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
       Objects.hash(nodeComponent, nodeName, nodeId, resultBundle.generateHash())
 
     override fun toString() =
-      "OnboardingTaskState.Success(${identity()}, result=${resultBundle?.forceToString()}, lastMetadata=$lastMetadata)"
+      "OnboardingTaskState.Success(${identity()}," +
+        " result=${resultBundle.forceToString()}," +
+        " lastMetadata=$lastMetadata)"
   }
 
   /**
@@ -222,6 +226,8 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
       lastMetadata = lastMetadata,
       errorMessage = errorMessage,
     )
+
+    override val result: O? by lazy { resultBundle?.let(parser::encode) }
 
     override val type: String = TYPE_FAILED
 

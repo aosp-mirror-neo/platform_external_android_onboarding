@@ -239,17 +239,17 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
   val metadataStore = OnboardingMetadataStore()
 
   /** Report task success state. */
-  protected fun success(result: O? = null): OnboardingTaskState<O> =
+  protected fun success(result: O): OnboardingTaskState<O> =
     OnboardingTaskState.Success(
       parser = contract.resultDecoder,
       nodeRef = contract,
       nodeId = nodeId,
-      resultBundle = result?.let(contract.resultEncoder::encode),
+      resultBundle = contract.resultEncoder.encode(result),
       lastMetadata = if (metadataStore.isEmpty) null else metadataStore,
     )
 
   /** Internal version of [success]. */
-  internal fun successInternal(result: O? = null): OnboardingTaskState<O> = success(result)
+  internal fun successInternal(result: O): OnboardingTaskState<O> = success(result)
 
   /** Report task failure state. */
   protected fun failure(errorMessage: IString, result: O? = null): OnboardingTaskState<O> =

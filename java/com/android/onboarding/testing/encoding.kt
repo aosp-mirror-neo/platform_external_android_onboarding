@@ -38,11 +38,7 @@ inline fun <reified T : Parcelable> reparcelize(input: T): T {
  * the resulting [PersistableBundle].
  */
 fun <T : Persistable?> repersist(input: T, deserializer: PersistableDeserializer<T>): T {
-  if (input == null) {
-    @Suppress("UNCHECKED_CAST")
-    return null as T
-  }
-  return repersist(input, Persistable::toPersistableBundle, deserializer)
+  return repersist(input, { it?.toPersistableBundle() ?: PersistableBundle.EMPTY }, deserializer)
 }
 
 /**
