@@ -559,3 +559,17 @@ const val ESIM_FALLBACK_SEPARATION = 475397409L
   available = "2026-01-01",
 )
 const val DISABLE_PHENOTYPE_COMPLIANCE_DATE_OVERRIDES = 480030468L
+
+/**
+ * Enables tasks and activities to emit their own graph nodes which will be included in the main
+ * setupwizard graph.
+ */
+@ChangeId(
+  bugId = 477196978L,
+  owner = "scottjonathan",
+  breaking = [],
+  tags = [P11_DVT, NEXT],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2026-02-01",
+)
+const val WIZARD_GRAPH_METADATA = 477196978L
