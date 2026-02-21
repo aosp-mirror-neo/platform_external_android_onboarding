@@ -9,6 +9,7 @@ android_library {
         "//visibility:public",
     ],
     srcs: [
+        "WaitingScreenConfig.kt",
         "WizardScriptConfig.kt",
     ],
     static_libs: [
