@@ -114,6 +114,7 @@ fun PersistableBundle.toBundle(onError: ((key: String, error: String) -> Unit)? 
       ?: PersistableBundle()
 
   for (key in originalTypes.keySet()) {
+    @Suppress("DEPRECATION") // Need to use get() to get the data out of the Bundle
     val value = bundle.get(key)
 
     if (value == null) {
@@ -164,18 +165,26 @@ fun PersistableBundle.toBundle(onError: ((key: String, error: String) -> Unit)? 
           )
 
         ArrayList::class.qualifiedName -> {
-          val arrayListType = originalTypes.getString(key, "").split("<")[1].split(">")[0]
+          val arrayType = originalTypes.getString(key, "").split("<")[1].split(">")[0]
 
-          when (arrayListType) {
+          when (arrayType) {
             Int::class.qualifiedName ->
               bundle.putIntegerArrayList(key, ArrayList((value as IntArray).toList()))
-            // String and Charsequence are interchangeable in Bundles
             String::class.qualifiedName ->
-              bundle.putCharSequenceArrayList(key, ArrayList((value as Array<String>).toList()))
+              bundle.putStringArrayList(key, ArrayList((value as Array<String>).toList()))
+            CharSequence::class.qualifiedName ->
+              bundle.putCharSequenceArrayList(key, ArrayList((value as Array<String?>).toList()))
+            Bundle::class.qualifiedName ->
+              bundle.putParcelableArrayList(
+                key,
+                getPersistableList(key, PersistablePersistableBundle)
+                  ?.map { it?.persistableBundle?.toBundle(onError) }
+                  ?.let(::ArrayList),
+              )
             else ->
               onError?.invoke(
                 key,
-                "$key originally had array list type $originalType but we cannot convert back to that",
+                "$key originally had ArrayList type $originalType but we cannot convert back to that",
               )
           }
         }
@@ -184,20 +193,21 @@ fun PersistableBundle.toBundle(onError: ((key: String, error: String) -> Unit)? 
           val arrayType = originalTypes.getString(key, "").split("<")[1].split(">")[0]
 
           when (arrayType) {
+            Int::class.qualifiedName -> bundle.putIntArray(key, value as IntArray)
+            String::class.qualifiedName -> bundle.putStringArray(key, value as Array<String>)
             CharSequence::class.qualifiedName ->
               bundle.putCharSequenceArray(key, value as Array<String>)
-            Bundle::class.qualifiedName -> {
+            Bundle::class.qualifiedName ->
               bundle.putParcelableArray(
                 key,
                 getPersistableList(key, PersistablePersistableBundle)
                   ?.map { it?.persistableBundle?.toBundle(onError) }
                   ?.toTypedArray(),
               )
-            }
             else ->
               onError?.invoke(
                 key,
-                "$key originally had array type $originalType but we cannot convert back to that",
+                "$key originally had Array type $originalType but we cannot convert back to that",
               )
           }
         }

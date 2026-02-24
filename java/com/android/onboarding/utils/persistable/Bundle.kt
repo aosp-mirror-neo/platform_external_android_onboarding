@@ -66,137 +66,7 @@ fun Bundle.toPersistableBundle(
       if (value == null) {
         continue
       }
-
-      val topLevelClassName = value::class.qualifiedName
-      converted.putString(key, topLevelClassName)
-
-      when (value) {
-        // Supported types
-        is Int -> persistableBundle.putInt(key, value)
-        is IntArray -> persistableBundle.putIntArray(key, value)
-        is Long -> persistableBundle.putLong(key, value)
-        is LongArray -> persistableBundle.putLongArray(key, value)
-        is Double -> persistableBundle.putDouble(key, value)
-        is DoubleArray -> persistableBundle.putDoubleArray(key, value)
-        is Boolean -> persistableBundle.compatPutBoolean(key, value)
-        is BooleanArray -> persistableBundle.compatPutBooleanArray(key, value)
-        is String -> persistableBundle.putString(key, value)
-        is PersistableBundle -> persistableBundle.putPersistableBundle(key, value)
-        is Persistable -> persistableBundle.putPersistable(key, value)
-
-        // Unsupported types we can convert
-        is Bundle -> persistableBundle.putPersistableBundle(key, value.toPersistableBundle(onError))
-        is Byte -> persistableBundle.putInt(key, value.toInt())
-        is ByteArray -> persistableBundle.putIntArray(key, value.map { it.toInt() }.toIntArray())
-        is Short -> persistableBundle.putInt(key, value.toInt())
-        is ShortArray -> persistableBundle.putIntArray(key, value.map { it.toInt() }.toIntArray())
-        is Char -> persistableBundle.putString(key, value.toString())
-        is CharArray ->
-          persistableBundle.putStringArray(key, value.map { it.toString() }.toTypedArray())
-        is CharSequence -> persistableBundle.putString(key, value.toString())
-        is Float -> persistableBundle.putDouble(key, value.toDouble())
-        is FloatArray ->
-          persistableBundle.putDoubleArray(key, value.map { it.toDouble() }.toDoubleArray())
-        is Size -> persistableBundle.putString(key, value.toString())
-        is ComponentName -> persistableBundle.putString(key, value.flattenToString())
-        is Intent -> persistableBundle.putPersistable(key, PersistableIntent(value))
-
-        is Account -> persistableBundle.putPersistableBundle(key, toPersistableBundle(value))
-        is Locale -> persistableBundle.putString(key, value.toLanguageTag())
-        is Uri -> {
-          // Specify Uri type to avoid subclass issues e.g. StringUri
-          converted.putString(key, Uri::class.qualifiedName)
-          persistableBundle.putString(key, value.toString())
-        }
-        is ArrayList<*> -> {
-          if (value.size == 0) {
-            Log.d(
-              LOG_TAG,
-              "Dropping empty arraylist with key $key because we can't determine the type",
-            )
-          } else {
-            // We assume that all values are of the same type
-            val arrayValue = value[0]!!
-            converted.putString(key, "$topLevelClassName<${arrayValue::class.qualifiedName}>")
-
-            when (arrayValue) {
-              is Int ->
-                persistableBundle.putIntArray(key, IntArray(value.size) { i -> value[i] as Int })
-              is CharSequence ->
-                persistableBundle.putStringArray(key, value.map { it.toString() }.toTypedArray())
-              else ->
-                if (onError == null) {
-                  Log.d(
-                    LOG_TAG,
-                    "Dropping arraylist with key $key due to unknown or unpersistable type ${arrayValue.javaClass}",
-                  )
-                } else {
-                  onError(
-                    key,
-                    "Arraylist with key $key contains unknown or unpersistable type ${arrayValue.javaClass}",
-                  )
-                }
-            }
-          }
-        }
-
-        is Array<*> -> {
-          if (value.size == 0) {
-            Log.d(LOG_TAG, "Dropping empty array with key $key because we can't determine the type")
-          } else {
-            val arrayValue = value.firstNotNullOfOrNull { it }
-
-            if (arrayValue == null) {
-              // We store an array of nulls - type shouldn't matter - and we can't know the
-              // intended type
-              persistableBundle.putStringArray(key, Array<String?>(value.size) { null })
-              continue
-            }
-
-            converted.putString(key, "$topLevelClassName<${arrayValue::class.qualifiedName}>")
-            when (arrayValue) {
-              is String ->
-                persistableBundle.putStringArray(key, (value).map { it?.toString() }.toTypedArray())
-              is CharSequence ->
-                persistableBundle.putStringArray(key, value.map { it?.toString() }.toTypedArray())
-              is Bundle -> {
-                persistableBundle.putPersistableList(
-                  key,
-                  value.map {
-                    (it as? Bundle)?.let {
-                      PersistablePersistableBundle(it.toPersistableBundle(onError))
-                    }
-                  },
-                )
-              }
-              else ->
-                if (onError == null) {
-                  Log.d(
-                    LOG_TAG,
-                    "Dropping array with key $key due to unknown or unpersistable type ${arrayValue?.javaClass}",
-                  )
-                } else {
-                  onError(
-                    key,
-                    "array with key $key contains unknown or unpersistable type ${arrayValue?.javaClass}",
-                  )
-                }
-            }
-          }
-        }
-        else ->
-          if (onError == null) {
-            Log.d(
-              LOG_TAG,
-              "Dropping object with key $key due to unknown or unpersistable type ${value?.javaClass}",
-            )
-          } else {
-            onError(
-              key,
-              "Dropping object with key $key due to unknown or unpersistable type ${value?.javaClass}",
-            )
-          }
-      }
+      persistableBundle.putValue(key, value, converted, onError)
     }
 
     val conversion =
@@ -204,6 +74,116 @@ fun Bundle.toPersistableBundle(
     persistableBundle.putPersistableBundle(KEY_CONVERSION, conversion)
 
     return persistableBundle
+  }
+}
+
+private fun PersistableBundle.putValue(
+  key: String,
+  value: Any,
+  converted: PersistableBundle,
+  onError: ((key: String, error: String) -> Unit)?,
+) {
+  val topLevelClassName = value::class.qualifiedName
+  converted.putString(key, topLevelClassName)
+  when (value) {
+    // Supported types
+    is Int -> putInt(key, value)
+    is IntArray -> putIntArray(key, value)
+    is Long -> putLong(key, value)
+    is LongArray -> putLongArray(key, value)
+    is Double -> putDouble(key, value)
+    is DoubleArray -> putDoubleArray(key, value)
+    is Boolean -> compatPutBoolean(key, value)
+    is BooleanArray -> compatPutBooleanArray(key, value)
+    is String -> putString(key, value)
+    is PersistableBundle -> putPersistableBundle(key, value)
+    is Persistable -> putPersistable(key, value)
+
+    // Unsupported types we can convert
+    is Bundle -> putPersistableBundle(key, value.toPersistableBundle(onError))
+    is Byte -> putInt(key, value.toInt())
+    is ByteArray -> putIntArray(key, value.map { it.toInt() }.toIntArray())
+    is Short -> putInt(key, value.toInt())
+    is ShortArray -> putIntArray(key, value.map { it.toInt() }.toIntArray())
+    is Char -> putString(key, value.toString())
+    is CharArray -> putStringArray(key, value.map { it.toString() }.toTypedArray())
+    is CharSequence -> putString(key, value.toString())
+    is Float -> putDouble(key, value.toDouble())
+    is FloatArray -> putDoubleArray(key, value.map { it.toDouble() }.toDoubleArray())
+    is Size -> putString(key, value.toString())
+    is ComponentName -> putString(key, value.flattenToString())
+    is Intent -> putPersistable(key, PersistableIntent(value))
+
+    is Account -> putPersistableBundle(key, toPersistableBundle(value))
+    is Locale -> putString(key, value.toLanguageTag())
+    is Uri -> {
+      // Specify Uri type to avoid subclass issues e.g. StringUri
+      converted.putString(key, Uri::class.qualifiedName)
+      putString(key, value.toString())
+    }
+    is ArrayList<*> -> putListValue(key, value, converted, onError, topLevelClassName)
+    is Array<*> -> putListValue(key, value.asList(), converted, onError, topLevelClassName)
+    else ->
+      if (onError == null) {
+        Log.d(
+          LOG_TAG,
+          "Dropping object with key $key due to unknown or unpersistable type ${value.javaClass}",
+        )
+      } else {
+        onError(
+          key,
+          "Dropping object with key $key due to unknown or unpersistable type ${value.javaClass}",
+        )
+      }
+  }
+}
+
+private fun PersistableBundle.putListValue(
+  key: String,
+  value: Collection<Any?>,
+  converted: PersistableBundle,
+  onError: ((key: String, error: String) -> Unit)?,
+  topLevelClassName: String?,
+) {
+  if (value.size == 0) {
+    Log.d(
+      LOG_TAG,
+      "Dropping empty $topLevelClassName with key $key because we can't determine the type",
+    )
+  } else {
+    val arrayValue = value.firstNotNullOfOrNull { it }
+
+    if (arrayValue == null) {
+      // We store an array of nulls - type shouldn't matter - and we can't know the
+      // intended type
+      putStringArray(key, arrayOfNulls(value.size))
+      return
+    }
+
+    converted.putString(key, "$topLevelClassName<${arrayValue::class.qualifiedName}>")
+    when (arrayValue) {
+      is Int -> putIntArray(key, value.map { it as Int }.toIntArray())
+      is String -> putStringArray(key, value.map { it?.toString() }.toTypedArray())
+      is CharSequence -> putStringArray(key, value.map { it?.toString() }.toTypedArray())
+      is Bundle ->
+        putPersistableList(
+          key,
+          value.map { (it as? Bundle)?.toPersistableBundle(onError) },
+          PersistablePersistableBundle,
+        )
+      else ->
+        if (onError == null) {
+          Log.d(
+            LOG_TAG,
+            "Dropping $topLevelClassName with key $key due to unknown or unpersistable type ${arrayValue.javaClass}",
+          )
+        } else {
+          onError(
+            key,
+            "$topLevelClassName with key $key contains unknown or unpersistable type ${arrayValue.javaClass}",
+          )
+        }
+    }
   }
 }
 
