@@ -632,7 +632,7 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
       TAG,
       "sendDataChunk#[$token] Receiving data chunk of id=$dataId chunk[${chunkIndex + 1}/$totalChunks]",
     )
-    val chunks = chunkDataMap.getOrDefault(dataId, MutableList(totalChunks) { ByteArray(0) })
+    val chunks = chunkDataMap[dataId] ?: MutableList(totalChunks) { ByteArray(0) }
     chunks[chunkIndex] = chunk
     chunkDataMap[dataId] = chunks
     val receivedChunksSize = chunks.filter { it.isNotEmpty() }.size
