@@ -19,6 +19,7 @@ android_library {
         "WzmLog.java",
     ],
     static_libs: [
+        "android_onboarding.config",
         "android_onboarding.metadata",
         "android_onboarding.utils",
         "android_onboarding.utils.equality",
@@ -27,7 +28,6 @@ android_library {
         "androidx.appcompat_appcompat",
         "error_prone_annotations",
         "setupcompat_wizard_manager_constants",
-        "wizard_manager.config",
     ],
     sdk_version: "system_current",
     dont_merge_manifests: true,

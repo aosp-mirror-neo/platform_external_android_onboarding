@@ -1,6 +1,7 @@
 package com.google.android.wizardmanager
 
 import android.os.PersistableBundle
+import com.android.onboarding.config.OnboardingConfig
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.getPersistable
 import com.google.android.wizardmanager.WizardAction.BRANCHES_KEY
@@ -17,7 +18,6 @@ import com.google.android.wizardmanager.WizardAction.URI_KEY
 import com.google.android.wizardmanager.WizardBranchArray.DEFAULT_ACTION_ID_KEY
 import com.google.android.wizardmanager.WizardBranchArray.MAP_KEY
 import com.google.android.wizardmanager.WizardStack.SIZE_KEY
-import com.google.android.wizardmanager.config.WizardScriptConfig
 
 // Ideally the objects in this file should be companion objects to the classes themselves, but
 // we can't do that until they are converted to Kotlin
@@ -41,7 +41,7 @@ object Deserializers {
         .ifFlow(persistableBundle.getString(IF_FLOW_KEY))
         .branches(branches)
         .dependencies(persistableBundle.getStringArray(DEPENDENCIES_KEY)?.toList() ?: emptyList())
-        .config(persistableBundle.getPersistable(CONFIG_KEY, WizardScriptConfig))
+        .config(persistableBundle.getPersistable(CONFIG_KEY, OnboardingConfig))
         .build()
     }
   }

@@ -10,9 +10,9 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import com.android.onboarding.config.OnboardingConfig;
 import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
-import com.google.android.wizardmanager.config.WizardScriptConfig;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @NonNull private final String logId;
 
   /** The WizardScript config applied for this action. */
-  @Nullable private final WizardScriptConfig config;
+  @Nullable private final OnboardingConfig config;
 
   protected WizardAction(Builder builder) {
     this.scriptUri = builder.scriptUri;
@@ -108,7 +108,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     private String ifFlow;
     private WizardBranchArray branches = new WizardBranchArray();
     private List<String> dependencies = new ArrayList<>();
-    @Nullable private WizardScriptConfig config;
+    @Nullable private OnboardingConfig config;
 
     public Builder(@NonNull String scriptUri, int index) {
       this.scriptUri = scriptUri;
@@ -164,7 +164,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     }
 
     @CanIgnoreReturnValue
-    public Builder config(@Nullable WizardScriptConfig config) {
+    public Builder config(@Nullable OnboardingConfig config) {
       this.config = config;
       return this;
     }
@@ -265,7 +265,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   }
 
   @Nullable
-  public WizardScriptConfig getConfig() {
+  public OnboardingConfig getConfig() {
     return config;
   }
 
@@ -375,8 +375,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
               source.readParcelable(WizardBranchArray.class.getClassLoader());
           List<String> dependencies = new ArrayList<>();
           source.readStringList(dependencies);
-          WizardScriptConfig config =
-              source.readParcelable(WizardScriptConfig.class.getClassLoader());
+          OnboardingConfig config = source.readParcelable(OnboardingConfig.class.getClassLoader());
           return new WizardAction.Builder(scriptUri, index)
               .id(id)
               .uri(uri)

@@ -4,13 +4,13 @@ package {
 }
 
 android_library {
-    name: "wizard_manager.config",
+    name: "android_onboarding.config",
     visibility: [
         "//visibility:public",
     ],
     srcs: [
+        "OnboardingConfig.kt",
         "WaitingScreenConfig.kt",
-        "WizardScriptConfig.kt",
     ],
     static_libs: [
         "android_onboarding.utils.equality",

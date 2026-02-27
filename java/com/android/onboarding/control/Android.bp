@@ -12,6 +12,8 @@ android_library {
         "ActivityLaunch.kt",
     ],
     static_libs: [
+        "android_onboarding.compatibility",
+        "android_onboarding.nodes.ref",
         "android_onboarding.pending",
         "android_onboarding.utils.equality",
         "android_onboarding.utils.persistable",
