@@ -1,4 +1,4 @@
-package com.google.android.wizardmanager.config
+package com.android.onboarding.config
 
 import android.os.Parcelable
 import android.os.PersistableBundle

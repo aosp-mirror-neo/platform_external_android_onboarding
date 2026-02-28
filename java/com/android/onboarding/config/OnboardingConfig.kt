@@ -1,4 +1,4 @@
-package com.google.android.wizardmanager.config
+package com.android.onboarding.config
 
 import android.os.Parcelable
 import android.os.PersistableBundle
@@ -10,19 +10,19 @@ import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistable
 import kotlinx.parcelize.Parcelize
 
-/** Configuration for a WizardScript and its children. */
+/** A container for various onboarding related configurations. */
 @Parcelize
 @Keep
-data class WizardScriptConfig(val waitingScreenConfig: WaitingScreenConfig? = null) :
+data class OnboardingConfig(val waitingScreenConfig: WaitingScreenConfig? = null) :
   Parcelable, Persistable, StableEquality {
   override fun toPersistableBundle(): PersistableBundle =
     PersistableBundle().apply { putPersistable(KEY_WAITING_SCREEN_CONFIG, waitingScreenConfig) }
 
-  companion object : PersistableDeserializer<WizardScriptConfig> {
+  companion object : PersistableDeserializer<OnboardingConfig> {
     const val KEY_WAITING_SCREEN_CONFIG = "waitingScreenConfig"
 
-    override fun fromPersistableBundle(persistableBundle: PersistableBundle): WizardScriptConfig =
-      WizardScriptConfig(
+    override fun fromPersistableBundle(persistableBundle: PersistableBundle): OnboardingConfig =
+      OnboardingConfig(
         waitingScreenConfig =
           persistableBundle.getPersistable(KEY_WAITING_SCREEN_CONFIG, WaitingScreenConfig)
       )
@@ -32,10 +32,7 @@ data class WizardScriptConfig(val waitingScreenConfig: WaitingScreenConfig? = nu
      *
      * Returns the merged config.
      */
-    fun merge(
-      childConfig: WizardScriptConfig?,
-      parentConfig: WizardScriptConfig?,
-    ): WizardScriptConfig? {
+    fun merge(childConfig: OnboardingConfig?, parentConfig: OnboardingConfig?): OnboardingConfig? {
       if (childConfig == null && parentConfig == null) {
         return null
       }
@@ -49,7 +46,7 @@ data class WizardScriptConfig(val waitingScreenConfig: WaitingScreenConfig? = nu
       }
       val mergedWaitingScreenConfig =
         WaitingScreenConfig.merge(childConfig.waitingScreenConfig, parentConfig.waitingScreenConfig)
-      return WizardScriptConfig(mergedWaitingScreenConfig)
+      return OnboardingConfig(mergedWaitingScreenConfig)
     }
   }
 }
