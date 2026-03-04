@@ -3,6 +3,7 @@ android_onboarding.common.annotations
 android_onboarding.common.refs
 android_onboarding.compatibility
 android_onboarding.config
+android_onboarding.config.workerforegroundpriority
 android_onboarding.contracts
 android_onboarding.contracts.annotations
 android_onboarding.contracts.annotations.ext
