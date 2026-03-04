@@ -5,6 +5,7 @@ package com.android.onboarding.tasks.service
 import android.content.Context
 import android.os.PersistableBundle
 import com.android.onboarding.contracts.OnboardingActivityApiContract
+import com.android.onboarding.contracts.annotations.DEFAULT_TIMEOUT_IN_SECONDS
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.InterruptReason
 import com.android.onboarding.metadata.OnboardingMetadataStore
@@ -287,12 +288,16 @@ class OnboardingTaskServiceServer(
       // can't be resolved.
       val state =
         if (currentState.isCompleted) {
-          Log.v(TAG, "awaitTaskCompletion: Task($token) is already completed - $currentState")
+          Log.d(TAG, "awaitTaskCompletion: Task($token) is already completed - $currentState")
           currentState
         } else {
           // Waiting for task to complete.
           val taskExecution = taskStateManager.getTaskExecution(token)
           if (taskExecution != null) {
+            Log.d(
+              TAG,
+              "awaitTaskCompletion: Task($token) found in execution cache. Waiting for completion.",
+            )
             taskExecution.join()
             taskStateManager[token]
           } else {
@@ -300,12 +305,13 @@ class OnboardingTaskServiceServer(
             if (token.timeout == null) {
               Log.w(TAG, "awaitTaskCompletion: Task($token) does not have a timeout defined.")
             }
-            val timeoutDuration = token.timeout?.toKotlinDuration() ?: 30.seconds
+            val timeoutDuration =
+              token.timeout?.toKotlinDuration() ?: DEFAULT_TIMEOUT_IN_SECONDS.seconds
             val pollingInterval = 50.milliseconds
             var timeLapsed = kotlin.time.Duration.ZERO
-            Log.v(
+            Log.d(
               TAG,
-              "awaitTaskCompletion: Task($token) not found in execution cache. Fallback to polling: timeoutDuration=$timeoutDuration pollingInterval=$pollingInterval",
+              "awaitTaskCompletion: Task($token) being polled for completion: timeoutDuration=$timeoutDuration pollingInterval=$pollingInterval",
             )
             while (!taskStateManager[token].isCompleted && timeLapsed < timeoutDuration) {
               delay(pollingInterval)
@@ -313,9 +319,9 @@ class OnboardingTaskServiceServer(
             }
             val state = taskStateManager[token]
             if (state.isCompleted) {
-              Log.v(
+              Log.d(
                 TAG,
-                "awaitTaskCompletion: Task($token) is now complete after polling for $timeoutDuration.",
+                "awaitTaskCompletion: Task($token) is now complete after polling for $timeLapsed.",
               )
               state
             } else {
@@ -329,7 +335,7 @@ class OnboardingTaskServiceServer(
             }
           }
         }
-      Log.v(TAG, "awaitTaskCompletion($token): Flushing before returning")
+      Log.d(TAG, "awaitTaskCompletion($token): Flushing before returning")
       taskStateManager.flush()
       // We resolve with token again even though we have already have <O> return type.
       // This ensures that even recovered ErasedOnboardingState still returns correct result types.
