@@ -17,6 +17,10 @@ import com.android.onboarding.nodes.nodeId
 import com.android.onboarding.nodes.refersTo
 import com.android.onboarding.pending.BackgroundLaunchable
 import com.android.onboarding.pending.BackgroundLaunchableForResult
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.EXTRA_COMPONENT
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.EXTRA_NODE
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.EXTRA_TIMEOUT_IN_SECONDS
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.NAMESPACE
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
 import com.android.onboarding.utils.currentUserIdentifier
@@ -47,7 +51,7 @@ data class OnboardingTaskToken<O>(
   override val nodeId: NodeId,
   override val targetUserId: Int,
   override val targetPackageName: String,
-  override val timeout: Duration? = null,
+  override val timeout: Duration?,
 ) :
   UnresolvedOnboardingTaskToken<O>,
   ResultHandler<PersistableBundle, O> by resultHandler,
@@ -58,7 +62,6 @@ data class OnboardingTaskToken<O>(
     nodeId: NodeId = generateNodeId(),
     targetUserId: Int,
     targetPackageName: String,
-    timeout: Duration? = null,
   ) : this(
     taskManagerId = taskManagerId,
     nodeRef = contract,
@@ -74,7 +77,7 @@ data class OnboardingTaskToken<O>(
         if (it == ErasedOnboardingTaskToken.UNKNOWN_TARGET_PACKAGE_NAME) contract.nodePackage
         else it
       },
-    timeout = timeout,
+    timeout = contract.timeout,
   )
 
   override fun equals(other: Any?): Boolean =
@@ -172,7 +175,6 @@ sealed interface UnresolvedOnboardingTaskToken<out O> : UniqueNodeRef, Persistab
       nodeId = nodeId,
       targetUserId = targetUserId,
       targetPackageName = targetPackageName,
-      timeout = timeout,
     )
 }
 
@@ -190,10 +192,10 @@ class ErasedOnboardingTaskToken internal constructor(private val bundle: Persist
     get() = bundle.nodeId
 
   override val nodeName: String
-    get() = checkNotNull(bundle.getString(OnboardingTaskToken.EXTRA_NODE))
+    get() = checkNotNull(bundle.getString(EXTRA_NODE))
 
   override val nodeComponent: String
-    get() = checkNotNull(bundle.getString(OnboardingTaskToken.EXTRA_COMPONENT))
+    get() = checkNotNull(bundle.getString(EXTRA_COMPONENT))
 
   override val targetUserId: Int
     get() = bundle.getInt(OnboardingTaskToken.EXTRA_TARGET_USER, UNKNOWN_TARGET_USER_ID)
@@ -203,8 +205,7 @@ class ErasedOnboardingTaskToken internal constructor(private val bundle: Persist
       bundle.getString(OnboardingTaskToken.EXTRA_TARGET_PACKAGE_NAME) ?: UNKNOWN_TARGET_PACKAGE_NAME
 
   override val timeout: Duration?
-    get() =
-      bundle.getLongOrNull(OnboardingTaskToken.EXTRA_TIMEOUT_IN_SECONDS)?.let(Duration::ofSeconds)
+    get() = bundle.getLongOrNull(EXTRA_TIMEOUT_IN_SECONDS)?.let(Duration::ofSeconds)
 
   @OptIn(InternalOnboardingApi::class)
   override fun toPersistableBundle(): PersistableBundle = PersistableBundle(bundle)
@@ -230,7 +231,7 @@ class ErasedOnboardingTaskToken internal constructor(private val bundle: Persist
       persistableBundle: PersistableBundle
     ): ErasedOnboardingTaskToken = ErasedOnboardingTaskToken(persistableBundle)
 
-    const val EXTRA_TASK_MANAGER_ID = "${OnboardingTaskToken.NAMESPACE}.TASK_MANAGER_ID"
+    const val EXTRA_TASK_MANAGER_ID = "${NAMESPACE}.TASK_MANAGER_ID"
     const val UNKNOWN_TARGET_PACKAGE_NAME = "unknown_target_package_name"
     const val UNKNOWN_TARGET_USER_ID = -1
   }

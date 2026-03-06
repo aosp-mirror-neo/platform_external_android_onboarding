@@ -94,6 +94,7 @@ abstract class OnboardingTaskContract<I, O> : BaseOnboardingTaskContract<I, O>()
           taskServiceIntent = taskServiceIntent,
           targetUserId = getTargetUserId(input),
           targetPackageName = getTargetComponent(input),
+          timeout = timeout,
         )
         .resolve(this)
     OnboardingGraphLog.log(

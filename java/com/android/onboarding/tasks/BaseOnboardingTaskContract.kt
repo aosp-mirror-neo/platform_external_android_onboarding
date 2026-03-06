@@ -6,7 +6,6 @@ import com.android.onboarding.contracts.annotations.InterruptReason
 import com.android.onboarding.encoding.InputHandler
 import com.android.onboarding.pending.BackgroundLaunchableForResult
 import com.google.errorprone.annotations.CanIgnoreReturnValue
-import java.time.Duration
 
 /**
  * Common base for all [OnboardingTaskContract]. Public clients always look to use
@@ -17,9 +16,6 @@ import java.time.Duration
 
 abstract class BaseOnboardingTaskContract<I, O> @InternalOnboardingApi constructor() :
   BackgroundLaunchableForResult<I, O>, InputHandler<PersistableBundle, I> {
-
-  /** The timeout duration. */
-  abstract val timeout: Duration
 
   /**
    * Validates the integrity of the provided task arguments.

@@ -5,6 +5,7 @@ import android.os.PersistableBundle
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import com.android.onboarding.contracts.annotations.DEFAULT_TIMEOUT_IN_SECONDS
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.InterruptReason
 import com.android.onboarding.metadata.IString
@@ -156,7 +157,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
   suspend fun execute(
     context: Context,
     input: PersistableBundle,
-    timeout: Duration = contract.timeout,
+    timeout: Duration? = contract.timeout,
   ): OnboardingTaskState<O> {
     if (!isCreated) {
       return failure(
@@ -287,7 +288,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
   protected open suspend fun executeTask(
     context: Context,
     input: PersistableBundle,
-    timeout: Duration,
+    timeout: Duration?,
   ): OnboardingTaskState<O> =
     runTaskForState(
       context = context,
@@ -312,7 +313,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
   suspend fun runTaskForState(
     context: Context,
     input: I,
-    timeout: Duration = contract.timeout,
+    timeout: Duration? = contract.timeout,
   ): OnboardingTaskState<O> {
     // Needed until we merge ContextAwareOnboardingTask into OnboardingTask.
     contextRef = WeakReference(context)
@@ -344,7 +345,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
   /** Start the [execution] and handle common failures. */
   @InternalOnboardingApi
   protected suspend fun startExecution(
-    timeout: Duration = contract.timeout,
+    timeout: Duration? = contract.timeout,
     execution: suspend () -> O,
   ): OnboardingTaskState<O> {
     isRunning = true
@@ -352,7 +353,7 @@ abstract class OnboardingTask<I, O, C : BaseOnboardingTaskContract<I, O>> :
     thrownException.set(null)
 
     return try {
-      withTimeout(timeout.toMillis()) {
+      withTimeout(timeout?.toMillis() ?: DEFAULT_TIMEOUT_IN_SECONDS) {
         // We run the main task logic in one coroutine
         val mainExecution = lifecycleScope.async { execution() }.also { recordTaskBlockingJob(it) }
         // And have a second to watch for exceptions thrown anywhere

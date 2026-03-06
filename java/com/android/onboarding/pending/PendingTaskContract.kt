@@ -19,15 +19,18 @@ import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_SE
 import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_SOURCE_ID
 import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TARGET_PACKAGE_NAME
 import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TARGET_USER_ID
+import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TIMEOUT_IN_SECONDS
 import com.android.onboarding.pending.PendingContractMetadata.Companion.EXTRA_TYPE
 import com.android.onboarding.pending.PendingContractMetadata.Companion.NAMESPACE
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
 import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
+import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getLongOrNull
 import com.android.onboarding.utils.persistable.PersistableIntent
 import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistable
+import java.time.Duration
 
 @InternalOnboardingApi
 class PendingTaskContract(
@@ -41,6 +44,7 @@ class PendingTaskContract(
     taskServiceIntent: PersistableIntent,
     targetUserId: Int = currentUserIdentifier,
     targetPackageName: String = ref.nodePackage,
+    timeout: Duration?,
   ) : this(input) {
     this.nodeComponent = ref.nodeComponent
     this.nodeName = ref.nodeName
@@ -48,6 +52,7 @@ class PendingTaskContract(
     this.taskServiceIntent = taskServiceIntent
     this.targetUserId = targetUserId
     this.targetPackageName = targetPackageName
+    this.timeout = timeout
   }
 
   init {
@@ -64,6 +69,7 @@ class PendingTaskContract(
       "contract=${identity()}," +
       "package=${targetPackageName}," +
       "targetUserId=${targetUserId}," +
+      "timeout=${timeout}," +
       ")"
 
   override fun clone(): PendingTaskContract = PendingTaskContract(PersistableBundle(bundle))
@@ -128,6 +134,12 @@ class PendingTaskContract(
       bundle.putString(EXTRA_TARGET_PACKAGE_NAME, value)
     }
 
+  override var timeout: Duration?
+    get() = bundle.getLongOrNull(EXTRA_TIMEOUT_IN_SECONDS)?.let(Duration::ofSeconds)
+    set(value) {
+      value?.let { bundle.putLong(EXTRA_TIMEOUT_IN_SECONDS, it.seconds) }
+    }
+
   override fun getTargetUserId(input: Unit): Int = targetUserId
 
   override fun getTargetComponent(input: Unit): String = nodeComponent
@@ -184,6 +196,9 @@ class PendingTaskContract(
 
     override val creatorNodeId: NodeId
       get() = raw.creatorNodeId
+
+    override val timeout
+      get() = raw.timeout
 
     companion object CREATOR : Parcelable.Creator<PendingTaskContract> by PendingTaskContract
   }
