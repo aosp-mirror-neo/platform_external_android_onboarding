@@ -1,0 +1,30 @@
+// Generated file - DO NOT EDIT!
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_library {
+    name: "android_onboarding.config.workerforegroundpriority",
+    visibility: [
+        "//visibility:public",
+    ],
+    srcs: [
+        "WorkerForegroundPriority.kt",
+        "WorkerForegroundPriorityConfig.kt",
+    ],
+    static_libs: [
+        "android_onboarding.utils.equality",
+        "android_onboarding.utils.persistable",
+        "androidx.annotation_annotation",
+        "androidx.core_core",
+        "kotlin-parcelize-runtime",
+    ],
+    kotlin_plugins: [
+        "kotlin-parcelize-compiler-plugin",
+    ],
+    sdk_version: "system_current",
+    dont_merge_manifests: true,
+    manifest: ":android_onboarding.AndroidManifest",
+    min_sdk_version: "23",
+    target_sdk_version: "36",
+}
