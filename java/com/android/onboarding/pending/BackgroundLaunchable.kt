@@ -13,6 +13,7 @@ import com.android.onboarding.utils.currentUserIdentifier
 import com.android.onboarding.utils.generateHash
 import com.android.onboarding.utils.logging.OnboardingLog
 import com.android.onboarding.utils.persistable.PersistableIntent
+import java.time.Duration
 import java.util.Objects
 
 /**
@@ -38,6 +39,9 @@ interface BackgroundLaunchable<I> : NodeRef, WithInputEncoder<I, PersistableBund
   fun getTargetComponent(input: I): String {
     return nodeComponent
   }
+
+  /** The timeout duration, after which, this entity should be considered to have failed. */
+  val timeout: Duration?
 
   companion object {
     private val log = OnboardingLog.logger("BackgroundLaunchable")

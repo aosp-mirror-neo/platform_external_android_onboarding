@@ -5,7 +5,6 @@ package com.android.onboarding.tasks.service
 import android.content.Context
 import android.os.PersistableBundle
 import com.android.onboarding.contracts.OnboardingActivityApiContract
-import com.android.onboarding.contracts.annotations.DEFAULT_TIMEOUT_IN_SECONDS
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
 import com.android.onboarding.contracts.annotations.InterruptReason
 import com.android.onboarding.metadata.OnboardingMetadataStore
@@ -39,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 import kotlin.properties.ReadOnlyProperty
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toKotlinDuration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -278,7 +277,7 @@ class OnboardingTaskServiceServer(
       token,
       onError = { Log.w(TAG, "Failure awaiting task completion for node ${token.identity()}", it) },
     ) {
-      Log.v(TAG, "awaitTaskCompletion($token)")
+      Log.d(TAG, "awaitTaskCompletion($token) with timeout: ${token.timeout}")
       taskPermissionManager.enforceCallerPermission(applicationContext)
 
       taskStateManager.restoreTaskStatesIfNecessary()
@@ -305,8 +304,9 @@ class OnboardingTaskServiceServer(
             if (token.timeout == null) {
               Log.w(TAG, "awaitTaskCompletion: Task($token) does not have a timeout defined.")
             }
-            val timeoutDuration =
-              token.timeout?.toKotlinDuration() ?: DEFAULT_TIMEOUT_IN_SECONDS.seconds
+            // Valid for chained contract launches, as we don't want a timeout there.
+            // Set an arbitrary long timeout here just in case.
+            val timeoutDuration = token.timeout?.toKotlinDuration() ?: 15.minutes
             val pollingInterval = 50.milliseconds
             var timeLapsed = kotlin.time.Duration.ZERO
             Log.d(

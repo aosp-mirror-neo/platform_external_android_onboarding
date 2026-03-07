@@ -110,6 +110,7 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
         timeSource = timeSource,
       )
     checkNotNull(localOtm)
+    Log.i(TAG, "Component($component) initiated binder instance: $this")
   }
 
   val otm: OnboardingTaskManager by otm
@@ -990,6 +991,7 @@ abstract class DefaultOnboardingTaskManagerServiceBinder(
       nodeId = nodeId,
       targetUserId = targetUserId,
       targetPackageName = targetPackageName,
+      timeout = timeout,
     )
   }
 

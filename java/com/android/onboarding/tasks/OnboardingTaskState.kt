@@ -18,6 +18,9 @@ import com.android.onboarding.nodes.nodeId
 import com.android.onboarding.nodes.refersTo
 import com.android.onboarding.tasks.OnboardingTaskState.Companion.EXTRA_LAST_METADATA
 import com.android.onboarding.tasks.OnboardingTaskState.Companion.EXTRA_RESULT
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.EXTRA_COMPONENT
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.EXTRA_NODE
+import com.android.onboarding.tasks.OnboardingTaskToken.Companion.NAMESPACE
 import com.android.onboarding.utils.StableEquality
 import com.android.onboarding.utils.contentDeepEquals
 import com.android.onboarding.utils.datasplitter.getPendingDataIdentifier
@@ -58,8 +61,8 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
   override fun toPersistableBundle(): PersistableBundle =
     PersistableBundle().also { bundle ->
       bundle.nodeId = nodeId
-      bundle.putString(OnboardingTaskToken.EXTRA_COMPONENT, nodeComponent)
-      bundle.putString(OnboardingTaskToken.EXTRA_NODE, nodeName)
+      bundle.putString(EXTRA_COMPONENT, nodeComponent)
+      bundle.putString(EXTRA_NODE, nodeName)
       bundle.putString(EXTRA_TYPE, type)
     }
 
@@ -289,10 +292,10 @@ sealed class OnboardingTaskState<out O> : UnresolvedOnboardingTaskState<O> {
     internal const val TYPE_IN_PROGRESS = "InProgress"
     internal const val TYPE_SUCCESS = "Success"
     internal const val TYPE_FAILED = "Failed"
-    internal const val EXTRA_TYPE = "${OnboardingTaskToken.NAMESPACE}.TYPE"
-    internal const val EXTRA_ERROR = "${OnboardingTaskToken.NAMESPACE}.ERROR"
-    internal const val EXTRA_RESULT = "${OnboardingTaskToken.NAMESPACE}.RESULT"
-    internal const val EXTRA_LAST_METADATA = "${OnboardingTaskToken.NAMESPACE}.LAST_METADATA"
+    internal const val EXTRA_TYPE = "${NAMESPACE}.TYPE"
+    internal const val EXTRA_ERROR = "${NAMESPACE}.ERROR"
+    internal const val EXTRA_RESULT = "${NAMESPACE}.RESULT"
+    internal const val EXTRA_LAST_METADATA = "${NAMESPACE}.LAST_METADATA"
   }
 }
 
@@ -306,10 +309,10 @@ class ErasedOnboardingTaskState internal constructor(private val bundle: Persist
     get() = bundle.nodeId
 
   override val nodeName: String
-    get() = checkNotNull(bundle.getString(OnboardingTaskToken.EXTRA_NODE))
+    get() = checkNotNull(bundle.getString(EXTRA_NODE))
 
   override val nodeComponent: String
-    get() = checkNotNull(bundle.getString(OnboardingTaskToken.EXTRA_COMPONENT))
+    get() = checkNotNull(bundle.getString(EXTRA_COMPONENT))
 
   private val type: String
     get() = checkNotNull(bundle.getString(OnboardingTaskState.EXTRA_TYPE))

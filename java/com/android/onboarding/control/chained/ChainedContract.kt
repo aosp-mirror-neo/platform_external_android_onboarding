@@ -28,6 +28,7 @@ import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.putPersistable
 import java.util.Objects
 import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 /**
  * A contract specifying a request to launch another [target] node and then return the result by
@@ -191,6 +192,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         creatorNodeId = callbackRef.nodeId,
         taskServiceIntent = callbackServiceIntent,
         targetUserId = callbackUserId,
+        timeout = estimatedCallbackRuntime?.toJavaDuration()?.multipliedBy(3),
       )
     }
 
@@ -435,6 +437,7 @@ sealed interface ChainedContract<R> : Persistable, NodeRef, StableEquality {
         creatorNodeId = callbackRef.nodeId,
         taskServiceIntent = callbackServiceIntent,
         targetUserId = callbackUserId,
+        timeout = estimatedCallbackRuntime?.toJavaDuration()?.multipliedBy(3),
       )
     }
 

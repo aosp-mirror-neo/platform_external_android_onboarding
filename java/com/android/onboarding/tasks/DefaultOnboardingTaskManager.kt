@@ -31,7 +31,6 @@ import com.android.onboarding.versions.OnboardingChanges
 import com.android.onboarding.versions.changes.CHANGE_ID_FULL_LOCAL_BINDER
 import com.android.onboarding.versions.changes.STORE_TASK_STATES_CHANGE_ID
 import com.google.common.util.concurrent.ListenableFuture
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext
@@ -102,8 +101,6 @@ class DefaultOnboardingTaskManager(
       nodeId = generateNodeId(),
       targetUserId = contract.getTargetUserId(input),
       targetPackageName = contract.getTargetComponent(input),
-      timeout =
-        (contract as? OnboardingTaskContract)?.metadata?.timeoutInSeconds?.let(Duration::ofSeconds),
     )
 
   override fun close() {

@@ -13,6 +13,7 @@ android_library {
         "WaitingScreenConfig.kt",
     ],
     static_libs: [
+        "android_onboarding.config.workerforegroundpriority",
         "android_onboarding.utils.equality",
         "android_onboarding.utils.persistable",
         "androidx.annotation_annotation",
