@@ -4,7 +4,6 @@ import android.os.Parcelable
 import android.os.PersistableBundle
 import androidx.annotation.Keep
 import com.android.onboarding.utils.StableEquality
-import com.android.onboarding.utils.persistable.NullSafePersistableBundleExtensions.getStringOrThrow
 import com.android.onboarding.utils.persistable.Persistable
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import kotlinx.parcelize.Parcelize
@@ -18,7 +17,8 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 @Keep
-data class WaitingScreenConfig(val contract: String) : Parcelable, Persistable, StableEquality {
+data class WaitingScreenConfig(val contract: String? = null) :
+  Parcelable, Persistable, StableEquality {
   override fun toPersistableBundle(): PersistableBundle =
     PersistableBundle().apply { putString(KEY_CONTRACT, contract) }
 
@@ -26,7 +26,7 @@ data class WaitingScreenConfig(val contract: String) : Parcelable, Persistable, 
     internal const val KEY_CONTRACT = "contract"
 
     override fun fromPersistableBundle(persistableBundle: PersistableBundle) =
-      WaitingScreenConfig(persistableBundle.getStringOrThrow(KEY_CONTRACT))
+      WaitingScreenConfig(persistableBundle.getString(KEY_CONTRACT))
 
     /**
      * Merge this config with a parent config. Child config wins.
@@ -36,6 +36,12 @@ data class WaitingScreenConfig(val contract: String) : Parcelable, Persistable, 
     fun merge(
       childConfig: WaitingScreenConfig?,
       parentConfig: WaitingScreenConfig?,
-    ): WaitingScreenConfig? = childConfig ?: parentConfig
+    ): WaitingScreenConfig? {
+      if (childConfig == WaitingScreenConfig()) {
+        // Child clears config.
+        return null
+      }
+      return childConfig ?: parentConfig
+    }
   }
 }

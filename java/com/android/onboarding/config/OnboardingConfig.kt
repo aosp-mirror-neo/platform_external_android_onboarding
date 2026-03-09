@@ -56,6 +56,10 @@ data class OnboardingConfig(
         // Override everything with the parent config.
         return parentConfig
       }
+      if (childConfig == OnboardingConfig()) {
+        // Child clears config.
+        return OnboardingConfig()
+      }
       val mergedWaitingScreenConfig =
         WaitingScreenConfig.merge(childConfig.waitingScreenConfig, parentConfig.waitingScreenConfig)
       val mergedWorkerForegroundPriorityConfig =
