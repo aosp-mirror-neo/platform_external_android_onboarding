@@ -4,6 +4,7 @@ import android.os.PersistableBundle
 import com.android.onboarding.config.OnboardingConfig
 import com.android.onboarding.utils.persistable.PersistableDeserializer
 import com.android.onboarding.utils.persistable.getPersistable
+import com.android.onboarding.utils.persistable.getPersistableList
 import com.google.android.wizardmanager.WizardAction.BRANCHES_KEY
 import com.google.android.wizardmanager.WizardAction.CONFIG_KEY
 import com.google.android.wizardmanager.WizardAction.DEPENDENCIES_KEY
@@ -17,6 +18,11 @@ import com.google.android.wizardmanager.WizardAction.SCRIPT_URI_KEY
 import com.google.android.wizardmanager.WizardAction.URI_KEY
 import com.google.android.wizardmanager.WizardBranchArray.DEFAULT_ACTION_ID_KEY
 import com.google.android.wizardmanager.WizardBranchArray.MAP_KEY
+import com.google.android.wizardmanager.WizardScript.ACTION_LIST_KEY
+import com.google.android.wizardmanager.WizardScript.CONFIG_KEY as WIZARD_SCRIPT_CONFIG_KEY
+import com.google.android.wizardmanager.WizardScript.FIRST_ACTION_INDEX_KEY
+import com.google.android.wizardmanager.WizardScript.SCRIPT_URI_KEY as WIZARD_SCRIPT_SCRIPT_URI_KEY
+import com.google.android.wizardmanager.WizardScript.VERSION_KEY
 import com.google.android.wizardmanager.WizardStack.SIZE_KEY
 
 // Ideally the objects in this file should be companion objects to the classes themselves, but
@@ -43,6 +49,22 @@ object Deserializers {
         .dependencies(persistableBundle.getStringArray(DEPENDENCIES_KEY)?.toList() ?: emptyList())
         .config(persistableBundle.getPersistable(CONFIG_KEY, OnboardingConfig))
         .build()
+    }
+  }
+
+  object WizardScript : PersistableDeserializer<com.google.android.wizardmanager.WizardScript> {
+    override fun fromPersistableBundle(
+      persistableBundle: PersistableBundle
+    ): com.google.android.wizardmanager.WizardScript {
+      val scriptUri =
+        persistableBundle.getString(WIZARD_SCRIPT_SCRIPT_URI_KEY) ?: error("Missing SCRIPT_URI")
+      val actionList =
+        persistableBundle.getPersistableList(ACTION_LIST_KEY, WizardAction)
+          ?: error("Missing ACTION_LIST")
+      val firstActionIndex = persistableBundle.getInt(FIRST_ACTION_INDEX_KEY)
+      val version = persistableBundle.getInt(VERSION_KEY)
+      val config = persistableBundle.getPersistable(WIZARD_SCRIPT_CONFIG_KEY, OnboardingConfig)
+      return WizardScript(scriptUri, actionList, firstActionIndex, version, config)
     }
   }
 
