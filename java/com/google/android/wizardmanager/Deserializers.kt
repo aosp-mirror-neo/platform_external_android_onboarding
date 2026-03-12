@@ -13,7 +13,6 @@ import com.google.android.wizardmanager.WizardAction.ID_KEY
 import com.google.android.wizardmanager.WizardAction.IF_FLOW_KEY
 import com.google.android.wizardmanager.WizardAction.IF_LIFECYCLE_KEY
 import com.google.android.wizardmanager.WizardAction.INDEX_KEY
-import com.google.android.wizardmanager.WizardAction.NESTED_SCRIPT_KEY
 import com.google.android.wizardmanager.WizardAction.NODE_KEY
 import com.google.android.wizardmanager.WizardAction.SCRIPT_URI_KEY
 import com.google.android.wizardmanager.WizardAction.URI_KEY
@@ -49,7 +48,6 @@ object Deserializers {
         .branches(branches)
         .dependencies(persistableBundle.getStringArray(DEPENDENCIES_KEY)?.toList() ?: emptyList())
         .config(persistableBundle.getPersistable(CONFIG_KEY, OnboardingConfig))
-        .nestedScript(persistableBundle.getPersistable(NESTED_SCRIPT_KEY, WizardScript))
         .build()
     }
   }
