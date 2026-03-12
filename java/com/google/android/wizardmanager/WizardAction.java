@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import android.text.TextUtils;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,6 +46,9 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   /** The yield action that is used to yield the script. */
   public static final WizardAction YIELD_ACTION =
       new WizardAction.Builder(YIELD_ACTION_ID, 0).id(YIELD_ACTION_ID).uri(null).build();
+
+  /** Copied from `WizardManager.EXTRA_LOAD_SCRIPT_URI`. */
+  private static final String EXTRA_LOAD_SCRIPT_URI = "loadScriptUri";
 
   /** URI to be invoked for this action, generated using "adb shell am to-intent-uri" */
   @Nullable private final String uri;
@@ -267,6 +271,23 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @Nullable
   public OnboardingConfig getConfig() {
     return config;
+  }
+
+  /** Returns the URI of the script to execute for this action. */
+  @VisibleForTesting
+  @Nullable
+  public String getLoadScriptUri() {
+    // We reverse engineer WizardActionParser here. We decided not to store the loadScriptUri
+    // attribute with another persistable key to keep the WizardAction object lean.
+    if (TextUtils.isEmpty(uri) || !uri.startsWith("intent:")) {
+      return null;
+    }
+    try {
+      return Intent.parseUri(uri, 0).getStringExtra(EXTRA_LOAD_SCRIPT_URI);
+    } catch (URISyntaxException e) {
+      WzmLog.w("Failed to get loadScriptUri from uri", e);
+    }
+    return null;
   }
 
   @Override
