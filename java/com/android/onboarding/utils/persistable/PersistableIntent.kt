@@ -243,6 +243,15 @@ constructor(
 
   /** @see [Intent.putExtra] */
   @CanIgnoreReturnValue
+  fun putExtra(key: String?, value: Long): PersistableIntent = build {
+    this.extras.putLong(key, value)
+  }
+
+  /** @see [Intent.getLongExtra] */
+  fun getLongExtra(key: String?, defaultValue: Long): Long = extras.getLong(key, defaultValue)
+
+  /** @see [Intent.putExtra] */
+  @CanIgnoreReturnValue
   fun putExtra(key: String?, value: PersistableBundle?): PersistableIntent = build {
     this.extras.putPersistableBundle(key, value)
   }
