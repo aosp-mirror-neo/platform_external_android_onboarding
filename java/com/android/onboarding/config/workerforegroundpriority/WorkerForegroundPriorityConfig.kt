@@ -56,6 +56,10 @@ data class WorkerForegroundPriorityConfig(val priorities: List<WorkerForegroundP
       if (childConfig == null) {
         return parentConfig
       }
+      if (childConfig.priorities.isEmpty()) {
+        // Child clears config.
+        return childConfig
+      }
 
       val parentMap = parentConfig.priorities.associateBy { it.workerId }
       val childMap = childConfig.priorities.associateBy { it.workerId }
