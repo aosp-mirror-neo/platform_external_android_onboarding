@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import android.text.TextUtils;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,7 +39,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   static final String BRANCHES_KEY = "branches";
   static final String DEPENDENCIES_KEY = "dependencies";
   static final String CONFIG_KEY = "config";
-  static final String NESTED_SCRIPT_KEY = "nested_script";
 
   /** Special action id indicating that the script should be yielded. */
   public static final String YIELD_ACTION_ID = "#YIELD";
@@ -46,6 +46,9 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   /** The yield action that is used to yield the script. */
   public static final WizardAction YIELD_ACTION =
       new WizardAction.Builder(YIELD_ACTION_ID, 0).id(YIELD_ACTION_ID).uri(null).build();
+
+  /** Copied from `WizardManager.EXTRA_LOAD_SCRIPT_URI`. */
+  private static final String EXTRA_LOAD_SCRIPT_URI = "loadScriptUri";
 
   /** URI to be invoked for this action, generated using "adb shell am to-intent-uri" */
   @Nullable private final String uri;
@@ -82,9 +85,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   /** The WizardScript config applied for this action. */
   @Nullable private final OnboardingConfig config;
 
-  /** The nested script to execute for this action */
-  @Nullable private final WizardScript nestedScript;
-
   protected WizardAction(Builder builder) {
     this.scriptUri = builder.scriptUri;
     this.index = builder.index;
@@ -98,7 +98,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     this.dependencies = builder.dependencies;
     this.logId = String.format("%s#%s", scriptUri, id);
     this.config = builder.config;
-    this.nestedScript = builder.nestedScript;
   }
 
   /** Builder for {@link WizardAction}. */
@@ -114,7 +113,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     private WizardBranchArray branches = new WizardBranchArray();
     private List<String> dependencies = new ArrayList<>();
     @Nullable private OnboardingConfig config;
-    @Nullable private WizardScript nestedScript;
 
     public Builder(@NonNull String scriptUri, int index) {
       this.scriptUri = scriptUri;
@@ -175,12 +173,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
       return this;
     }
 
-    @CanIgnoreReturnValue
-    public Builder nestedScript(@Nullable WizardScript nestedScript) {
-      this.nestedScript = nestedScript;
-      return this;
-    }
-
     public WizardAction build() {
       return new WizardAction(this);
     }
@@ -196,8 +188,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         .ifFlow(ifFlow)
         .branches(branches)
         .dependencies(dependencies)
-        .config(config)
-        .nestedScript(nestedScript);
+        .config(config);
   }
 
   @Nullable
@@ -282,9 +273,21 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     return config;
   }
 
+  /** Returns the URI of the script to execute for this action. */
+  @VisibleForTesting
   @Nullable
-  public WizardScript getNestedScript() {
-    return nestedScript;
+  public String getLoadScriptUri() {
+    // We reverse engineer WizardActionParser here. We decided not to store the loadScriptUri
+    // attribute with another persistable key to keep the WizardAction object lean.
+    if (TextUtils.isEmpty(uri) || !uri.startsWith("intent:")) {
+      return null;
+    }
+    try {
+      return Intent.parseUri(uri, 0).getStringExtra(EXTRA_LOAD_SCRIPT_URI);
+    } catch (URISyntaxException e) {
+      WzmLog.w("Failed to get loadScriptUri from uri", e);
+    }
+    return null;
   }
 
   @Override
@@ -301,8 +304,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
           && Objects.equals(flow, o.flow)
           && Objects.equals(ifFlow, o.ifFlow)
           && Objects.equals(dependencies, o.dependencies)
-          && Objects.equals(config, o.config)
-          && Objects.equals(nestedScript, o.nestedScript);
+          && Objects.equals(config, o.config);
     }
     return false;
   }
@@ -310,18 +312,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @Override
   public int hashCode() {
     return Objects.hash(
-        scriptUri,
-        index,
-        id,
-        uri,
-        node,
-        ifLifecycle,
-        flow,
-        ifFlow,
-        branches,
-        dependencies,
-        config,
-        nestedScript);
+        scriptUri, index, id, uri, node, ifLifecycle, flow, ifFlow, branches, dependencies, config);
   }
 
   @Override
@@ -348,8 +339,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         + dependencies
         + " config="
         + config
-        + " nestedScript="
-        + nestedScript
         + "}";
   }
 
@@ -367,7 +356,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     bldr.append(indentStr).append(" branches = ").append(branches).append("\n");
     bldr.append(indentStr).append(" dependencies = ").append(dependencies).append("\n");
     bldr.append(indentStr).append(" config = ").append(config).append("\n");
-    bldr.append(indentStr).append(" nestedScript = ").append(nestedScript).append("\n");
     return bldr.append(indentStr).append("}").toString();
   }
 
@@ -389,7 +377,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     dest.writeParcelable(branches, flags);
     dest.writeStringList(dependencies);
     dest.writeParcelable(config, flags);
-    dest.writeParcelable(nestedScript, flags);
   }
 
   public static final Parcelable.Creator<WizardAction> CREATOR =
@@ -410,7 +397,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
           List<String> dependencies = new ArrayList<>();
           source.readStringList(dependencies);
           OnboardingConfig config = source.readParcelable(OnboardingConfig.class.getClassLoader());
-          WizardScript nestedScript = source.readParcelable(WizardScript.class.getClassLoader());
           return new WizardAction.Builder(scriptUri, index)
               .id(id)
               .uri(uri)
@@ -421,7 +407,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
               .branches(branches)
               .dependencies(dependencies)
               .config(config)
-              .nestedScript(nestedScript)
               .build();
         }
 
@@ -447,7 +432,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
       WzmLog.d(prefix + "ifFlow=" + instance.ifFlow);
       WzmLog.d(prefix + "branches=" + instance.branches);
       WzmLog.d(prefix + "config=" + instance.config);
-      WzmLog.d(prefix + "nestedScript=" + instance.nestedScript);
     } else {
       WzmLog.d(prefix + "DUMP WizardAction instance is null");
     }
@@ -468,7 +452,6 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     putPersistable(bundle, BRANCHES_KEY, branches);
     bundle.putStringArray(DEPENDENCIES_KEY, dependencies.toArray(new String[0]));
     putPersistable(bundle, CONFIG_KEY, config);
-    putPersistable(bundle, NESTED_SCRIPT_KEY, nestedScript);
     return bundle;
   }
 }

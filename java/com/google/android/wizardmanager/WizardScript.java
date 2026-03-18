@@ -49,7 +49,7 @@ public class WizardScript
   private final List<WizardAction> actionList;
   private final Map<String, WizardAction> actions;
   private final int version;
-  @Nullable private final OnboardingConfig config;
+  @Nullable private OnboardingConfig config = null;
 
   private String customizedFlow = null;
   private Integer exitResultCode = null;
@@ -302,6 +302,10 @@ public class WizardScript
     }
 
     return action;
+  }
+
+  public void setConfig(@Nullable OnboardingConfig config) {
+    this.config = config;
   }
 
   @Nullable

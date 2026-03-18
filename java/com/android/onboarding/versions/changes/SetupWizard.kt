@@ -533,13 +533,19 @@ const val ENABLE_SINGLE_WORKER_IN_WIZARD_MANAGER = 450443090L
 )
 const val ENABLE_MULTI_WORKER_IN_NEXT_ACTION_CONTROLLER = 450443584L
 
+/**
+ * When enabled, eSIM fallback (no SIMs on source) flow will happen in a separate wizard action
+ * `quick_start_esim_fallback`.
+ *
+ * Allows the fallback flow to be moved out of the UWS.
+ */
 @ChangeId(
   bugId = 475397409L,
   owner = "atpugnayra",
   breaking = [],
   changeRadius = ChangeRadius.MULTI_COMPONENT,
   tags = [P11_DVT, NEXT],
-  available = ChangeId.NOT_AVAILABLE,
+  available = "2026-01-21",
 )
 const val ESIM_FALLBACK_SEPARATION = 475397409L
 
@@ -573,3 +579,13 @@ const val DISABLE_PHENOTYPE_COMPLIANCE_DATE_OVERRIDES = 480030468L
   available = "2026-02-01",
 )
 const val WIZARD_GRAPH_METADATA = 477196978L
+
+/** Enables setting onboarding config to WizardScript and WizardAction nodes. */
+@ChangeId(
+  bugId = 436783904L,
+  owner = "iancheng",
+  breaking = [],
+  tags = [P11_DVT, NEXT],
+  changeRadius = ChangeRadius.SINGLE_COMPONENT,
+)
+const val ENABLE_ONBOARDING_CONFIG = 436783904L
