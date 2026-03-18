@@ -27,6 +27,11 @@ enum class PrecalculationTrigger : PersistableEnum {
    */
   RESTORE_READY,
   PERSONALIZATION_FLOW_STARTED,
+  /**
+   * The point when the users consent choices have been transferred from their previous device and
+   * the user has agreed to the consent transfer.
+   */
+  CONSENT_READY,
   /** Triggered at the very beginning of deferred setup. */
   DEFERRED_SETUP_STARTED;
 

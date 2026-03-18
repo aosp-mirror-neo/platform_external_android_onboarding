@@ -12,8 +12,12 @@ import com.google.android.wizardmanager.wizardManagerExtras
 
 /** Interface for providing a waiting screen. */
 interface WaitingScreenProvider {
-  /** Returns a waiting screen. This will be the waiting screen to use when making the user wait. */
-  fun getWaitingScreen(): WaitingScreen<out WaitingScreenArgument>
+  /**
+   * Returns a waiting screen. This will be the waiting screen to use when making the user wait.
+   *
+   * @param configuredWaitingScreen The class name of the configured waiting screen, if any.
+   */
+  fun getWaitingScreen(configuredWaitingScreen: String?): WaitingScreen<out WaitingScreenArgument>
 }
 
 /** The arguments required to launch a waiting screen. */
