@@ -11,6 +11,7 @@ android_library {
     srcs: [
         "Deserializers.kt",
         "WizardAction.java",
+        "WizardActionDependency.kt",
         "WizardBranchArray.java",
         "WizardBundle.kt",
         "WizardManagerConstants.kt",

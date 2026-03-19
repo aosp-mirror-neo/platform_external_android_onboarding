@@ -16,7 +16,6 @@ import com.android.onboarding.utils.StableEquality;
 import com.android.onboarding.utils.persistable.Persistable;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,7 +36,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   static final String FLOW_KEY = "flow";
   static final String IF_FLOW_KEY = "if_flow";
   static final String BRANCHES_KEY = "branches";
-  static final String DEPENDENCIES_KEY = "dependencies";
+  static final String DEPENDENCY_TREE_KEY = "dependency_tree";
   static final String CONFIG_KEY = "config";
 
   /** Special action id indicating that the script should be yielded. */
@@ -65,8 +64,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   /** Transition table, mapping result codes to the next action to run */
   @NonNull private final WizardBranchArray branches;
 
-  /** The dependencies of this action. */
-  @NonNull private final List<String> dependencies;
+  /** The dependency tree of this action. */
+  @Nullable private final WizardActionDependency dependencyTree;
 
   /** The URI of the script declaring this action. */
   @NonNull private final String scriptUri;
@@ -95,7 +94,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     this.flow = builder.flow;
     this.ifFlow = builder.ifFlow;
     this.branches = builder.branches;
-    this.dependencies = builder.dependencies;
+    this.dependencyTree = builder.dependencyTree;
     this.logId = String.format("%s#%s", scriptUri, id);
     this.config = builder.config;
   }
@@ -109,9 +108,9 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     private String node;
     private String ifLifecycle;
     private String flow;
-    private String ifFlow;
-    private WizardBranchArray branches = new WizardBranchArray();
-    private List<String> dependencies = new ArrayList<>();
+    @Nullable private String ifFlow;
+    @NonNull private WizardBranchArray branches = new WizardBranchArray();
+    @Nullable private WizardActionDependency dependencyTree;
     @Nullable private OnboardingConfig config;
 
     public Builder(@NonNull String scriptUri, int index) {
@@ -162,8 +161,10 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     }
 
     @CanIgnoreReturnValue
-    public Builder dependencies(@NonNull List<String> dependencies) {
-      this.dependencies = dependencies;
+    public Builder dependencies(@Nullable WizardActionDependency dependencyTree) {
+      if (dependencyTree != null) {
+        this.dependencyTree = dependencyTree;
+      }
       return this;
     }
 
@@ -187,7 +188,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         .flow(flow)
         .ifFlow(ifFlow)
         .branches(branches)
-        .dependencies(dependencies)
+        .dependencies(dependencyTree)
         .config(config);
   }
 
@@ -263,9 +264,10 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     return branches;
   }
 
-  @NonNull
-  public List<String> getDependencies() {
-    return dependencies;
+  /** Returns the recursive dependency tree for this action. */
+  @Nullable
+  public WizardActionDependency getDependencyTree() {
+    return dependencyTree;
   }
 
   @Nullable
@@ -303,7 +305,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
           && Objects.equals(ifLifecycle, o.ifLifecycle)
           && Objects.equals(flow, o.flow)
           && Objects.equals(ifFlow, o.ifFlow)
-          && Objects.equals(dependencies, o.dependencies)
+          && Objects.equals(dependencyTree, o.dependencyTree)
           && Objects.equals(config, o.config);
     }
     return false;
@@ -312,7 +314,17 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
   @Override
   public int hashCode() {
     return Objects.hash(
-        scriptUri, index, id, uri, node, ifLifecycle, flow, ifFlow, branches, dependencies, config);
+        scriptUri,
+        index,
+        id,
+        uri,
+        node,
+        ifLifecycle,
+        flow,
+        ifFlow,
+        branches,
+        dependencyTree,
+        config);
   }
 
   @Override
@@ -335,8 +347,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
         + index
         + " branches="
         + branches
-        + " dependencies="
-        + dependencies
+        + " dependencyTree="
+        + dependencyTree
         + " config="
         + config
         + "}";
@@ -354,7 +366,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     bldr.append(indentStr).append(" flow = ").append(flow).append("\n");
     bldr.append(indentStr).append(" ifFlow = ").append(ifFlow).append("\n");
     bldr.append(indentStr).append(" branches = ").append(branches).append("\n");
-    bldr.append(indentStr).append(" dependencies = ").append(dependencies).append("\n");
+    bldr.append(indentStr).append(" dependencyTree = ").append(dependencyTree).append("\n");
     bldr.append(indentStr).append(" config = ").append(config).append("\n");
     return bldr.append(indentStr).append("}").toString();
   }
@@ -375,7 +387,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     dest.writeString(flow);
     dest.writeString(ifFlow);
     dest.writeParcelable(branches, flags);
-    dest.writeStringList(dependencies);
+    dest.writeParcelable(dependencyTree, flags);
     dest.writeParcelable(config, flags);
   }
 
@@ -394,8 +406,8 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
 
           WizardBranchArray branches =
               source.readParcelable(WizardBranchArray.class.getClassLoader());
-          List<String> dependencies = new ArrayList<>();
-          source.readStringList(dependencies);
+          WizardActionDependency dependencyTree =
+              source.readParcelable(WizardActionDependency.class.getClassLoader());
           OnboardingConfig config = source.readParcelable(OnboardingConfig.class.getClassLoader());
           return new WizardAction.Builder(scriptUri, index)
               .id(id)
@@ -405,7 +417,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
               .flow(flow)
               .ifFlow(ifFlow)
               .branches(branches)
-              .dependencies(dependencies)
+              .dependencies(dependencyTree)
               .config(config)
               .build();
         }
@@ -450,7 +462,7 @@ public class WizardAction implements Parcelable, Persistable, StableEquality {
     bundle.putString(FLOW_KEY, flow);
     bundle.putString(IF_FLOW_KEY, ifFlow);
     putPersistable(bundle, BRANCHES_KEY, branches);
-    bundle.putStringArray(DEPENDENCIES_KEY, dependencies.toArray(new String[0]));
+    putPersistable(bundle, DEPENDENCY_TREE_KEY, dependencyTree);
     putPersistable(bundle, CONFIG_KEY, config);
     return bundle;
   }
