@@ -7,7 +7,7 @@ import com.android.onboarding.utils.persistable.getPersistable
 import com.android.onboarding.utils.persistable.getPersistableList
 import com.google.android.wizardmanager.WizardAction.BRANCHES_KEY
 import com.google.android.wizardmanager.WizardAction.CONFIG_KEY
-import com.google.android.wizardmanager.WizardAction.DEPENDENCIES_KEY
+import com.google.android.wizardmanager.WizardAction.DEPENDENCY_TREE_KEY
 import com.google.android.wizardmanager.WizardAction.FLOW_KEY
 import com.google.android.wizardmanager.WizardAction.ID_KEY
 import com.google.android.wizardmanager.WizardAction.IF_FLOW_KEY
@@ -46,9 +46,35 @@ object Deserializers {
         .flow(persistableBundle.getString(FLOW_KEY))
         .ifFlow(persistableBundle.getString(IF_FLOW_KEY))
         .branches(branches)
-        .dependencies(persistableBundle.getStringArray(DEPENDENCIES_KEY)?.toList() ?: emptyList())
+        .dependencies(persistableBundle.getPersistable(DEPENDENCY_TREE_KEY, WizardActionDependency))
         .config(persistableBundle.getPersistable(CONFIG_KEY, OnboardingConfig))
         .build()
+    }
+  }
+
+  object WizardActionDependency :
+    PersistableDeserializer<com.google.android.wizardmanager.WizardActionDependency> {
+    private const val TYPE_KEY = "type"
+    private const val ACTION_ID_KEY = "action_id"
+    private const val CHILDREN_KEY = "children"
+
+    override fun fromPersistableBundle(
+      persistableBundle: PersistableBundle
+    ): com.google.android.wizardmanager.WizardActionDependency {
+      val typeValue = persistableBundle.getInt(TYPE_KEY)
+      val type = com.google.android.wizardmanager.WizardActionDependency.Type.fromValue(typeValue)
+      val actionId = persistableBundle.getString(ACTION_ID_KEY)
+      val children =
+        persistableBundle.getPersistableList(CHILDREN_KEY, WizardActionDependency) ?: emptyList()
+
+      return when (type) {
+        com.google.android.wizardmanager.WizardActionDependency.Type.ACTION ->
+          com.google.android.wizardmanager.WizardActionDependency.action(actionId!!)
+        com.google.android.wizardmanager.WizardActionDependency.Type.ALL_OF ->
+          com.google.android.wizardmanager.WizardActionDependency.allOf(children.filterNotNull())
+        com.google.android.wizardmanager.WizardActionDependency.Type.ANY_OF ->
+          com.google.android.wizardmanager.WizardActionDependency.anyOf(children.filterNotNull())
+      }
     }
   }
 
