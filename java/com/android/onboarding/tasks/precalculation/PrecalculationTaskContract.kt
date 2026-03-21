@@ -2,7 +2,7 @@ package com.android.onboarding.tasks.precalculation
 
 import android.os.PersistableBundle
 import com.android.onboarding.contracts.annotations.InternalOnboardingApi
-import com.android.onboarding.tasks.ArgumentFreeOnboardingTaskContract
+import com.android.onboarding.tasks.OnboardingTaskContract
 
 /**
  * Contract representing a task intended to precalculate data for later use by an activity.
@@ -16,7 +16,13 @@ import com.android.onboarding.tasks.ArgumentFreeOnboardingTaskContract
  * implementation details and dependencies of the data calculated by the task.
  */
 abstract class PrecalculationTaskContract :
-  ArgumentFreeOnboardingTaskContract<PrecalculatedData>() {
+  OnboardingTaskContract<PersistableBundle, PrecalculatedData>() {
+  @OptIn(InternalOnboardingApi::class)
+  final override fun performEncodeArgs(taskArgs: PersistableBundle) = PersistableBundle(taskArgs)
+
+  @OptIn(InternalOnboardingApi::class)
+  final override fun performExtractArgs(bundle: PersistableBundle) = bundle
+
   @OptIn(InternalOnboardingApi::class)
   final override fun performEncodeResult(taskResult: PrecalculatedData) =
     taskResult.toPersistableBundle()
