@@ -587,5 +587,6 @@ const val WIZARD_GRAPH_METADATA = 477196978L
   breaking = [],
   tags = [P11_DVT, NEXT],
   changeRadius = ChangeRadius.SINGLE_COMPONENT,
+  available = "2026-03-11",
 )
 const val ENABLE_ONBOARDING_CONFIG = 436783904L
